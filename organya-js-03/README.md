@@ -17,9 +17,9 @@ UI graphics were taken from original Organya source code: https://github.com/shb
 
 This is a very slightly modified version: It now supports Org-03 (with the new drums and all).
 The demo index page has some small added perks:
-- a simple option to input a link to an org file and have it played
+- a simple option to input a link to an org file and have it played (only File Garden upload links work)
 - play, pause, backward, forward, home buttons
 - mute any track while playing
 - use arrow keys to go up/down/left/right on the piano roll canvas
 
-see https://raadshaikh.000webhostapp.com/organya/org-index.html
+see https://raadshaikh.github.io/organya-js-03/org-index.html

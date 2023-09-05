@@ -1,0 +1,435 @@
+<html>
+
+<head>
+    <title>Organya Player</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <style>
+        body {
+            background-color: #f0f0f0;
+            /*d4d0c8*/
+            font: normal 12px Verdana, Arial, sans-serif;
+        }
+
+        body,
+        html {
+            height: 100%;
+            margin: 0;
+            padding: 0
+        }
+
+        #toolbar {
+            position: absolute;
+            flex-wrap: nowrap;
+            height: 40px;
+            display: flex;
+            top: 0;
+            left: 0;
+            right: 0;
+        }
+
+        #toolbar select {
+            min-width: 5em;
+            max-width: 128px;
+            flex: 0 1 auto;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 40px;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            cursor:url(GUI/cursor.cur), auto;
+        }
+        
+        #table{
+            display:table;
+            justify-content: center
+            width:auto;
+            display: inline-block;
+            list-style:none;
+            padding:0;
+            margin:0;
+        }
+        #table img {
+            display:block;
+            position:relative;
+            margin:0 auto;
+        }
+        #table li {
+        text-align:center;
+    }
+    </style>
+</head>
+
+<body>
+    <div id="toolbar">
+        <input type="radio" id="dropDownRadio" name="orgSelect" value="dropDownOn" onchange="radioOnChange()" checked>
+        <select id="songs" onchange="playOrg('dontPlay')"></select>
+        <input type="radio" id="urlInputRadio" name="orgSelect" value="urlInputOn" onchange="radioOnChange()">
+        <input type="url" id="idUrlInput" name="nameUrlInput" minlength="2" maxlength="256" size="10" placeholder="Enter URL" disabled>
+        
+        <div style="padding: 10px;"> </div>
+        
+        <button onclick="homeOrg()"><img src="GUI/org_home.png" alt="Home"></button>
+        <div style="padding: 5px;"> </div>
+        <button onclick="backMeas()"><img src="GUI/org_back.png" alt="Back"></button>
+        <button onclick="nextMeas()"><img src="GUI/org_next.png" alt="Next"></button>
+        <button onclick="playOrg()"><img src="GUI/org_play.png" alt="Play"></button>
+        <button onclick="pauseOrg()"><img src="GUI/org_stop.png" alt="Stop"></button>
+        <!-- <button onclick="stopOrg()">Stop</button> -->
+        
+        <label style="display: flex;align-items: center;padding-top: 5px;padding-bottom: 5px;padding-left: 20px;padding-right: 0px;">Meas</label>
+        <div style="display: flex;align-items: center;padding:4px;">
+            <label id="currentMeasDisplay" style="display: flex;align-items: center;justify-content: center;box-shadow: inset 1px 1px 3px #999;border: 1px solid #555;padding: 5px;width: 2em">0</label>
+            <div style="padding: 2px;"> </div>
+            <label id="currentStepDisplay" style="display: flex;align-items: center;justify-content: center;box-shadow: inset 1px 1px 3px #999;border: 1px solid #555;padding: 5px;width: 2em">0</label>
+        
+            <label style="display: flex;align-items: center;padding-top: 5px;padding-bottom: 5px;padding-left: 25px;padding-right: 4px;">Track</label>
+            <label id="currentTrackDisplay" style="display: flex;align-items: center;justify-content: center;box-shadow: inset 1px 1px 3px #999;border: 1px solid #555;padding: 5px;width: 1em">1</label>
+            <label style="display: flex;align-items: center;padding-top: 5px;padding-bottom: 5px;padding-left: 10px;padding-right: 4px;">Wait</label>
+            <label id="currentWaitDisplay" style="display: flex;align-items: center;justify-content: center;box-shadow: inset 1px 1px 3px #999;border: 1px solid #555;padding: 5px;width: 2em">0</label>
+        </div>
+        
+            <div style="padding: 10px;"></div>
+            <label style="display: flex;align-items: center;padding-top: 5px;padding-bottom: 5px;padding-left: 0px;padding-right: 4px;">Mute</label>
+            <div id="table">
+                <li><img src="GUI/button_track_1.png"/></li>
+                <li><input type="checkbox" value="0" id="mute_1" name="is1Muted" class="mute"/></li>
+            </div>
+            <div id="table">
+                <li><img src="GUI/button_track_2.png"/></li>
+                <li><input type="checkbox" value="1" id="mute_2" name="is2Muted" class="mute"/></li>
+            </div>
+            <div id="table">
+                <li><img src="GUI/button_track_3.png"/></li>
+                <li><input type="checkbox" value="2" id="mute_3" name="is3Muted" class="mute"/></li>
+            </div>
+            <div id="table">
+                <li><img src="GUI/button_track_4.png"/></li>
+                <li><input type="checkbox" value="3" id="mute_4" name="is4Muted" class="mute"/></li>
+            </div>
+            <div id="table">
+                <li><img src="GUI/button_track_5.png"/></li>
+                <li><input type="checkbox" value="4" id="mute_5" name="is5Muted" class="mute"/></li>
+            </div>
+            <div id="table">
+                <li><img src="GUI/button_track_6.png"/></li>
+                <li><input type="checkbox" value="5" id="mute_6" name="is6Muted" class="mute"/></li>
+            </div>
+            <div id="table">
+                <li><img src="GUI/button_track_7.png"/></li>
+                <li><input type="checkbox" value="6" id="mute_7" name="is7Muted" class="mute"/></li>
+            </div>
+            <div id="table">
+                <li><img src="GUI/button_track_8.png"/></li>
+                <li><input type="checkbox" value="7" id="mute_8" name="is8Muted" class="mute"/></li>
+            </div>
+            <button onclick="muteAll('melodies')" style="height:38px;padding:2px;"></button>
+            
+                <div style="padding:5px;"></div>
+                
+            <div id="table">    
+                <li><img src="GUI/button_track_Q.png"/></li>
+                <li><input type="checkbox" value="8" id="mute_Q" name="isQMuted" class="mute"/></li>
+            </div>
+            <div id="table">
+                <li><img src="GUI/button_track_W.png"/></li>
+                <li><input type="checkbox" value="9" id="mute_W" name="isWMuted" class="mute"/></li>
+            </div>
+            <div id="table">
+                <li><img src="GUI/button_track_E.png"/></li>
+                <li><input type="checkbox" value="10" id="mute_E" name="isEMuted" class="mute"/></li>
+            </div>
+            <div id="table">
+                <li><img src="GUI/button_track_R.png"/></li>
+                <li><input type="checkbox" value="11" id="mute_R" name="isRMuted" class="mute"/></li>
+            </div>
+            <div id="table">
+                <li><img src="GUI/button_track_T.png"/></li>
+                <li><input type="checkbox" value="12" id="mute_T" name="isTMuted" class="mute"/></li>
+            </div>
+            <div id="table">
+                <li><img src="GUI/button_track_Y.png"/></li>
+                <li><input type="checkbox" value="13" id="mute_Y" name="isYMuted" class="mute"/></li>
+            </div>
+            <div id="table">
+                <li><img src="GUI/button_track_U.png"/></li>
+                <li><input type="checkbox" value="14" id="mute_U" name="isUMuted" class="mute"/></li>
+            </div>
+            <div id="table">
+                <li><img src="GUI/button_track_I.png"/></li>
+                <li><input type="checkbox" value="15" id="mute_I" name="isIMuted" class="mute"/></li>
+            </div>
+            <button onclick="muteAll('drums')" style="height:38px;padding:2px;"></button>
+    
+        <div style="padding:10px;"></div>
+        <button onclick="muteAll('solo')"><img src="GUI/solo.png" alt="Solo"></button>
+    </div>
+            
+    <div id="canvas-container">
+        <canvas id="org-canvas"></canvas>
+    </div>
+
+    <!-- increment before each deploy -->
+    <script src="organya.js?cache_bust=10"></script>
+    <script src="organya-ui.js?cache_bust=10"></script>
+    <!--I have no clue what this cache bust thing is, but apparently it's needed to reflect updates properly-->
+    <script>
+    
+        let prev_song=null;
+        let new_song=null;
+        
+        (() => {
+            const songs = `org3test.org
+NewData8.org
+Pixel/all/Get Heart Tank!.org
+Pixel/all/Halloween 2.org
+Pixel/all/On to Grasstown.org
+Pixel/all/Quiet.org
+Pixel/all/Jenka 1.org
+Pixel/all/XXXX.org
+Pixel/all/Torokos Theme.org
+Pixel/all/Wind Fortress.org
+Pixel/all/People of the Root.org
+Pixel/all/Victory!.org
+Pixel/all/Got Item!.org
+Pixel/all/Gestation.org
+Pixel/all/Balrog's Theme.org
+Pixel/all/Run!.org
+Pixel/all/Labyrinth Fight.org
+Pixel/all/White.org
+Pixel/all/Living Waterway.org
+Pixel/all/Charge.org
+Pixel/all/Gameover.org
+Pixel/all/Mimiga Town.org
+Pixel/all/Cemetery.org
+Pixel/all/Pier Walk.org
+Pixel/all/Scorching Back.org
+Pixel/all/Pulse.org
+Pixel/all/Moonsong.org
+Pixel/all/Geothermal.org
+Pixel/all/The Way Back Home.org
+Pixel/all/Seal Chamber.org
+Pixel/all/Mischievous Robot.org
+Pixel/all/Access.org
+Pixel/all/Eyes of Flame.org
+Pixel/all/Tyrant.org
+Pixel/all/Running Hell.org
+Pixel/all/Meltdown.org
+Pixel/all/Safety.org
+Pixel/all/Last Cave.org
+Pixel/all/Hero's End.org
+Pixel/all/Break Down.org
+Pixel/all/Cave Story.org
+Pixel/all/Plant.org
+Pixel/all/Snoopy Cake (Rockorg).org
+Pixel/all/Gravity.org
+Pixel/all/Zombie.org
+Pixel/all/Jenka 2.org
+Pixel/all/Balcony.org
+Pixel/all/Oppression.org
+Pixel/all/Last Battle.org
+Pixel/all/Meltdown 2.org
+Pixel/allbeta/Wind Fortress Beta 2002-07-05.org
+Pixel/allbeta/Pier Walk Beta 2001-09-30.org
+Pixel/allbeta/Oppression Beta 2001-12-09.org
+Pixel/allbeta/Wind Fortress Beta 2002-07-09.org
+Pixel/allbeta/Safety Beta 2002-07-01.org
+Pixel/allbeta/Living Waterway Beta 2002-01-20.org
+Pixel/allbeta/Plant Beta 2001-12-09.org
+Pixel/allbeta/Wind Fortress Beta 2002-10-24.org
+Pixel/allbeta/Safety Beta 2002-06-07.org
+Pixel/allbeta/Plant Beta 2002-12-17.org
+Pixel/allbeta/Gravity Beta 2002-07-20.org
+Pixel/allbeta/Cemetery Beta 2002-12-17.org
+Pixel/allbeta/Gestation Beta 2001-09-30.org
+Pixel/allbeta/Meltdown Beta 2001-09-30.org
+Pixel/allbeta/Gravity Beta 2002-01-20.org
+Pixel/allbeta/Quiet Beta 2004-02-19.org
+Pixel/allbeta/Eyes of Flame Beta 2002-10-24.org
+Pixel/allbeta/Pulse Beta 2003-02-10.org
+Pixel/allbeta/Safety Beta 2001-12-09.org
+Pixel/allbeta/White Beta 2002-01-20.org
+Pixel/allbeta/Safety Beta 2002-07-20.org
+Pixel/allbeta/Oppression Beta 2002-02-28.org
+Pixel/allbeta/Meltdown Beta 2001-12-09.org
+Pixel/allbeta/Safety Beta 2001-09-30.org
+Pixel/allbeta/Plant Beta 2001-09-30.org
+Pixel/allbeta/Eyes of Flame Beta 2004-12-15.org
+Pixel/allbeta/Hero's End Beta 2001-12-09.org
+Pixel/allbeta/Eyes of Flame Beta 2002-12-17.org
+Pixel/allbeta/Wind Fortress Beta 2002-07-20.org
+Pixel/allbeta/Mimiga Town Beta 2003-02-10.org
+Pixel/allbeta/Gravity Beta 2001-09-30.org
+Pixel/allbeta/Living Waterway Beta 2001-12-09.org
+Pixel/allbeta/Cave Story Beta 2004-12-07.org
+Pixel/allbeta/Eyes of Flame Beta 2004-12-14.org
+Pixel/allbeta/Cave Story Beta 2001-12-09.org
+Pixel/allbeta/Living Waterway Beta 2001-09-30.org
+Pixel/allbeta/Mischievous Robot Beta 2002-06-07.org
+Pixel/allbeta/Mischievous Robot Beta 2002-07-01.org
+Pixel/allbeta/White Beta 2002-02-14.org
+Pixel/allbeta/Moonsong Beta 2001-12-09.org
+Pixel/allbeta/Moonsong Beta 2002-01-20.org
+Pixel/allbeta/Cave Story Beta 2001-09-30.org
+Pixel/allbeta/White Beta 2002-02-28.org
+Pixel/allbeta/Hero's End Beta 2001-09-30.org
+Pixel/allbeta/Last Battle Beta.org
+Pixel/allbeta/Hero's End Beta 2002-01-20.org
+Pixel/maimai.org
+Pixel/wanpaku.org
+Pixel/snowfalling.org
+Pixel/happy00.org
+Pixel/town0.org`.split("\n").sort();
+
+            const songListEl = document.getElementById("songs");
+            for (let song of songs) {
+                song = song.trim();
+                const opt = document.createElement("option");
+                opt.value = "songs/" + song;
+                opt.textContent = song;
+
+                songListEl.appendChild(opt);
+            }
+
+            const canvasContainer = document.getElementById("canvas-container");
+            const orgCanvas = document.getElementById("org-canvas");
+            orgCanvas.width = canvasContainer.clientWidth;
+            orgCanvas.height = canvasContainer.clientHeight;
+            const ui = new OrganyaUI(orgCanvas);
+
+            window.addEventListener("resize", () => {
+                orgCanvas.width = canvasContainer.clientWidth;
+                orgCanvas.height = canvasContainer.clientHeight;
+                ui.draw();
+            })
+            
+            window.radioOnChange = () => {
+                if(document.getElementById('dropDownRadio').checked){
+                    document.getElementById('songs').disabled=false;
+                    document.getElementById('idUrlInput').disabled=true;
+                    playOrg('doNotPlay');
+                }
+                else{
+                    document.getElementById('songs').disabled=true;
+                    document.getElementById('idUrlInput').disabled=false;
+                }
+            }
+
+            let currentOrg = null;
+            window.stopOrg = () => {
+                if (currentOrg != null) {
+                    currentOrg.stop();
+                    currentOrg = null;
+                }
+            }
+	    
+            window.pauseOrg = () => {
+                if (currentOrg != null) {
+                    currentOrg.pause();
+                    prev_song = songListEl.options[songListEl.selectedIndex].value;
+                }
+            }
+
+            window.playOrg = async (argument='doPlay') => {
+                console.log("fetching song...");
+                if(document.getElementById('dropDownRadio').checked){
+                    res = await fetch(songListEl.options[songListEl.selectedIndex].value);
+                    new_song = songListEl.options[songListEl.selectedIndex].value;
+                }
+                else if(document.getElementById('urlInputRadio').checked){
+                    res = await fetch(document.getElementById('idUrlInput').value);
+                    new_song = document.getElementById('idUrlInput').value;
+                }
+                if (prev_song != new_song || prev_song == null){
+                    stopOrg();
+                    const data = await res.arrayBuffer();
+                    await initOrganya();
+
+                    currentOrg = new Organya(data);
+                    ui.setOrganya(currentOrg);
+                    currentWaitDisplay.innerHTML=currentOrg.song.wait;
+                    currentOrg.update();
+                }
+                currentOrg.play(argument);
+            }
+            
+            window.homeOrg = () => {
+                if (currentOrg != null) {
+                    currentOrg.homeOrg();
+                }
+            }
+            window.backMeas = () => {
+                if (currentOrg != null) {
+                    currentOrg.backMeas();
+                }
+            }
+            window.nextMeas = () => {
+                if (currentOrg != null) {
+                    currentOrg.nextMeas();
+                }
+            }
+            window.updown = (argument) => {
+                const scrollAmount = -64*(Number(argument=='up')-Number(argument=='down'));
+                ui.onScroll({ deltaY: scrollAmount });
+            }
+            
+            
+            let muteMelodies=['mute_1','mute_2','mute_3','mute_4','mute_5','mute_6','mute_7','mute_8'];
+            let muteDrums=['mute_Q','mute_W','mute_E','mute_R','mute_T','mute_Y','mute_U','mute_I'];
+            let muteAll=muteMelodies.concat(muteDrums);
+            let shouldUnMuteAll=0;
+            window.muteAll = (argument) => {
+                let toMute=[];
+                if (argument=='melodies'){
+                    toMute = muteMelodies;
+                }
+                else if (argument=='drums') {
+                    toMute = muteDrums;
+                }
+                else if (argument=='solo'){
+                    toMute=muteAll.slice(); //to copy arrays
+                    unMute='mute_'+currentTrackDisplay.innerHTML;
+                    toMute.splice(toMute.indexOf(unMute), 1);
+                }
+                for (var i in toMute) {
+                    if(shouldUnMuteAll==0){
+                        document.getElementById(toMute[i]).checked=muteAll.indexOf(i);
+                    }
+                    else if (shouldUnMuteAll==1){
+                        document.getElementById(toMute[i]).checked=null;
+                    }
+                }
+                shouldUnMuteAll=1-shouldUnMuteAll;
+            }
+            
+            
+            let allowedTracks=['1','2','3','4','5','6','7','8','q','w','e','r','t','y','u','i']
+            document.addEventListener('keydown', (e) => {
+
+                    if(currentOrg!=null && allowedTracks.includes(e.key)){
+                        currentTrackDisplay.innerHTML=e.key.toUpperCase();
+                        currentOrg.selectedTrack=allowedTracks.indexOf(e.key)
+                        currentOrg.update();
+                    }
+                    else if(e.key=="ArrowLeft"){
+                        window.backMeas();
+                    }
+                    else if(e.key=="ArrowRight"){
+                        window.nextMeas();
+                    }
+                    else if(e.key=="ArrowUp"){
+                        window.updown('up');
+                    }
+                    else if(e.key=="ArrowDown"){
+                        window.updown('down');
+                    }
+                
+            }, true);
+            
+        })();
+    </script>
+</body>
+
+</html>

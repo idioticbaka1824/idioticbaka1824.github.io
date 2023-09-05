@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../styles/mystyle1.css">
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']]
+  }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
+
+<script src='https://cdnjs.cloudflare.com/ajax/libs/d3/5.0.0/d3.js'></script>
+
+
+</head>
+
+
+
+<body>
+
+<div class="body2">
+</div>
+
+<div class="left_bar clearfix">
+ <div class="menu menu-text">
+
+<h1>Feynman Diagrams</h1>
+<hr class="menu-hr">
+
+<div class="nav-placeholder clearfix">
+<iframe name="navigation" src="../nav.html"></iframe>
+</div>
+
+
+
+ </div>
+</div>
+
+
+<div class="right_bar clearfix">
+ <div class="pagebg">
+  <div class="page page-text">
+  
+<p>
+This is a simple utility for finding Feynman diagrams corresponding to a physical process.
+<br><br>
+Enter the list of incoming and outgoing particles, and specify how many internal vertices you want. Then click 'Go!'.
+<br><br>
+If a diagram is unclear, try dragging the vertices around with the mouse.
+<br><br>
+Only QED is supported. $-1=e^-,~1=e^+,~0=\gamma$. Separate particles with commas.
+</p>
+
+<label for="incomingList">Incoming particles:</label>
+<input type="text" value="-1,1" id="incomingList"><br>
+<label for="outgoingList">Outgoing particles:</label>
+<input type="text" value="0,0" id="outgoingList"><br>
+<label for="n_internal">&nbsp;&nbsp;&nbsp;&nbsp;Internal vertices:</label>
+<input type="number" value="2" id="n_internal" min="1" style="width:3em">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<input type="button" id="goButton" value="Go!" onclick="go_html()">
+<br>
+<p id="result-text"></p>
+<div class="fd-displaySection" id="fd-myDisplaySection">
+<!-- press 'go' and stuff should appear here -->
+</div>
+
+  </div>
+ </div>
+</div>
+
+<script src="fjs-script.js"></script>
+<script src="fjs-render.js"></script>
+
+<script>
+function go_html(){
+	var resultMessage=go_script();
+	document.getElementById('result-text').innerHTML=('Searching...');
+	console.log('html results: ', results);
+	document.getElementById('result-text').innerHTML=resultMessage;
+	
+	for(var i_fd=0; i_fd<stringResults.length; i_fd++){
+		go_render(stringResults[i_fd]);
+	}
+}
+</script>
+
+</body>
+</html>

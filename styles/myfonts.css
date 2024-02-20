@@ -1,0 +1,15 @@
+@font-face {
+			font-family: Sanskrit Text;
+			src: local(../../fonts/Sanskr.ttf);
+			unicode-range: U+9900;
+		}
+@font-face {
+			font-family: Jameel Noori Nastaleeq;
+			src: local(../../fonts/Jameel Noori Nastaleeq Regular.ttf);
+			unicode-range: U+600-6FF;
+		}
+@font-face {
+			font-family: Times New Roman;
+			src: local(../../fonts/times.ttf);
+			unicode-range: U+0-07F;
+		}

@@ -133,7 +133,12 @@ iframe {
 .page-text a:hover {  color: var(--pink);  }
 .page-text a:active {  color: var(--blue);  }
 
-ul {
+pre {
+	font-family: Times New Roman;
+	white-space: pre-wrap;
+}
+
+ul.widelist {
   line-height: 2em;
 }
 

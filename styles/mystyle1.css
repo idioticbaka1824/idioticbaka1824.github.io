@@ -134,7 +134,7 @@ iframe {
 .page-text a:active {  color: var(--blue);  }
 
 pre {
-	font-family: Times New Roman;
+	font-family: Times New Roman, serif;
 	white-space: pre-wrap;
 }
 

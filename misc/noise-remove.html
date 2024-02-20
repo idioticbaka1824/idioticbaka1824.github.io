@@ -34,9 +34,54 @@
 <div class="right_bar clearfix">
  <div class="pagebg">
   <div class="page page-text">
-
-abc
-
+<p>
+<h3>Problem statement:</h3>
+We have an audio clip containing both a sound effect and background music, and another 
+audio clip containing the corresponding background music separately.<br>
+We want to remove the background music so as to isolate the sound effect.<br>
+The obvious solution is to subtract the background audio from the combined audio, but this only 
+works if both audios are exactly aligned, which may not be the case. The separate background audio 
+may be slightly out of phase with the background in the combined audio, which complicates things.
+<br><br>
+<h3>Model:</h3>
+Let the combined audio $f(t)$ be composed of two sounds: the sound effect $s(t)$ and the background music $b(t)$. 
+Thus, $f(t)=s(t)+b(t)$.<br>
+Let the available, possibly shifted background audio be represented as $b_a(t)=b(t-a)$.<br>
+Let the Fourier transform of a function be defined as $\widehat{f}(\omega)=\int_{-\infty}^{\infty} \frac{1}{\sqrt{2\pi}}f(t)e^{-i\omega t}\,dt$
+<br><br>
+Then, in the frequency domain, we have two equations 
+$$\begin{align}
+\tag{1}\widehat{f}(\omega)&=\widehat{s}(\omega)+\widehat{b}(\omega) \\
+\tag{2}\widehat{b_a}(\omega)&=e^{-ia\omega}\widehat{b}(\omega)
+\end{align}$$
+in three unknowns
+$$\widehat{s}(\omega),\;\widehat{b}(\omega),\;a$$
+<h3>Solution:</h3>
+This appears intractable upon first glance, but recall the properties of the Fourier transform:
+$$\tag{3}\widehat{\frac{df(t)}{dt}}=i\omega\widehat{f}(\omega)$$
+We see that taking the derivative of the audio signal in the time domain gives us some more information to work with. Thus,
+$$\begin{align}
+\tag{4}\widehat{f'(t)}(\omega)&=\widehat{s'(t)}+\widehat{b'(t)}=i\omega\widehat{f}(\omega)=i\omega\left(\widehat{s}(\omega)+\widehat{b}(\omega)\right)\\
+\tag{5}\widehat{b'_a(t)}(\omega)&=i\omega\widehat{b_a}(\omega)=i\omega e^{-ia\omega}\widehat{b}(\omega)
+\end{align}$$
+Since $f'(t)$ and $b_a'(t)$ are calculable from $f(t)$ and $b(t)$, we have gained two equations at no cost. We can now solve for $\widehat{s}(\omega)$ quite straightforwardly.
+<br><br>
+From $(4)$ we have
+$$\tag{6}\widehat{s}=-\frac{i}{\omega}\widehat{f'}-\widehat{b}$$
+and from $(5)$ we have
+$$\tag{7}\widehat{b}=-\frac{i}{\omega}e^{ia\omega}\widehat{b'_a}$$
+Substituting $(7)$ in $(6)$ yields
+$$\tag{8}\widehat{s}=\frac{i}{\omega}\left(e^{ia\omega}\widehat{b'_a}-\widehat{f'}\right)$$
+Now, from $(1)$ and $(2)$ we have
+$$\tag{9}e^{ia\omega}=\frac{\widehat{b}}{\widehat{b_a}}=\frac{\widehat{f}-\widehat{s}}{\widehat{b_a}}$$
+Substituting $(9)$ in $(8)$ yields
+$$\tag{10}\widehat{s}=\frac{i\widehat{b'_a}\widehat{f}}{\omega\widehat{b_a}}-\frac{i\widehat{b'_a}\widehat{s}}{\omega\widehat{b_a}}-\frac{i\widehat{f'}}{\omega}$$
+Solving $(10)$ for $\widehat{s}$ finally gives us
+$$\tag{11}\widehat{s}(\omega)=\frac{\widehat{b'_a}\widehat{f}-\widehat{f'}}{\widehat{b'_a}-i\omega\widehat{b_a}}$$
+Inverting $(11)$ returns $s(t)$, the isolated sound effect desired. $\blacksquare$
+<br><br>
+Note that this derivation uses the unitary definition of the Fourier transform in units of angular frequency, on a continuous domain. Some changes must be made when implementing this in code.
+</p>
   </div>
  </div>
 </div>

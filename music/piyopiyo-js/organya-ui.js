@@ -164,54 +164,29 @@
                 const viewPos = startMeas * meas[0] * meas[1];
                 const scrollX = viewPos * 12 - 36;
 				
-				let chickX = (this.organya.playPos - viewPos)*12 - scrollX;
+				let chickX = this.organya.playPos*12 - scrollX;
 				this.ctx.drawImage(this.cursor, 68, 16, 12, 16, chickX, 0, 12, 16);
-
-                // draw tails
-                trackLoop: for (let track = 7; track >= 0; track--) {
-                    const trackRef = this.organya.song.tracks[track];
-                    let noteIdx = Math.max(0, trackRef.findIndex((n) => n.pos >= viewPos) - 1);
-                    if (noteIdx === -1) continue;
-
-                    const sprTailX = 32;
-                    const sprTailY = 32 + track * 4 - 32*(track==this.organya.selectedTrack);
-
-                    let x = 64;
-                    while (x < width) {
-                        const note = trackRef[noteIdx++];
-                        if (!note) continue trackLoop;
-
-                        const noteX = note.pos * 16 - scrollX;
-                        const noteY = (95 - note.key) * 12 - this.scrollY;
-
-                        x = noteX;
-                        for (let i = 0; i < note.len; i++) {
-                            this.ctx.drawImage(this.noteImg, sprTailX, sprTailY, 16, 4, noteX + i * 16, noteY + 4, 16, 4);
-                            x += 16;
-                        }
-                    }
-                }
 
                 trackLoop: for (let track = 15; track >= 0; track--) {
                     const trackRef = this.organya.song.tracks[track];
                     let noteIdx = Math.max(0, trackRef.findIndex((n) => n.pos >= viewPos) - 1); //what is going on here?
                     if (noteIdx === -1) continue;
 
-                    const sprHeadX = (track & 1) * 16;
+                    const sprHeadX = (track & 1) * 12;
                     const sprHeadY = 48 + (track / 2 | 0) * 8 + 64*(track==this.organya.selectedTrack); //the extra term is to highlight selected track notes
 
-                    let x = 64;
+                    let x = 36;
                     while (x < width) {
                         const note = trackRef[noteIdx++];
                         if (!note) continue trackLoop;
 
-                        const noteX = note.pos * 16 - scrollX;
+                        const noteX = note.pos * 12 - scrollX;
                         const noteY = (95 - note.key) * 12 - this.scrollY;
 
                         x = noteX;
-                        for (let i = 0; i < note.len; i++) x += 16;
+                        for (let i = 0; i < note.len; i++) x += 12;
 
-                        this.ctx.drawImage(this.noteImg, sprHeadX, sprHeadY, 16, 8, noteX, noteY + 3, 16, 8);
+                        if(noteY>16) this.ctx.drawImage(this.noteImg, sprHeadX, sprHeadY, 16, 8, noteX, noteY + 3, 16, 8);
                     }
                 }
             }

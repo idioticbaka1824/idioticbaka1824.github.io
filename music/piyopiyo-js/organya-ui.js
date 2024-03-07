@@ -185,7 +185,7 @@
                         if (!note) continue trackLoop;
 
                         const noteX = note.pos * 12 - scrollX;
-                        const noteY = (95 - note.key) * 12 - this.scrollY;
+                        const noteY = (95 - note.key) * 12 - this.scrollY - 6*(chickX == noteX);
 
                         x = noteX;
                         for (let i = 0; i < note.len; i++) x += 12;

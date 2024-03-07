@@ -135,7 +135,7 @@
                     if (subBeat === 0 && beat === 0) {
                         
                         if (this.organya!=null && measId==(this.organya.song.start / this.organya.MeasxStep | 0)){
-                            this.drawHeadFoot(x, maxY, 0);
+                            this.drawHeadFoot(x, 0, 0);
                         }
                         
                         sprX = 36;
@@ -143,7 +143,7 @@
                         this.drawNumber(x, 0, measId++, 3);
                         
                         if (this.organya!=null && measId==(this.organya.song.end / this.organya.MeasxStep | 0)){
-                            this.drawHeadFoot(x+16*this.organya.MeasxStep, maxY, 1);
+                            this.drawHeadFoot(x+12*this.organya.MeasxStep, 0, 1);
                         }
                     }
 

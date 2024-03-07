@@ -142,7 +142,7 @@
                         
                         sprX = 36;
 						dx = 12;
-                        this.drawNumber(x, 0, measId++, 3);
+                        this.drawNumber(x, 0, measId++, 3, true);
                         
                         if (this.organya!=null && measId==(this.organya.song.end / this.organya.MeasxStep | 0)){
                             this.drawHeadFoot(x+16*this.organya.MeasxStep, maxY, 1);
@@ -219,7 +219,7 @@
             y = -this.scrollY;
             while (y < height) {
                 this.ctx.drawImage(this.pianoRoll, 0, 0, 36, 144, 0, y, 36, 144);
-                this.drawNumber(25, y + 126, octave, 0, true);
+                this.drawNumber(25, y + 126, octave, 0, false);
                 if (octave-- === 0) break;
                 y += 144;
             }

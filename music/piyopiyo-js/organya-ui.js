@@ -174,7 +174,7 @@
                     if (noteIdx === -1) continue;
 					
 					if (track != 3) {
-						let noteheads[track] = notehead;
+						let notehead = noteheads[track];
 						let sprHeadX = (notehead % 10)*12 + 120*(track!=this.organya.selectedTrack); //the extra term is to highlight selected track notes
 						let sprHeadY = ~~(notehead / 10)*12;
 					}
@@ -196,7 +196,7 @@
                         for (let i = 0; i < note.len; i++) x += 12;
 
                         if(noteY>16) { //keeping the red bar at the top clear
-							if (track == 3) sprHeadX = 12*dramheads[note.key] += 120*(track!=this.organya.selectedTrack);
+							if (track == 3) sprHeadX = 12*dramheads[note.key] + 120*(track!=this.organya.selectedTrack);
 							this.ctx.drawImage(this.noteImg, sprHeadX, sprHeadY, 12, 12, noteX, noteY, 12, 12);
 						}
                     }

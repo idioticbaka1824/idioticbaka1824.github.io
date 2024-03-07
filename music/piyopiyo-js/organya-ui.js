@@ -219,7 +219,7 @@
             y = -this.scrollY;
             while (y < height) {
                 this.ctx.drawImage(this.pianoRoll, 0, 0, 36, 144, 0, y, 36, 144);
-                this.drawNumber(26, y + 128, octave, 0, true);
+                this.drawNumber(26, y + 126, octave, 0, true);
                 if (octave-- === 0) break;
                 y += 144;
             }

@@ -251,7 +251,6 @@ org3test.org`.split("\n").sort();
                 console.log("fetching song...");
                 if(document.getElementById('dropDownRadio').checked){
 					songname = songListEl.options[songListEl.selectedIndex].value
-					songname = 'http://localhost/D:/Raad/myGithub/raadshaikh.github.io/music/piyopiyo-js/songs/NewData10_3.2.org'
                     res = await fetch(songname);
                     new_song = songListEl.options[songListEl.selectedIndex].value;
                 }

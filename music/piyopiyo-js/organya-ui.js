@@ -126,7 +126,7 @@
 					
                 while (x < width) {
                     
-					this.ctx.drawImage(this.cursor, 68, 60, 12, 16, this.organya.playPos*12-6, 0, 12, 16);
+					if(this.organya) this.ctx.drawImage(this.cursor, 68, 60, 12, 16, this.organya.playPos*12-6, 0, 12, 16);
 					
                     let sprX = 60;
 					let dx = 12;

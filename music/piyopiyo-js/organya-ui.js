@@ -27,9 +27,9 @@
             this.number = new Image();
             this.number.src = "GUI/figure.png";
             this.number.addEventListener("load", this.onImageLoad.bind(this));
-            // this.cursor = new Image();
-            // this.cursor.src = "GUI/cursor.png";
-            // this.cursor.addEventListener("load", this.onImageLoad.bind(this));
+            this.cursor = new Image();
+            this.cursor.src = "GUI/cursor.png";
+            this.cursor.addEventListener("load", this.onImageLoad.bind(this));
         }
         
         
@@ -64,7 +64,7 @@
         
 
         onImageLoad() {
-            if (this.noteImg.complete && this.pianoRoll.complete && this.number.complete) {
+            if (this.noteImg.complete && this.pianoRoll.complete && this.number.complete && this.cursor.complete) {
                 this.onUpdate();
             }
         }
@@ -84,13 +84,13 @@
                 str = "0" + str;
             }
             for (let i = 0; i < str.length; i++) {
-                this.ctx.drawImage(this.number, (str.charCodeAt(i) - 0x30) * 8, white ? 16 : 0, 8, 16, x + 8 * i, y, 8, 16);
+                this.ctx.drawImage(this.number, (str.charCodeAt(i) - 0x30) * 8, white ? 0 : 16, 8, 16, x + 8 * i, y, 8, 16);
             }
         }
         
         drawHeadFoot(x, y, argument) {
             //argument=0 for head, 1 for foot
-            this.ctx.drawImage(this.cursor, 44+12*argument,32,12,16,x,y,12,16);
+            this.ctx.drawImage(this.cursor, 44+12*argument,16,12,16,x,y,12,16);
         }
 
         onUpdate() {
@@ -119,16 +119,12 @@
                 let x = 36;
                 let measId = startMeas;
 				
-				while (x < width) {
+				while (x < width) {           
 					this.ctx.drawImage(this.pianoRoll, 0, 240, 12, 16, x, 0, 12, 16); // red strip along which chick runs
-					x+=12;
+					x += 12;
 				}
-					
+				x = 36;
                 while (x < width) {
-                    
-					// if (this.organya!=null) {
-						// this.ctx.drawImage(this.cursor, 68, 60, 12, 16, this.organya.playPos*12-6, 0, 12, 16);
-					// }
 					
                     let sprX = 60;
 					let dx = 12;
@@ -144,7 +140,7 @@
                         
                         sprX = 36;
 						dx = 12;
-                        this.drawNumber(x, 0, measId++, 3, true);
+                        this.drawNumber(x, 0, measId++, 3);
                         
                         if (this.organya!=null && measId==(this.organya.song.end / this.organya.MeasxStep | 0)){
                             this.drawHeadFoot(x+16*this.organya.MeasxStep, maxY, 1);
@@ -166,7 +162,10 @@
 
             if (this.organya) {
                 const viewPos = startMeas * meas[0] * meas[1];
-                const scrollX = viewPos * 16 - 64;
+                const scrollX = viewPos * 12 - 36;
+				
+				let chickX = (this.organya.playPos - viewPos)*12 - scrollX;
+				this.ctx.drawImage(this.cursor, 68, 16, 12, 16, chickX, 0, 12, 16);
 
                 // draw tails
                 trackLoop: for (let track = 7; track >= 0; track--) {
@@ -195,7 +194,7 @@
 
                 trackLoop: for (let track = 15; track >= 0; track--) {
                     const trackRef = this.organya.song.tracks[track];
-                    let noteIdx = Math.max(0, trackRef.findIndex((n) => n.pos >= viewPos) - 1);
+                    let noteIdx = Math.max(0, trackRef.findIndex((n) => n.pos >= viewPos) - 1); //what is going on here?
                     if (noteIdx === -1) continue;
 
                     const sprHeadX = (track & 1) * 16;
@@ -221,7 +220,7 @@
             y = -this.scrollY;
             while (y < height) {
                 this.ctx.drawImage(this.pianoRoll, 0, 0, 36, 144, 0, y, 36, 144);
-                this.drawNumber(25, y + 126, octave, 0, false);
+                this.drawNumber(25, y + 126, octave, 0, true);
                 if (octave-- === 0) break;
                 y += 144;
             }

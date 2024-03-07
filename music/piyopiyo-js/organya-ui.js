@@ -81,7 +81,7 @@
                 str = "0" + str;
             }
             for (let i = 0; i < str.length; i++) {
-                this.ctx.drawImage(this.number, (str.charCodeAt(i) - 0x30) * 8, 0, 8, 12, x + 8 * i, y, 8, 12);
+                this.ctx.drawImage(this.number, (str.charCodeAt(i) - 0x30) * 8, 0, 8, 16, x + 8 * i, y, 8, 16);
             }
         }
         
@@ -113,7 +113,7 @@
             while (y < height) {
                 let beat = 0;
                 let subBeat = 0;
-                let x = 64;
+                let x = 36;
                 let measId = startMeas;
                 while (x < width) {
                     

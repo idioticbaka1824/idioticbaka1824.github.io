@@ -168,23 +168,18 @@
 				this.ctx.drawImage(this.cursor, 68, 16, 12, 16, chickX, 0, 12, 16);
 
                 trackLoop: for (let track = 3; track >= 0; track--) {
-					let noteheads = [97, 98, 99];
+					var noteheads = [97, 98, 99];
+					var dramheads = [0,0,0,0,1,1,1,1,2,2,2,2,3,3,4,4,4,4,4,4,4,4,5,5];
                     const trackRef = this.organya.song.tracks[track];
                     let noteIdx = Math.max(0, trackRef.findIndex((n) => n.pos >= viewPos) - 1); //what is going on here?
                     if (noteIdx === -1) continue;
 					
 					if (track != 3) {
-						let notehead = noteheads[track];
-						let sprHeadX = (notehead % 10)*12 + 120*(track!=this.organya.selectedTrack); //the extra term is to highlight selected track notes
-						let sprHeadY = ~~(notehead / 10)*12;
-					}
-					if (track == 3) {
-						let dramheads = [0,0,0,0,1,1,1,1,2,2,2,2,3,3,4,4,4,4,4,4,4,4,5,5];
-						let sprHeadX = 0;
-						let sprHeadY = 120;
-					}
-					
-                    let x = 36;
+						var notehead = noteheads[track];
+						var sprHeadX = (notehead % 10)*12 + 120*(track!=this.organya.selectedTrack); //the extra term is to highlight selected track notes
+						var sprHeadY = ~~(notehead / 10)*12;
+					}					
+                    var x = 36;
                     while (x < width) {
                         const note = trackRef[noteIdx++];
                         if (!note) continue trackLoop;
@@ -196,7 +191,10 @@
                         for (let i = 0; i < note.len; i++) x += 12;
 
                         if(noteY>16) { //keeping the red bar at the top clear
-							if (track == 3) sprHeadX = 12*dramheads[note.key] + 120*(track!=this.organya.selectedTrack);
+							if (track == 3) {
+								sprHeadX = 12*dramheads[note.key] + 120*(track!=this.organya.selectedTrack);
+								sprHeadY = 120;
+							}
 							this.ctx.drawImage(this.noteImg, sprHeadX, sprHeadY, 12, 12, noteX, noteY, 12, 12);
 						}
                     }

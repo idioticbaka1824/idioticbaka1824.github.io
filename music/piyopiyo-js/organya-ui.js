@@ -19,7 +19,7 @@
             
 
             this.noteImg = new Image();
-            this.noteImg.src = "GUI/Note.png";
+            this.noteImg.src = "GUI/note.png";
             this.noteImg.addEventListener("load", this.onImageLoad.bind(this));
             this.pianoRoll = new Image();
             this.pianoRoll.src = "GUI/music.png";
@@ -167,14 +167,23 @@
 				let chickX = this.organya.playPos*12 - scrollX;
 				this.ctx.drawImage(this.cursor, 68, 16, 12, 16, chickX, 0, 12, 16);
 
-                trackLoop: for (let track = 15; track >= 0; track--) {
+                trackLoop: for (let track = 3; track >= 0; track--) {
+					let noteheads = [97, 98, 99];
                     const trackRef = this.organya.song.tracks[track];
                     let noteIdx = Math.max(0, trackRef.findIndex((n) => n.pos >= viewPos) - 1); //what is going on here?
                     if (noteIdx === -1) continue;
-
-                    const sprHeadX = (track & 1) * 12;
-                    const sprHeadY = 48 + (track / 2 | 0) * 8 + 64*(track==this.organya.selectedTrack); //the extra term is to highlight selected track notes
-
+					
+					if (track != 3) {
+						let noteheads[track] = notehead;
+						let sprHeadX = (notehead % 10)*12 + 120*(track!=this.organya.selectedTrack); //the extra term is to highlight selected track notes
+						let sprHeadY = ~~(notehead / 10)*12;
+					}
+					else if (track == 3) {
+						let dramheads = [0,0,0,0,1,1,1,1,2,2,2,2,3,3,4,4,4,4,4,4,4,4,5,5];
+						let sprHeadX = 0;
+						let sprHeadY = 120;
+					}
+					
                     let x = 36;
                     while (x < width) {
                         const note = trackRef[noteIdx++];
@@ -186,7 +195,10 @@
                         x = noteX;
                         for (let i = 0; i < note.len; i++) x += 12;
 
-                        if(noteY>16) this.ctx.drawImage(this.noteImg, sprHeadX, sprHeadY, 16, 8, noteX, noteY + 3, 16, 8);
+                        if(noteY>16) { //keeping the red bar at the top clear
+							if (track == 3) sprHeadX = 12*dramheads[note.key] += 120*(track!=this.organya.selectedTrack);
+							this.ctx.drawImage(this.noteImg, sprHeadX, sprHeadY, 12, 12, noteX, noteY, 12, 12);
+						}
                     }
                 }
             }

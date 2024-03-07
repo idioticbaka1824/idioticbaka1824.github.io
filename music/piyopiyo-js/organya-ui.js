@@ -22,7 +22,7 @@
             this.noteImg.src = "GUI/Note.png";
             this.noteImg.addEventListener("load", this.onImageLoad.bind(this));
             this.pianoRoll = new Image();
-            this.pianoRoll.src = "GUI/Music.png";
+            this.pianoRoll.src = "GUI/music.png";
             this.pianoRoll.addEventListener("load", this.onImageLoad.bind(this));
             this.number = new Image();
             this.number.src = "GUI/figure.png";

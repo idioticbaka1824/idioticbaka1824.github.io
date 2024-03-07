@@ -115,10 +115,14 @@
                 let subBeat = 0;
                 let x = 36;
                 let measId = startMeas;
+				
+				while (x < width) {
+					this.ctx.drawImage(this.pianoRoll, 0, 240, 12, 16, x, 0, 12, 16); // red strip along which chick runs
+					x+=12;
+				}
+					
                 while (x < width) {
                     
-					this.ctx.drawImage(this.pianoRoll, 0, 240, 12, 16, x, 0, 12, 16); // red strip along which chick runs
-					
                     let sprX = 60;
 					let dx = 12;
                     if (subBeat === 0) {
@@ -210,7 +214,7 @@
             y = -this.scrollY;
             while (y < height) {
                 this.ctx.drawImage(this.pianoRoll, 0, 0, 36, 144, 0, y, 36, 144);
-                this.drawNumber(54, y + 132, octave, 0, true);
+                this.drawNumber(26, y + 128, octave, 0, true);
                 if (octave-- === 0) break;
                 y += 144;
             }

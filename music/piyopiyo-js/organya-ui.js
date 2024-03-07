@@ -27,6 +27,9 @@
             this.number = new Image();
             this.number.src = "GUI/figure.png";
             this.number.addEventListener("load", this.onImageLoad.bind(this));
+            this.cursor = new Image();
+            this.cursor.src = "GUI/cursor.png";
+            this.cursor.addEventListener("load", this.onImageLoad.bind(this));
         }
         
         
@@ -61,7 +64,7 @@
         
 
         onImageLoad() {
-            if (this.noteImg.complete && this.pianoRoll.complete && this.number.complete) {
+            if (this.noteImg.complete && this.pianoRoll.complete && this.number.complete && this.cursor.complete) {
                 this.onUpdate();
             }
         }
@@ -87,7 +90,7 @@
         
         drawHeadFoot(x, y, argument) {
             //argument=0 for head, 1 for foot
-            this.ctx.drawImage(this.noteImg, 16*argument,32,16,11,x,y,16,11);
+            this.ctx.drawImage(this.cursor, 44+12*argument,32,12,16,x,y,12,16);
         }
 
         onUpdate() {
@@ -123,6 +126,8 @@
 					
                 while (x < width) {
                     
+					this.ctx.drawImage(this.cursor, 68, 60, 12, 16, this.organya.playPos*12-6, 0, 12, 16);
+					
                     let sprX = 60;
 					let dx = 12;
                     if (subBeat === 0) {

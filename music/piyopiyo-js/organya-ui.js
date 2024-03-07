@@ -84,7 +84,7 @@
                 str = "0" + str;
             }
             for (let i = 0; i < str.length; i++) {
-                this.ctx.drawImage(this.number, (str.charCodeAt(i) - 0x30) * 8, 0, 8, 16, x + 8 * i, y, 8, 16);
+                this.ctx.drawImage(this.number, (str.charCodeAt(i) - 0x30) * 8, white ? 16 : 0, 8, 16, x + 8 * i, y, 8, 16);
             }
         }
         
@@ -219,7 +219,7 @@
             y = -this.scrollY;
             while (y < height) {
                 this.ctx.drawImage(this.pianoRoll, 0, 0, 36, 144, 0, y, 36, 144);
-                this.drawNumber(26, y + 126, octave, 0, true);
+                this.drawNumber(25, y + 126, octave, 0, true);
                 if (octave-- === 0) break;
                 y += 144;
             }

@@ -137,14 +137,13 @@
                         if (this.organya!=null && measId==(this.organya.song.start / this.organya.MeasxStep | 0)){ // bitwise OR with 0 looks like it does nothing, but actually turns things into int (so basically floor function)
                             this.drawHeadFoot(x, 0, 0);
                         }
-                        
-                        sprX = 36;
-						dx = 12;
-                        this.drawNumber(x+12, 0, measId++, 3); //+12 because piyopiyo draws the measure number a bit to the right
-                        
                         if (this.organya!=null && measId==(this.organya.song.end / this.organya.MeasxStep | 0)){
                             this.drawHeadFoot(x+0*this.organya.MeasxStep, 0, 1);
                         }
+						
+                        sprX = 36;
+						dx = 12;
+                        this.drawNumber(x+12, 0, measId++, 3); //+12 because piyopiyo draws the measure number a bit to the right
                     }
 
                     if (++subBeat === meas[1]) {

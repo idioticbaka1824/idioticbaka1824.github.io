@@ -178,7 +178,7 @@
 						let sprHeadX = (notehead % 10)*12 + 120*(track!=this.organya.selectedTrack); //the extra term is to highlight selected track notes
 						let sprHeadY = ~~(notehead / 10)*12;
 					}
-					else if (track == 3) {
+					if (track == 3) {
 						let dramheads = [0,0,0,0,1,1,1,1,2,2,2,2,3,3,4,4,4,4,4,4,4,4,5,5];
 						let sprHeadX = 0;
 						let sprHeadY = 120;

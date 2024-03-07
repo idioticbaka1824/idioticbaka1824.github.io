@@ -118,11 +118,11 @@
                 let measId = startMeas;
                 while (x < width) {
                     
-                    let sprX = 64;
-					let dx = 8;
+                    let sprX = 60;
+					let dx = 12;
                     if (subBeat === 0) {
-						sprX = 54;
-						dx = 10;
+						sprX = 48;
+						dx = 12;
 					}
                     if (subBeat === 0 && beat === 0) {
                         
@@ -131,7 +131,7 @@
                         }
                         
                         sprX = 36;
-						dx = 18;
+						dx = 12;
                         this.drawNumber(x, 0, measId++, 3);
                         
                         if (this.organya!=null && measId==(this.organya.song.end / this.organya.MeasxStep | 0)){
@@ -146,7 +146,7 @@
                     
 
                     this.ctx.drawImage(this.pianoRoll, sprX, 0, dx, 144, x, y, 12, 144);
-                    x += 16;
+                    x += 12;
                 }
 
                 y += 144;

@@ -27,9 +27,9 @@
             this.number = new Image();
             this.number.src = "GUI/figure.png";
             this.number.addEventListener("load", this.onImageLoad.bind(this));
-            this.cursor = new Image();
-            this.cursor.src = "GUI/cursor.png";
-            this.cursor.addEventListener("load", this.onImageLoad.bind(this));
+            // this.cursor = new Image();
+            // this.cursor.src = "GUI/cursor.png";
+            // this.cursor.addEventListener("load", this.onImageLoad.bind(this));
         }
         
         
@@ -64,7 +64,7 @@
         
 
         onImageLoad() {
-            if (this.noteImg.complete && this.pianoRoll.complete && this.number.complete && this.cursor.complete) {
+            if (this.noteImg.complete && this.pianoRoll.complete && this.number.complete) {
                 this.onUpdate();
             }
         }

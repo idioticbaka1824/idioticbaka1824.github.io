@@ -134,16 +134,16 @@
 					}
                     if (subBeat === 0 && beat === 0) {
                         
-                        if (this.organya!=null && measId==(this.organya.song.start / this.organya.MeasxStep | 0)){
+                        if (this.organya!=null && measId==(this.organya.song.start / this.organya.MeasxStep | 0)){ // bitwise OR with 0 looks like it does nothing, but actually turns things into int (so basically floor function)
                             this.drawHeadFoot(x, 0, 0);
                         }
                         
                         sprX = 36;
 						dx = 12;
-                        this.drawNumber(x, 0, measId++, 3);
+                        this.drawNumber(x+12, 0, measId++, 3); //+12 because piyopiyo draws the measure number a bit to the right
                         
                         if (this.organya!=null && measId==(this.organya.song.end / this.organya.MeasxStep | 0)){
-                            this.drawHeadFoot(x+16*this.organya.MeasxStep, 0, 1);
+                            this.drawHeadFoot(x+0*this.organya.MeasxStep, 0, 1);
                         }
                     }
 
@@ -177,7 +177,7 @@
 					if (track != 3) {
 						var notehead = noteheads[track];
 						var sprHeadX = (notehead % 10)*12 + 120*(track!=this.organya.selectedTrack); //the extra term is to highlight selected track notes
-						var sprHeadY = ~~(notehead / 10)*12;
+						var sprHeadY = ~~(notehead / 10)*12; //~~ is also like a floor function
 					}					
                     var x = 36;
                     while (x < width) {

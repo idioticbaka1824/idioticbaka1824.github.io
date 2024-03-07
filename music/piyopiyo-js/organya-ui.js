@@ -209,7 +209,7 @@
             let octave = 7;
             y = -this.scrollY;
             while (y < height) {
-                this.ctx.drawImage(this.pianoRoll, 0, 0, 36, 144, 0, y, 64, 144);
+                this.ctx.drawImage(this.pianoRoll, 0, 0, 36, 144, 0, y, 36, 144);
                 this.drawNumber(54, y + 132, octave, 0, true);
                 if (octave-- === 0) break;
                 y += 144;

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../styles/mystyle1.css"><script>
+var my_words = ['word1', 'word2', 'word3'];
+
+function wordList() {
+	var wordlist_textarea = document.getElementById('wordlist_box');
+	var wordlist_button = document.getElementById('wordlist_button');
+	var isHidden=wordlist_textarea.getAttribute('hidden');
+	if (isHidden=='hidden') {
+		wordlist_textarea.removeAttribute('hidden');
+		wordlist_button.innerText = 'Hide and Update Word List';
+	}
+	else {
+		wordlist_textarea.setAttribute('hidden', 'hidden');
+		wordlist_button.innerText = 'Show Word List';
+	}
+	raw_words=wordlist_textarea.value;
+	my_words=raw_words.trim().split('\n');
+}
+
+function showResult() {
+	var n=my_words.length;
+	var k=Math.floor(Math.random()*n);
+	var result_div=document.getElementById('result_box');
+	if (n==0) {
+		result_div.innerHTML = 'Game Over!'
+	}
+	else {
+		result_div.innerHTML = 'Your word is: ' + my_words[k];
+		my_words.splice(k, 1)
+	}
+}
+</script>
+</head>
+<body>
+
+<div class="body2">
+</div>
+
+<div class="left_bar clearfix">
+ <div class="menu menu-text">
+
+<h1>Misc</h1>
+<hr>
+
+<div class="nav-placeholder clearfix">
+<iframe name="navigation" src="../nav.html"></iframe>
+</div>
+ </div>
+</div>
+
+
+<div class="right_bar clearfix">
+ <div class="pagebg">
+  <div class="page page-text">
+
+<button onclick='wordList()' id='wordlist_button'>Hide and Update Word List</button>
+<br>
+<textarea id=wordlist_box></textarea>
+<br><br>
+<button onclick='showResult()'>Click me to get your word!</button>
+<div id='result_box'></div>
+
+  </div>
+ </div>
+</div>
+
+</body>
+</html>

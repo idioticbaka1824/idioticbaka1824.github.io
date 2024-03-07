@@ -25,7 +25,7 @@
             this.pianoRoll.src = "GUI/Music.png";
             this.pianoRoll.addEventListener("load", this.onImageLoad.bind(this));
             this.number = new Image();
-            this.number.src = "GUI/Number.png";
+            this.number.src = "GUI/figure.png";
             this.number.addEventListener("load", this.onImageLoad.bind(this));
         }
         
@@ -80,9 +80,8 @@
             while (str.length < zeroPad) {
                 str = "0" + str;
             }
-
             for (let i = 0; i < str.length; i++) {
-                this.ctx.drawImage(this.number, (str.charCodeAt(i) - 0x30) * 8, white ? 12 : 0, 8, 12, x + 8 * i, y, 8, 12);
+                this.ctx.drawImage(this.number, (str.charCodeAt(i) - 0x30) * 8, 0, 8, 12, x + 8 * i, y, 8, 12);
             }
         }
         
@@ -118,6 +117,8 @@
                 let measId = startMeas;
                 while (x < width) {
                     
+					this.ctx.drawImage(this.pianoRoll, 0, 240, 12, 16, x, 0, 12, 16); // red strip along which chick runs
+					
                     let sprX = 60;
 					let dx = 12;
                     if (subBeat === 0) {

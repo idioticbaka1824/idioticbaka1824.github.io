@@ -200,7 +200,7 @@
         }
 		
 		cursorUpdate(x) {
-			let viewPos = ~~(this.playPos/this.MeasxStep);
+			let viewPos = ~~(this.playPos/this.MeasxStep)*this.MeasxStep;
 			let newPlayPosOffset = ~~((x-36)/12); //offset from viewpos (the beginning of the viewing window)
             this.playPos = viewPos + newPlayPosOffset;
             this.updateTimeDisplay();

@@ -203,6 +203,7 @@
 			let viewPos = ~~(this.playPos/this.MeasxStep)*this.MeasxStep;
 			let newPlayPosOffset = ~~((x-36)/12); //offset from viewpos (the beginning of the viewing window)
             this.playPos = viewPos + newPlayPosOffset;
+            this.updateTimeDisplay();
         }
         
         
@@ -215,6 +216,8 @@
         update() {
             if (this.onUpdate) this.onUpdate(this);
             
+			if (this.playPos>this.song.end) this.playPos=this.song.start;
+			
             this.whichMuted();
 
             for (let track = 0; track < 8; track++) {

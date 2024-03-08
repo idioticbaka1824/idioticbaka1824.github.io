@@ -12,7 +12,8 @@
 
             // PiyoPiyo-
             const isPiyo = view.getUint32(p, true); p += 4;
-            if (isPiyo != 0x504d4480) { //"PMD" followed by 0x80
+			console.log(isPiyo);
+            if (isPiyo != 0x504d44) { //"PMD"
                 throw "Invalid magic.";
             }
 

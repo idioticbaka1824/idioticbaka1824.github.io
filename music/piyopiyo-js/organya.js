@@ -21,9 +21,9 @@
             this.wait = view.getUint32(p, true); p += 4;
             this.start = view.getInt32(p, true); p += 4;
             this.end = view.getInt32(p, true); p += 4;
-			this.songLength = view.getInt32(p, true); p += 4;
+            this.songLength = view.getInt32(p, true); p += 4;
 			//track header stuff, add later
-			console.log(this.track1DataStartAddress, this.wait, this.start, this.end, this.songlength);
+			console.log(this.track1DataStartAddress, this.wait, this.start, this.end, this.songLength);
 
             this.instruments = [];
 
@@ -37,11 +37,11 @@
             }
 
             this.tracks = [];
-            for (let i = 0; i < 16; i++) {
+            for (let i = 0; i < 4; i++) {
                 const track = [];
-                track.length = this.instruments[i].notes;
+                track.length = this.songLength;
 
-                for (let j = 0; j < this.instruments[i].notes; j++)
+                for (let j = 0; j < track.length; j++)
                     track[j] = { pos: 0, key: 0, len: 0, vol: 0, pan: 0 };
 
                 for (let j = 0; j < this.instruments[i].notes; j++) {
@@ -49,15 +49,7 @@
                 }
 
                 for (let j = 0; j < this.instruments[i].notes; j++) {
-                    track[j].key = view.getUint8(p, true); p++;
-                }
-
-                for (let j = 0; j < this.instruments[i].notes; j++) {
-                    track[j].len = view.getUint8(p, true); p++;
-                }
-
-                for (let j = 0; j < this.instruments[i].notes; j++) {
-                    track[j].vol = view.getUint8(p, true); p++;
+                    track[j].key(s???) = view.getUint24(p, true); p++; //multiple notes at a time. how to adapt? how to read 3 bytes as bitfield?
                 }
 
                 for (let j = 0; j < this.instruments[i].notes; j++) {

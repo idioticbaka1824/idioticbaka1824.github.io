@@ -10,21 +10,20 @@
             const view = new DataView(data);
             let p = 0;
 
-            // Org-
-            const org1 = view.getUint32(p, true); p += 4;
-            if (org1 != 0x2d67724f) {
+            // PiyoPiyo-
+            const isPiyo = view.getUint32(p, true); p += 4;
+            if (isPiyo != 0x504d4480) { //"PMD" followed by 0x80
                 throw "Invalid magic.";
             }
 
-            const orgVersion = view.getUint16(p, true); p += 2;
-            if (orgVersion != 0x3230 && orgVersion != 0x3330) { //"02" or "03"
-                throw "Invalid version.";
-            }
+            const track1DataStartAddress = view.getUint32(p, true); p += 4;
 
-            this.wait = view.getUint16(p, true); p += 2;
-            this.meas = [view.getUint8(p++, true), view.getUint8(p++, true)];
+            this.wait = view.getUint32(p, true); p += 4;
             this.start = view.getInt32(p, true); p += 4;
             this.end = view.getInt32(p, true); p += 4;
+			this.songLength = view.getUint32(p, true); p += 4;
+			//track header stuff, add later
+			console.log(this.songlength);
 
             this.instruments = [];
 

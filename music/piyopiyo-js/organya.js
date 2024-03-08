@@ -16,14 +16,14 @@
                 throw "Invalid magic.";
             }
 
-            const track1DataStartAddress = view.getUint32(p, true); p += 4;
+            const this.track1DataStartAddress = view.getUint32(p, true); p += 4;
 
             this.wait = view.getUint32(p, true); p += 4;
             this.start = view.getInt32(p, true); p += 4;
             this.end = view.getInt32(p, true); p += 4;
-			this.songLength = view.getUint32(p, true); p += 4;
+			this.songLength = view.getInt32(p, true); p += 4;
 			//track header stuff, add later
-			console.log(this.wait, this.start, this.end, this.songlength);
+			console.log(this.track1DataStartAddress, this.wait, this.start, this.end, this.songlength);
 
             this.instruments = [];
 

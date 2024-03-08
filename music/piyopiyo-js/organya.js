@@ -12,7 +12,6 @@
 
             // PiyoPiyo-
             const isPiyo = view.getUint32(p, true); p += 4;
-			console.log(isPiyo);
             if ((isPiyo).toString(16).slice(-6) != '444d50') { //"PMDx" where 'x' could be anything (wish there was a function to read 3 bytes)
                 throw "Invalid magic.";
             }
@@ -24,7 +23,7 @@
             this.end = view.getInt32(p, true); p += 4;
 			this.songLength = view.getUint32(p, true); p += 4;
 			//track header stuff, add later
-			console.log(this.songlength);
+			console.log(this.wait, this.start, this.end, this.songlength);
 
             this.instruments = [];
 

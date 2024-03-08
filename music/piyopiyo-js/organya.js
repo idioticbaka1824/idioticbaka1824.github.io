@@ -16,7 +16,7 @@
                 throw "Invalid magic.";
             }
 
-            const this.track1DataStartAddress = view.getUint32(p, true); p += 4;
+            this.track1DataStartAddress = view.getUint32(p, true); p += 4;
 
             this.wait = view.getUint32(p, true); p += 4;
             this.start = view.getInt32(p, true); p += 4;

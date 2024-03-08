@@ -272,18 +272,13 @@ NewData10_3.2.org`.split("\n").sort();
                     currentOrg.nextMeas();
                 }
             }
-			<!-- window.cursorUpdate = (x) => { -->
-                <!-- if (currentOrg != null) { -->
-                    <!-- currentOrg.cursorUpdate(x); -->
-                <!-- } -->
-            <!-- } -->
             window.updown = (argument) => {
                 const scrollAmount = -64*(Number(argument=='up')-Number(argument=='down'));
                 ui.onScroll({ deltaY: scrollAmount });
             }
             
 			window.clickHandling = (x, y) => {
-				if(currentOrg != null && y>=0 && y<=16) currentOrg.cursorUpdate;
+				if(currentOrg != null && y>=0 && y<=16) currentOrg.cursorUpdate(x);
 			}
             
             let muteMelodies=['mute_1','mute_2','mute_3','mute_4','mute_5','mute_6','mute_7','mute_8'];
@@ -347,14 +342,8 @@ NewData10_3.2.org`.split("\n").sort();
 			}
 			
 			orgCanvas.addEventListener('mousedown', (e) => {
-
                 click_coords = getMousePosition(orgCanvas, e);
-				<!-- if (click_coords[1]>=0 && click_coords[1]<=16) { -->
-					<!-- window.cursorUpdate(click_coords[0]); -->
-				<!-- } -->
-				
 				window.clickHandling(click_coords[0], click_coords[1]);
-                
             }, true);
             
         })();

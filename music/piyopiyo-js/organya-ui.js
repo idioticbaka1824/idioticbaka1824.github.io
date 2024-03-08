@@ -138,7 +138,7 @@
                             this.drawHeadFoot(x, 0, 0);
                         }
                         if (this.organya!=null && measId==(this.organya.song.end / this.organya.MeasxStep | 0)){
-                            this.drawHeadFoot(x+0*this.organya.MeasxStep, 0, 1);
+                            this.drawHeadFoot(x, 0, 1);
                         }
 						
                         sprX = 36;

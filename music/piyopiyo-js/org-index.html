@@ -272,6 +272,11 @@ NewData10_3.2.org`.split("\n").sort();
                     currentOrg.nextMeas();
                 }
             }
+			window.cursorUpdate = (x) => {
+                if (currentOrg != null) {
+                    currentOrg.cursorUpdate(x);
+                }
+            }
             window.updown = (argument) => {
                 const scrollAmount = -64*(Number(argument=='up')-Number(argument=='down'));
                 ui.onScroll({ deltaY: scrollAmount });
@@ -327,6 +332,24 @@ NewData10_3.2.org`.split("\n").sort();
                     else if(e.key=="ArrowDown"){
                         window.updown('down');
                     }
+                
+            }, true);
+			
+			
+			function getMousePosition(canvas, event) {
+            let rect = canvas.getBoundingClientRect();
+            let x = event.clientX - rect.left;
+            let y = event.clientY - rect.top;
+            return [x, y];
+			}
+			
+			orgCanvas.addEventListener('mousedown', (e) => {
+
+                click_coords = getMousePosition(orgCanvas, e);
+				if (click_coords[1]>=0 && click_coords[1]<=16) {
+					console.log(click_coords[0]);
+					window.cursorUpdate(click_coords[0]);
+				}
                 
             }, true);
             

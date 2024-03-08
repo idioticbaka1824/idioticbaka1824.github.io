@@ -13,7 +13,7 @@
             // PiyoPiyo-
             const isPiyo = view.getUint32(p, true); p += 4;
 			console.log(isPiyo);
-            if (isPiyo != 0x504d44) { //"PMD"
+            if ((isPiyo).toString(16).slice(-6) != '444d50') { //"PMDx" where 'x' could be anything (wish there was a function to read 3 bytes)
                 throw "Invalid magic.";
             }
 

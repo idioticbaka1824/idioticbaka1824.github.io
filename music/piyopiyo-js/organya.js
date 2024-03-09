@@ -75,7 +75,7 @@
 						if (bitfield[key] == '1') keys.push(key);
 					}
 					track[j].keys = keys; //keys is an array of the pitch of all the notes at position j. values can be 0-23 (relative to baseOctave). note that in organya, keys.length could only be 1 (no overlapping notes)
-					
+					console.log(keys);
 					let pan = record.slice(0, 8);
 					pan = parseInt(pan, 2);
 					pan = 6; //choosing 6 because that's 'centred' in org. in piyo it's 0, so delete this line after figuring out and modifying the playback code

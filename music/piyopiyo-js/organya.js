@@ -34,7 +34,7 @@
             this.wait = view.getUint32(p, true); p += 4;
             this.start = view.getInt32(p, true); p += 4;
             this.end = view.getInt32(p, true); p += 4;
-            this.songLength = view.getInt32(p, true); p += 4;
+            this.songLength = view.getInt32(p, true); p += 4; //upper bound on number of steps to play or consider
 
             this.instruments = [];
 
@@ -48,10 +48,11 @@
                 const unknown3 = view.getUint32(p, true); p += 4;
 				const waveSamples = getBytesLE(view, p, 256, 'signed'); p+=256;
 				const envelopeSamples = getBytesLE(view, p, 64, 'signed'); p+=64;
-                this.instruments[i] = { baseOctave, icon, envelopeLength, volume, waveSamples, envelopeSamples };
+                this.instruments[i] = { baseOctave, icon, envelopeLength, volume, waveSamples, envelopeSamples, pipi:0 };
             }
 			const drumVolume = view.getUint32(p, true); p+= 4;
-			this.instruments[3] = {volume: drumVolume};
+			this.instruments[3] = {volume: drumVolume}; //instruments[3], being the drum track, is qualitatively different from the others. handle it separately when needed
+			
 			//assert p == track1DataStartAddress at this point
 			
             this.tracks = [];
@@ -59,23 +60,27 @@
                 const track = [];
                 track.length = this.songLength;
 
-                for (let j = 0; j < track.length; j++)
-                    track[j] = { pos: 0, key: 0, len: 0, vol: 0, pan: 0 };
-
-                for (let j = 0; j < this.instruments[i].notes; j++) {
-                    track[j].pos = view.getInt32(p, true); p += 4;
-                }
-
-                for (let j = 0; j < this.instruments[i].notes; j++) {
-                    track[j].key = view.getUint24(p, true); p++; //multiple notes at a time. how to adapt? how to read 3 bytes as bitfield?
-                }
-
-                for (let j = 0; j < this.instruments[i].notes; j++) {
-                    track[j].pan = view.getUint8(p, true); p++;
-                }
+                for (let j = 0; j < track.length; j++) {
+                    track[j] = { keys: [], pan: 0 };
+					
+                    let record = view.getInt32(p, true); p += 4;
+					record = record.toString(16);
+					let bitfield = record.slice(-6);
+					bitfield = parseInt(bitfield, 16).toString(2); //24 binary digits of whether or note a note exists at that key (piyopiyo only supports a range of 2 octaves for any track)
+					let keys = [];
+					for (let key=0; key<bitfield.length; key++) {
+						if (bitfield[key] == '1') keys.push(key);
+					}
+					track[j].keys = keys; //keys is an array of the pitch of all the notes at position j. values can be 0-23 (relative to baseOctave). note that in organya, keys.length could only be 1 (no overlapping notes)
+					
+					let pan = record.slice(0, 2);
+					pan = parseInt(pan, 16);
+					track[j].pan = pan;
+				}
 
                 this.tracks[i] = track;
             }
+			console.log(p);
         }
     }
 
@@ -100,7 +105,7 @@
             this.state = [];
             this.mutedTracks=[];
             this.selectedTrack=0;
-            for (let i = 0; i < 16; i++) {
+            for (let i = 0; i < 4; i++) {
                 this.state[i] = {
                     t: 0,
                     key: 0,
@@ -127,9 +132,9 @@
                 leftBuffer[sample] = 0;
                 rightBuffer[sample] = 0;
 
-                for (let i = 0; i < 16; i++) {
+                for (let i = 0; i < 4; i++) {
                     if (this.state[i].playing) {
-                        const samples = (i < 8) ? 256 : drums[this.song.instruments[i].wave].samples;
+                        const samples = (i < 3) ? 256 : drums[this.song.instruments[i].wave].samples;
 
                         this.state[i].t += (this.state[i].frequency / this.sampleRate) * advTable[this.state[i].octave];
 
@@ -151,10 +156,10 @@
                         let pos2 = !this.looping && t == samples ?
                             pos
                             : ((this.state[i].t + advTable[this.state[i].octave]) & ~(advTable[this.state[i].octave] - 1)) % samples;
-                        const s1 = i < 8
+                        const s1 = i < 3
                             ? (waveTable[256 * this.song.instruments[i].wave + pos] / 256)
                             : (((drumWaveTable[drums[this.song.instruments[i].wave].filePos + pos] & 0xff) - 0x80) / 256);
-                        const s2 = i < 8
+                        const s2 = i < 3
                             ? (waveTable[256 * this.song.instruments[i].wave + pos2] / 256)
                             : (((drumWaveTable[drums[this.song.instruments[i].wave].filePos + pos2] & 0xff) - 0x80) / 256);
                         const fract = (this.state[i].t - pos) / advTable[this.state[i].octave];
@@ -229,43 +234,46 @@
 			
             this.whichMuted();
 
-            for (let track = 0; track < 8; track++) {
+            for (let track = 0; track < 3; track++) { //melody (non-drum) tracks
                 if (!(this.mutedTracks.includes(track))) {
-                const note = this.song.tracks[track].find((n) => n.pos == this.playPos);
-                if (note) {
-                    if (note.key != 255) {
-                        const octave = ((note.key / 12) | 0);
-                        const key = note.key % 12;
+					//const note = this.song.tracks[track].find((n) => n.pos == this.playPos); //why do all this? don't we just want the pos-th item in the track? or were empty positions not stored with an empty track item, thus necessitating storing pos info in each track item? i don't think i'm doing that here
+					const record = this.song.tracks[track][this.playPos];
+					if (record.keys.length != 0) { //only continue if there is some or the other note at that position
+						for (let i_note=0; i_note<record.keys.length; i_note++) { //iterate over all the notes in the track at one particular position (this was unnecessary in organya)
+							if (keys[i_note] != 255) {
+								const octave = ((keys[i_note] / 12) | 0) + this.instruments[track].baseOctave;
+								const key = keys[i_note] % 12;
 
-                        if (this.state[track].key == 255) {
-                            this.state[track].key = note.key;
+								if (this.state[track].key == 255) {
+									this.state[track].key = note.key;
 
-                            this.state[track].frequency = freqTable[key] * octTable[octave] + (this.song.instruments[track].freq - 1000);
-                            if (this.song.instruments[track].pipi != 0 && !this.state[track].playing) {
-                                this.state[track].num_loops = ((octave + 1) * 4);
-                            }
-                        } else if (this.state[track].key != note.key) {
-                            this.state[track].key = note.key;
-                            this.state[track].frequency = freqTable[key] * octTable[octave] + (this.song.instruments[track].freq - 1000);
-                        }
+									this.state[track].frequency = freqTable[key] * octTable[octave] + (this.song.instruments[track].freq - 1000);
+									if (this.song.instruments[track].pipi != 0 && !this.state[track].playing) {
+										this.state[track].num_loops = ((octave + 1) * 4);
+									}
+								} else if (this.state[track].key != note.key) {
+									this.state[track].key = note.key;
+									this.state[track].frequency = freqTable[key] * octTable[octave] + (this.song.instruments[track].freq - 1000);
+								}
 
-                        if (this.song.instruments[track].pipi != 0 && !this.state[track].playing) {
-                            this.state[track].num_loops = ((octave + 1) * 4);
-                        }
+								if (this.song.instruments[track].pipi != 0 && !this.state[track].playing) {
+									this.state[track].num_loops = ((octave + 1) * 4);
+								}
 
-                        this.state[track].octave = octave;
-                        this.state[track].playing = true;
-                        this.state[track].looping = true;
-                        this.state[track].length = note.len*2;
-                        //I have no clue why, but at some point along the way (I think during adding support for new drums) the notes were getting cut off half way. Multiplying length by 2 is a sloppy fix that just works. Please help ;_;
-                    }
+								this.state[track].octave = octave;
+								this.state[track].playing = true;
+								this.state[track].looping = true;
+								this.state[track].length = note.len*2;
+								//I have no clue why, but at some point along the way (I think during adding support for new drums) the notes were getting cut off half way. Multiplying length by 2 is a sloppy fix that just works. Please help ;_;
+							}
 
-                    if (this.state[track].key != 255) {
-                        if (note.vol != 255) this.state[track].vol = note.vol;
-                        if (note.pan != 255) this.state[track].pan = note.pan;
-                    }
-                } //ending the 'skip muted tracks' if-block here, rather than at the end, because otherwise, muting while a note played would make that note get stuck
-                }
+							if (this.state[track].key != 255) {
+								if (note.vol != 255) this.state[track].vol = note.vol;
+								if (note.pan != 255) this.state[track].pan = note.pan;
+							}
+						} //ending the 'skip muted tracks' if-block here, rather than at the end, because otherwise, muting while a note played would make that note get stuck
+					}
+				}
                 if (this.state[track].length == 0) {
                     if (this.state[track].key != 255) {
                         if (this.song.instruments[track].pipi == 0)
@@ -280,21 +288,23 @@
             
             }
 
-            for (let track = 8; track < 16; track++) {
+            for (let track = 3; track < 4; track++) { //looks dumb, yeah. piyopiyo has only one drum track but it's easier to just leave it like this
                 if (!(this.mutedTracks.includes(track))) {
-                const note = this.song.tracks[track].find((n) => n.pos == this.playPos);
-                if (!note) continue;
+					const record = this.song.tracks[track][this.playPos];
+					if (record.keys.length == 0) continue;
+					for (let i_note=0; i_note<record.keys.length; i_note++) {
+						if (keys[i_note] != 255) {
+							here's where i left off. figure out note and key in track properties and how to extend them for multiple notes, for both drums and melodies
+							this.state[track].frequency = note.key * 800 + 100;
+							this.state[track].t = 0;
+							this.state[track].playing = true;
+						}
 
-                if (note.key != 255) {
-                    this.state[track].frequency = note.key * 800 + 100;
-                    this.state[track].t = 0;
-                    this.state[track].playing = true;
-                }
-
-                if (note.vol != 255) this.state[track].vol = note.vol;
-                if (note.pan != 255) this.state[track].pan = note.pan;
-            }
-        }
+						if (note.vol != 255) this.state[track].vol = note.vol;
+						if (note.pan != 255) this.state[track].pan = note.pan;
+					}
+				}
+			}
         }
 
         stop() {
@@ -345,51 +355,18 @@
         const view = new DataView(buf);
         waveTable = new Int8Array(buf);
         
-		const drumURL = new URL("https://raadshaikh.github.io/music/piyopiyo-js/DrumWaves.bin");
+		const drumURL = new URL("https://raadshaikh.github.io/music/piyopiyo-js/piyoDrums.bin");
         const res_d = await fetch(drumURL); //'_d' for 'drum'. Beyond that, code is unchanged
         const buf_d = await res_d.arrayBuffer();
         const view_d = new DataView(buf_d);
         drumWaveTable = new Int8Array(buf_d);
-
-        for (let i = 0; i < drumWaveTable.length - 4; i++) {
-            if (view_d.getUint32(i, true) == 0x45564157) { //"WAVE"
-                i += 4;
-                const riffId = view_d.getUint32(i, true); i += 4;
-                const riffLen = view_d.getUint32(i, true); i += 4;
-                if (riffId != 0x20746d66) { //"fmt "
-                    console.error("Invalid RIFF chunk ID");
-                    continue;
-                }
-
-                const startPos = i;
-                const aFormat = view_d.getUint16(i, true); i += 2;
-                if (aFormat != 1) {
-                    console.error("Invalid audio format");
-                    i = startPos + riffLen;
-                    continue;
-                }
-
-                const channels = view_d.getUint16(i, true); i += 2;
-                if (channels != 1) {
-                    console.error("Only 1 channel files are supported");
-                    i = startPos + riffLen;
-                    continue;
-                }
-
-                const samples = view_d.getUint32(i, true); i += 10; // skip rate + padding
-                const bits = view_d.getUint16(i, true); i += 2;
-                i+=14; //dunno why but there's 14 extraneous bytes in the new drum files at this point
-                const wavData = view_d.getUint32(i, true); i += 4;
-                const wavLen = view_d.getUint32(i, true); i += 4;
-
-                if (wavData != 0x61746164) { //"data"
-                    i = startPos + riffLen;
-                    continue;
-                }
-
-                drums.push({ filePos: i, bits, channels, samples: wavLen });
-                i += wavLen;
-            }
+		
+		let i = 0;
+        while (i < drumWaveTable.length) {
+			const drumfile_offset = i;
+			const wavLen = view_d.getUint32(i, false); i += 4;
+			drums.push({ filePos: drumfile_offset, samples: wavLen });
+			i += wavLen;
         }
 
         window.Organya = Organya;

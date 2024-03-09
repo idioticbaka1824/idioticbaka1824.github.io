@@ -168,7 +168,7 @@
 
                 trackLoop: for (let track = 3; track >= 0; track--) {
 					var noteheads = []; //icons for each track
-					for (let icon_i=0; icon_i<2; icon_i++) {
+					for (let icon_i=0; icon_i<3; icon_i++) {
 						noteheads.push(this.organya.song.instruments[icon_i].icon);
 					}
 					var dramheads = [0,0,0,0,1,1,1,1,2,2,2,2,3,3,4,4,4,4,4,4,4,4,5,5];
@@ -183,21 +183,22 @@
 					}					
                     var x = 36;
                     while (x < width) {
-                        const note = trackRef[noteIdx++];
-                        if (!note) continue trackLoop;
+                        const record = trackRef[noteIdx++];
+                        if (!record) continue trackLoop;
+						for(let i_note=0; i_note<record.keys.length; i_note++) {
+							const noteX = record.pos * 12 - scrollX;
+							const noteY = (95 - (record.keys[i_note] + 12*this.organya.song.instruments[track].baseOctave)) * 12 - this.scrollY - 6*(chickX == noteX);
 
-                        const noteX = note.pos * 12 - scrollX;
-                        const noteY = (95 - note.key) * 12 - this.scrollY - 6*(chickX == noteX);
+							x = noteX;
+							x+=12;
 
-                        x = noteX;
-                        for (let i = 0; i < note.len; i++) x += 12;
-
-                        if(noteY>16) { //keeping the red bar at the top clear
-							if (track == 3) {
-								sprHeadX = 12*dramheads[note.key] + 120*(track!=this.organya.selectedTrack);
-								sprHeadY = 120;
+							if(noteY>16) { //keeping the red bar at the top clear
+								if (track == 3) {
+									sprHeadX = 12*dramheads[record.keys[i_note]] + 120*(track!=this.organya.selectedTrack);
+									sprHeadY = 120;
+								}
+								this.ctx.drawImage(this.noteImg, sprHeadX, sprHeadY, 12, 12, noteX, noteY, 12, 12);
 							}
-							this.ctx.drawImage(this.noteImg, sprHeadX, sprHeadY, 12, 12, noteX, noteY, 12, 12);
 						}
                     }
                 }

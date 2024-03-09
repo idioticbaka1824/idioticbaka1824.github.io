@@ -167,7 +167,10 @@
 				this.ctx.drawImage(this.cursor, 68, 16, 12, 16, chickX, 0, 12, 16);
 
                 trackLoop: for (let track = 3; track >= 0; track--) {
-					var noteheads = [97, 98, 99];
+					var noteheads = []; //icons for each track
+					for (let icon_i=0; icon_i<2; icon_i++) {
+						noteheads.push(this.organya.song.instruments[icon_i].icon);
+					}
 					var dramheads = [0,0,0,0,1,1,1,1,2,2,2,2,3,3,4,4,4,4,4,4,4,4,5,5];
                     const trackRef = this.organya.song.tracks[track];
                     let noteIdx = Math.max(0, trackRef.findIndex((n) => n.pos >= viewPos) - 1); //what is going on here?

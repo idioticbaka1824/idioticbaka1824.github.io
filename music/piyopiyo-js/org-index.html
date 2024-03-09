@@ -235,7 +235,8 @@
             window.playOrg = async (argument='doPlay') => {
                 console.log("fetching song...");
                 if(document.getElementById('dropDownRadio').checked){
-					songname = songListEl.options[songListEl.selectedIndex].value
+					songname = songListEl.options[songListEl.selectedIndex].value;
+					songname = new URL("https://raadshaikh.github.io/music/piyopiyo-js/songs/test.pmd");
                     res = await fetch(songname);
                     new_song = songListEl.options[songListEl.selectedIndex].value;
                 }

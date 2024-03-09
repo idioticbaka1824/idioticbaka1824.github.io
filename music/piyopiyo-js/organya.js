@@ -1,6 +1,17 @@
 (() => {
     let waveTable = new Int8Array(new ArrayBuffer(0));
     let drums = [];
+	
+	//utility function
+	function getBytesLE(view, pos, n_bytes, unsigned) {
+		out=[];
+		for (let i=0; i<n_bytes; i++){
+			out.push(unsigned == 'unsigned' ? view.getUint8(pos, true) : view.getInt8(pos, true));
+			pos++;
+		}
+		out = new Int8Array(out);
+		return out;
+	}
 
     class Song {
         /**
@@ -17,25 +28,32 @@
             }
 
             this.track1DataStartAddress = view.getUint32(p, true); p += 4;
-
+			
+			this.meas = [4, 4]; //I don't think piyopiyo allows for any other type
+			
             this.wait = view.getUint32(p, true); p += 4;
             this.start = view.getInt32(p, true); p += 4;
             this.end = view.getInt32(p, true); p += 4;
             this.songLength = view.getInt32(p, true); p += 4;
-			//track header stuff, add later
-			console.log(this.track1DataStartAddress, this.wait, this.start, this.end, this.songLength);
 
             this.instruments = [];
 
-            for (let i = 0; i < 16; i++) {
-                const freq = view.getInt16(p, true); p += 2;
-                const wave = view.getUint8(p, true); p++;
-                const pipi = view.getUint8(p, true); p++;
-                const notes = view.getUint16(p, true); p += 2;
-
-                this.instruments[i] = { freq, wave, pipi, notes };
+            for (let i = 0; i < 3; i++) {
+                const baseOctave = view.getUint8(p, true); p++;
+                const icon = view.getUint8(p, true); p++;
+                const unknown = view.getUint16(p, true); p += 2;
+                const envelopeLength = view.getUint32(p, true); p += 4; //11025 is 1 second	
+                const volume = view.getUint32(p, true); p += 4;
+                const unknown2 = view.getUint32(p, true); p += 4;
+                const unknown3 = view.getUint32(p, true); p += 4;
+				const waveSamples = getBytesLE(view, p, 256, 'signed'); p+=256;
+				const envelopeSamples = getBytesLE(view, p, 64, 'signed'); p+=64;
+                this.instruments[i] = { baseOctave, icon, envelopeLength, volume, waveSamples, envelopeSamples };
             }
-
+			const drumVolume = view.getUint32(p, true); p+= 4;
+			this.instruments[3] = {volume: drumVolume};
+			//assert p == track1DataStartAddress at this point
+			
             this.tracks = [];
             for (let i = 0; i < 4; i++) {
                 const track = [];
@@ -49,7 +67,7 @@
                 }
 
                 for (let j = 0; j < this.instruments[i].notes; j++) {
-                    track[j].key(s???) = view.getUint24(p, true); p++; //multiple notes at a time. how to adapt? how to read 3 bytes as bitfield?
+                    track[j].key = view.getUint24(p, true); p++; //multiple notes at a time. how to adapt? how to read 3 bytes as bitfield?
                 }
 
                 for (let j = 0; j < this.instruments[i].notes; j++) {
@@ -116,7 +134,7 @@
                         this.state[i].t += (this.state[i].frequency / this.sampleRate) * advTable[this.state[i].octave];
 
                         if ((this.state[i].t | 0) >= samples) {
-                            if (this.state[i].looping && this.state[i].num_loops != 1) {
+                            if (this.state[i].looping && this.state[i].num_loops != 1) { //this bit takes care of long notes in org, probably can delete this block for piyopiyo
                                 this.state[i].t %= samples;
                                 if (this.state[i].num_loops != 1)
                                     this.state[i].num_loops -= 1;
@@ -321,12 +339,14 @@
         //splitting waves and drums into separate wavetables
         
         console.log("Initializing Organya...");
-        const res = await fetch("WAVE100.bin");
+		const waveURL = new URL("https://raadshaikh.github.io/music/piyopiyo-js/WAVE100.bin");
+        const res = await fetch(waveURL);
         const buf = await res.arrayBuffer();
         const view = new DataView(buf);
         waveTable = new Int8Array(buf);
         
-        const res_d = await fetch("DrumWaves.bin"); //'_d' for 'drum'. Beyond that, code is unchanged
+		const drumURL = new URL("https://raadshaikh.github.io/music/piyopiyo-js/DrumWaves.bin");
+        const res_d = await fetch(drumURL); //'_d' for 'drum'. Beyond that, code is unchanged
         const buf_d = await res_d.arrayBuffer();
         const view_d = new DataView(buf_d);
         drumWaveTable = new Int8Array(buf_d);

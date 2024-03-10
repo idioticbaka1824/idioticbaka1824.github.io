@@ -279,6 +279,7 @@
             
 			window.clickHandling = (x, y) => {
 				if(currentOrg != null && y>=0 && y<=16) currentOrg.cursorUpdate(x);
+				if(currentOrg != null && y>16 && x>36) currentOrg.addNote(x, y, ui.scrollY, );
 			}
             
             let muteMelodies=['mute_1','mute_2','mute_3','mute_4','mute_5','mute_6','mute_7','mute_8'];
@@ -310,12 +311,14 @@
             }
             
             
-            let allowedTracks=['1','2','3','4','5','6','7','8','q','w','e','r','t','y','u','i']
+            let allowedTracks=['1','2','3','4','p']
             document.addEventListener('keydown', (e) => {
 
                     if(currentOrg!=null && allowedTracks.includes(e.key)){
-                        currentTrackDisplay.innerHTML=e.key.toUpperCase();
-                        currentOrg.selectedTrack=allowedTracks.indexOf(e.key)
+						
+                        currentTrackDisplay.innerHTML = e.key == 4 ? 'P' : e.key.toUpperCase(); //both '4' and 'p' are accepted names for the drum track, but it should display 'p'
+                        currentOrg.selectedTrack = allowedTracks.indexOf(e.key)
+						if (e.key=='p') currentOrg.selectedTrack = 3;
                         currentOrg.update();
                     }
                     else if(e.key=="ArrowLeft"){

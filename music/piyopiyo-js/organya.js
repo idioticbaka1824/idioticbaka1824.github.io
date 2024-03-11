@@ -60,7 +60,7 @@
                 this.instruments[i] = { baseOctave, icon, envelopeLength, volume, waveSamples, envelopeSamples, freq:1000 };
             }
 			const drumVolume = view.getUint32(p, true); p+= 4; //0 to 300. 0 is still faintly audible
-			this.instruments[3] = {volume:drumVolume, baseOctave:0, waveSamples:this.instruments[0].waveSamples, envelopeLength:11025}; //instruments[3], being the drum track, is qualitatively different from the others. handle it separately when needed
+			this.instruments[3] = {volume:drumVolume, baseOctave:0}; //instruments[3], being the drum track, is qualitatively different from the others. handle it separately when needed
 			console.log(this.instruments);
 			//assert p == track1DataStartAddress at this point
 			
@@ -79,6 +79,15 @@
 						if (bitfield[key] == '1') keys.push(23-key);
 					}
 					track[j].keys = keys; //keys is an array of the pitch of all the notes at position j. values can be 0-23 (relative to baseOctave). note that in organya, keys.length could only be 1 (no overlapping notes)
+					if(i==3){
+						let key=0;
+						while(key<track[j].keys.length){
+							if(drumTypeTable[track[j].keys[key]]==-1 || drumTypeTable[track[j].keys[key]]==undefined){ //some drum frequencies are empty
+								track[j].keys.splice(key, 1);
+							}
+							key++;
+						}
+					}
 					let pan = record.slice(0, 8);
 					pan = parseInt(pan, 2);
 					track[j].pan = pan;
@@ -144,7 +153,7 @@
 					for(let i_note=0; i_note<this.state[i].keys.length; i_note++) {
 						if (this.state[i].playing) {
 							//console.log(this.state);
-							const samples = (i < 3+1) ? 256 : drums[drumTypeTable[this.state[i].keys[i_note]]].samples;
+							const samples = (i < 3) ? 256 : drums[drumTypeTable[this.state[i].keys[i_note]]].samples;
 
 							this.state[i].t[i_note] += (this.state[i].frequencies[i_note] / this.sampleRate) * advTable[this.state[i].octaves[i_note]];
 
@@ -166,10 +175,10 @@
 							let pos2 = !this.state[i].looping && t == samples ?
 								pos
 								: ((this.state[i].t[i_note] + advTable[this.state[i].octaves[i_note]]) & ~(advTable[this.state[i].octaves[i_note]] - 1)) % samples;
-							const s1 = i < 3+1
+							const s1 = i < 3
 								? (this.song.instruments[i].waveSamples[pos] / 256)
 								: ((drumWaveTable[drumTypeTable[this.state[i].keys[i_note]]][pos] ) / 256);
-							const s2 = i < 3+1
+							const s2 = i < 3
 								? (this.song.instruments[i].waveSamples[pos2] / 256)
 								: ((drumWaveTable[drumTypeTable[this.state[i].keys[i_note]]][pos2] ) / 256);
 							const fract = (this.state[i].t[i_note] - pos) / advTable[this.state[i].octaves[i_note]];
@@ -179,9 +188,10 @@
 
 							//envelope volume stuff
 							const fractionOfThisNoteCompleted = t/(this.sampleRate*this.song.instruments[i].envelopeLength/11025);
-							const volumeMultiplier = this.song.instruments[i].envelopeSamples[(fractionOfThisNoteCompleted*64 | 0)]/128;
+							let volumeMultiplier = 1;//this.song.instruments[i].envelopeSamples[(fractionOfThisNoteCompleted*64 | 0)]/128;
+							//volumeMultiplier *= 1 - 10*Math.log10(this.state[i].frequencies.length)/this.state[i].vol;
 
-							s *= Math.pow(10, ((this.state[i].vol*volumeMultiplier - 255) * 8) / 2000);
+							s *= Math.pow(10, ((this.state[i].vol*volumeMultiplier - 255) * 8)/2000);// - Math.log10(this.state[i].frequencies.length)); //simultaneous notes are pretty loud
 							//console.log(this.state[i]);
 
 							const pan = (panTable[this.state[i].pan] - 256) * 10;
@@ -246,7 +256,7 @@
 			let toPush = newNoteKeyRelative + 12*(newNoteKeyOctave-this.song.instruments[this.selectedTrack].baseOctave)
 			var keys = this.song.tracks[this.selectedTrack][newNotePos].keys
 			if (keys.includes(toPush)) keys.splice(keys.indexOf(toPush), 1);
-			else keys.push(toPush);
+			else if(drumTypeTable[newNoteKeyRelative]!=-1 && drumTypeTable[newNoteKeyRelative]!=undefined) keys.push(toPush);
 			this.update();
 		}
         
@@ -264,7 +274,7 @@
 			
             this.whichMuted();
 
-            for (let track = 0; track < 3; track++) { //melody (non-drum) tracks
+            for (let track = 0; track < 4; track++) { //melody (non-drum) tracks
                 if (!(this.mutedTracks.includes(track))) {
 					//const record = this.song.tracks[track].find((n) => n.pos == this.playPos); //why do all this? don't we just want the pos-th item in the track? or were empty positions not stored with an empty track item, thus necessitating storing pos info in each track item? i don't think i'm doing that here
 					const record = this.song.tracks[track][this.playPos];
@@ -274,7 +284,7 @@
 							if (keys[i_note] != 255) {
 								const octave = ((keys[i_note] / 12) | 0) + this.song.instruments[track].baseOctave;
 								const key = keys[i_note] % 12;
-								const frequencyToPush = freqTable[key] * octTable[octave];
+								const frequencyToPush = track < 3 ? freqTable[key] * octTable[octave] : 8820;
 								//const frequencyToPush = 8363*Math.pow(2, octave + key/12);
 								
 								if (this.state[track].keys.length == 0) {
@@ -298,7 +308,7 @@
 								this.state[track].octaves[i_note] = octave;
 								this.state[track].playing = true;
 								this.state[track].looping = true;
-								this.state[track].length = (this.song.instruments[track].envelopeLength/11025); //in seconds
+								this.state[track].length = (track<3) ? (this.song.instruments[track].envelopeLength/11025) : drums[drumTypeTable[this.state[track].keys[i_note]]].samples/11025; //in seconds
 							}
 
 							if (this.state[track].keys.length >0) {
@@ -324,12 +334,12 @@
 						}
 					}
 					else {
-						this.state[track].length -= this.song.wait;
+						this.state[track].length -= 1; //this.song.wait is nothing special, apparently anything >=1 works here and different values don't make a difference
 					}
 				//}
             }
 
-            for (let track = 3; track < 4; track++) { //looks dumb, yeah. piyopiyo has only one drum track but it's easier to just leave it like this
+            for (let track = 4; track < 4; track++) { //looks dumb, yeah. piyopiyo has only one drum track but it's easier to just leave it like this
                 if (!(this.mutedTracks.includes(track))) {
 					const record = this.song.tracks[track][this.playPos];
 					let keys = record.keys;
@@ -340,7 +350,8 @@
 							
 								const octave = ((keys[i_note] / 12) | 0) + this.song.instruments[track].baseOctave;
 								const key = keys[i_note] % 12;
-								const frequencyToPush = freqTable[key] * octTable[octave];
+								//const frequencyToPush = freqTable[key] * octTable[octave];
+								const frequencyToPush = 256;
 							
 							//this.state[track].frequencies[i_note] = keys[i_note] * 800 + 100;
 							this.state[track].frequencies.push(frequencyToPush); //not sure what frequency to put for drums, since while it's not really applicable, it also affects sample rate or something later. I'll go with middle C for now
@@ -370,6 +381,7 @@
         play(argument) {
             this.ctx = new (window.AudioContext || window.webkitAudioContext)();
             this.sampleRate = this.ctx.sampleRate;
+			console.log(this.sampleRate);
             this.samplesPerTick = (this.sampleRate / 1000) * this.song.wait | 0;
             this.samplesThisTick = 0;
 
@@ -425,6 +437,41 @@
 				drumWaveTable[i][j] = drumWaveTable[i][j]*100/32768;
 			}
 		}
+		console.log(drumWaveTable);
+		
+		
+		//
+		let toDownload = [];
+		for (let i=0; i<drumWaveTable[5].length; i++){
+			toDownload.push(drumWaveTable[5][i]);
+		}
+		
+		const downloadURL = (data, fileName) => {
+		  const a = document.createElement('a')
+		  a.href = data
+		  a.download = fileName
+		  document.body.appendChild(a)
+		  a.style.display = 'none'
+		  a.click()
+		  a.remove()
+		}
+
+		const downloadBlob = (data, fileName, mimeType) => {
+
+		  const blob = new Blob([data], {
+			type: mimeType
+		  })
+
+		  const url = window.URL.createObjectURL(blob)
+
+		  downloadURL(url, fileName)
+
+		  setTimeout(() => window.URL.revokeObjectURL(url), 1000)
+		}
+
+		//downloadBlob(toDownload, 'drum5.bin', 'application/octet-stream');
+		//
+		
         window.Organya = Organya;
     };
 })();

@@ -111,7 +111,7 @@
                 
             <div id="table">    
                 <li><img src="GUI/button_track_Q.png"/></li>
-                <li><input type="checkbox" value="4" id="mute_P" name="isPMuted" class="mute"/></li>
+                <li><input type="checkbox" value="3" id="mute_P" name="isPMuted" class="mute"/></li>
             </div>
     
         <div style="padding:10px;"></div>
@@ -189,7 +189,8 @@
                 console.log("fetching song...");
                 if(document.getElementById('dropDownRadio').checked){
 					songname = songListEl.options[songListEl.selectedIndex].value;
-					songname = new URL("https://raadshaikh.github.io/music/piyopiyo-js/songs/Ikachan.pmd");
+					songname = "https://raadshaikh.github.io/music/piyopiyo-js/" + songname
+					songname = new URL(songname);
                     res = await fetch(songname);
                     new_song = songListEl.options[songListEl.selectedIndex].value;
                 }
@@ -199,6 +200,8 @@
                 }
                 if (prev_song != new_song || prev_song == null){
                     stopOrg();
+					shouldUnMuteAll=1; //this doesn't quite work the way i want
+					window.muteAll('solo');
                     const data = await res.arrayBuffer();
                     await initOrganya();
 
@@ -248,17 +251,20 @@
                 else if (argument=='drums') {
                     toMute = muteDrums;
                 }
-                else if (argument=='solo'){ //something's wrong when one track is soloed and then another is soloed. fix this
+                else if (argument=='solo'){
                     toMute=muteAll.slice(); //to copy arrays
                     unMute='mute_'+currentTrackDisplay.innerHTML;
                     toMute.splice(toMute.indexOf(unMute), 1);
                 }
-                for (var i in toMute) {
-                    if(shouldUnMuteAll==0){
-                        document.getElementById(toMute[i]).checked=muteAll.indexOf(i);
+				if(shouldUnMuteAll==0){
+					for (var i in toMute) {
+                        document.getElementById(toMute[i]).checked=true;
                     }
-                    else if (shouldUnMuteAll==1){
-                        document.getElementById(toMute[i]).checked=null;
+                    document.getElementById(unMute).checked=null;
+				}
+                else if (shouldUnMuteAll==1){
+					for (var i in muteAll) {
+                        document.getElementById(muteAll[i]).checked=null;
                     }
                 }
                 shouldUnMuteAll=1-shouldUnMuteAll;
@@ -269,7 +275,7 @@
             document.addEventListener('keydown', (e) => {
 
                     if(currentOrg!=null && allowedTracks.includes(e.key)){
-						
+						if(currentOrg.selectedTrack!=allowedTracks.indexOf(e.key)) shouldUnMuteAll=1-shouldUnMuteAll;
                         currentTrackDisplay.innerHTML = e.key == 4 ? 'P' : e.key.toUpperCase(); //both '4' and 'p' are accepted names for the drum track, but it should display 'p'
                         currentOrg.selectedTrack = allowedTracks.indexOf(e.key)
 						if (e.key=='p') currentOrg.selectedTrack = 3;

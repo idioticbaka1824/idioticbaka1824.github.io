@@ -115,7 +115,7 @@
             this.selectedTrack=0;
             for (let i = 0; i < 4; i++) {
                 this.state[i] = {
-                    t: 0,
+                    t: [],
                     keys: [],
                     frequencies: [],
                     octaves: [],
@@ -146,33 +146,33 @@
 							//console.log(this.state);
 							const samples = (i < 3+1) ? 256 : drums[drumTypeTable[this.state[i].keys[i_note]]].samples;
 
-							this.state[i].t += (this.state[i].frequencies[i_note] / this.sampleRate) * advTable[this.state[i].octaves[i_note]];
+							this.state[i].t[i_note] += (this.state[i].frequencies[i_note] / this.sampleRate) * advTable[this.state[i].octaves[i_note]];
 
-							if ((this.state[i].t | 0) >= samples) { // using == instead of >= will hurt your ears
+							if ((this.state[i].t[i_note] | 0) >= samples) { // using == instead of >= will hurt your ears
 								if (this.state[i].looping && this.state[i].num_loops >= 1) {
-									this.state[i].t %= samples;
+									this.state[i].t[i_note] %= samples;
 									if (this.state[i].num_loops >= 1)
 										this.state[i].num_loops -= 0;
 
 								} else {
-									this.state[i].t = 0;
+									this.state[i].t[i_note] = 0;
 									this.state[i].playing = false;
 									continue;
 								}
 							}
 
-							const t = this.state[i].t & ~(advTable[this.state[i].octaves[i_note]] - 1);
+							const t = this.state[i].t[i_note] & ~(advTable[this.state[i].octaves[i_note]] - 1);
 							let pos = t % samples;
 							let pos2 = !this.state[i].looping && t == samples ?
 								pos
-								: ((this.state[i].t + advTable[this.state[i].octaves[i_note]]) & ~(advTable[this.state[i].octaves[i_note]] - 1)) % samples;
+								: ((this.state[i].t[i_note] + advTable[this.state[i].octaves[i_note]]) & ~(advTable[this.state[i].octaves[i_note]] - 1)) % samples;
 							const s1 = i < 3+1
 								? (this.song.instruments[i].waveSamples[pos] / 256)
 								: ((drumWaveTable[drumTypeTable[this.state[i].keys[i_note]]][pos] ) / 256);
 							const s2 = i < 3+1
 								? (this.song.instruments[i].waveSamples[pos2] / 256)
 								: ((drumWaveTable[drumTypeTable[this.state[i].keys[i_note]]][pos2] ) / 256);
-							const fract = (this.state[i].t - pos) / advTable[this.state[i].octaves[i_note]];
+							const fract = (this.state[i].t[i_note] - pos) / advTable[this.state[i].octaves[i_note]];
 
 							// perform linear interpolation
 							let s = s1 + (s2 - s1) * fract;
@@ -279,6 +279,7 @@
 								
 								if (this.state[track].keys.length == 0) {
 									this.state[track].keys.push(key);
+									this.state[track].t.push(0);
 
 									this.state[track].frequencies.push(frequencyToPush);
 									if (!this.state[track].playing) {
@@ -287,6 +288,7 @@
 								} else if (this.state[track].keys[i_note] != key) {
 									this.state[track].keys[i_note] = key;
 									this.state[track].frequencies.push(frequencyToPush);
+									this.state[track].t[i_note]=0;
 								}
 
 								if (!this.state[track].playing) {
@@ -343,7 +345,7 @@
 							//this.state[track].frequencies[i_note] = keys[i_note] * 800 + 100;
 							this.state[track].frequencies.push(frequencyToPush); //not sure what frequency to put for drums, since while it's not really applicable, it also affects sample rate or something later. I'll go with middle C for now
 							//if (drumTypeTable[keys[i_note]]!=-1) this.state[track].keys.push(keys[i_note]);
-							this.state[track].t = 0;
+							this.state[track].t[i_note] = 0;
 							this.state[track].playing = true;
 						}
 

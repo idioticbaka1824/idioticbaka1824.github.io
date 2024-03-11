@@ -12,11 +12,11 @@
 		out = new Int8Array(out);
 		return out;
 	}
-	function get2BytesLE(view, pos, n_bytes, unsigned) {
+	function get2BytesLE(view, pos, n_samples, unsigned) {
 		out=[];
-		for (let i=0; i<n_bytes; i++){
+		for (let i=0; i<n_samples; i++){
 			out.push(unsigned == 'unsigned' ? view.getUint16(pos, true) : view.getInt16(pos, true));
-			pos++;
+			pos+=2;
 		}
 		out = new Int16Array(out);
 		return out;
@@ -60,8 +60,8 @@
                 this.instruments[i] = { baseOctave, icon, envelopeLength, volume, waveSamples, envelopeSamples, freq:1000 };
             }
 			const drumVolume = view.getUint32(p, true); p+= 4; //0 to 300. 0 is still faintly audible
-			this.instruments[3] = {volume:drumVolume, baseOctave:0}; //instruments[3], being the drum track, is qualitatively different from the others. handle it separately when needed
-			
+			this.instruments[3] = {volume:drumVolume, baseOctave:0, waveSamples:this.instruments[0].waveSamples, envelopeLength:11025}; //instruments[3], being the drum track, is qualitatively different from the others. handle it separately when needed
+			console.log(this.instruments);
 			//assert p == track1DataStartAddress at this point
 			
             this.tracks = [];
@@ -95,6 +95,7 @@
     const panTable = [256, 0, 86, 172, 256, 340, 426, 512]; //piyo has pan values 1 to 7, but '0' is also centred
     const advTable = [1, 1, 2, 2, 4, 8, 16, 32];
     const octTable = [32, 64, 64, 128, 128, 128, 128, 128];
+	const drumTypeTable = [0,0,1,1,2,2,-1,-1,3,3,4,4,5,5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1];
 
     class Organya {
         /**
@@ -134,7 +135,7 @@
          */
         synth(leftBuffer, rightBuffer) {
             for (let sample = 0; sample < leftBuffer.length; sample++) {
-                if (this.samplesThisTick == 0) this.update();
+                if (this.samplesThisTick == 0) this.update(); //update works in increments of song wait time, so anything finer than that must be handled by this synth function
 
                 leftBuffer[sample] = 0;
                 rightBuffer[sample] = 0;
@@ -142,15 +143,16 @@
                 for (let i = 0; i < 4; i++) {
 					for(let i_note=0; i_note<this.state[i].keys.length; i_note++) {
 						if (this.state[i].playing) {
-							const samples = (i < 3) ? 256 : drums[this.state[i].keys[i_note]/2 | 0].samples;
+							//console.log(this.state);
+							const samples = (i < 3+1) ? 256 : drums[drumTypeTable[this.state[i].keys[i_note]]].samples;
 
 							this.state[i].t += (this.state[i].frequencies[i_note] / this.sampleRate) * advTable[this.state[i].octaves[i_note]];
 
-							if ((this.state[i].t | 0) >= samples) {
-								if (this.state[i].looping && this.state[i].num_loops >= 1) { //this bit takes care of long notes in org, probably can delete this block for piyopiyo
+							if ((this.state[i].t | 0) >= samples) { // using == instead of >= will hurt your ears
+								if (this.state[i].looping && this.state[i].num_loops >= 1) {
 									this.state[i].t %= samples;
 									if (this.state[i].num_loops >= 1)
-										this.state[i].num_loops -= 1;
+										this.state[i].num_loops -= 0;
 
 								} else {
 									this.state[i].t = 0;
@@ -161,21 +163,25 @@
 
 							const t = this.state[i].t & ~(advTable[this.state[i].octaves[i_note]] - 1);
 							let pos = t % samples;
-							let pos2 = !this.looping && t == samples ?
+							let pos2 = !this.state[i].looping && t == samples ?
 								pos
 								: ((this.state[i].t + advTable[this.state[i].octaves[i_note]]) & ~(advTable[this.state[i].octaves[i_note]] - 1)) % samples;
-							const s1 = i < 3
+							const s1 = i < 3+1
 								? (this.song.instruments[i].waveSamples[pos] / 256)
-								: ((drumWaveTable[(this.state[i].keys[i_note]/2 | 0)][pos] ) / 256);
-							const s2 = i < 3
+								: ((drumWaveTable[drumTypeTable[this.state[i].keys[i_note]]][pos] ) / 256);
+							const s2 = i < 3+1
 								? (this.song.instruments[i].waveSamples[pos2] / 256)
-								: ((drumWaveTable[(this.state[i].keys[i_note]/2 | 0)][pos2] ) / 256);
+								: ((drumWaveTable[drumTypeTable[this.state[i].keys[i_note]]][pos2] ) / 256);
 							const fract = (this.state[i].t - pos) / advTable[this.state[i].octaves[i_note]];
 
 							// perform linear interpolation
 							let s = s1 + (s2 - s1) * fract;
 
-							s *= Math.pow(10, ((this.state[i].vol - 255) * 8) / 2000);
+							//envelope volume stuff
+							const fractionOfThisNoteCompleted = t/(this.sampleRate*this.song.instruments[i].envelopeLength/11025);
+							const volumeMultiplier = this.song.instruments[i].envelopeSamples[(fractionOfThisNoteCompleted*64 | 0)]/128;
+
+							s *= Math.pow(10, ((this.state[i].vol*volumeMultiplier - 255) * 8) / 2000);
 							//console.log(this.state[i]);
 
 							const pan = (panTable[this.state[i].pan] - 256) * 10;
@@ -198,7 +204,7 @@
                     this.updateTimeDisplay();
                     this.samplesThisTick = 0;
 
-                    if (this.playPos == this.song.end) {
+                    if (this.playPos >= this.song.end) {
                         this.playPos = this.song.start;
                         this.updateTimeDisplay();
                     }
@@ -238,10 +244,10 @@
 			let newNoteKeyRelative = newNoteKey % 12;
 			let newNoteKeyOctave = (newNoteKey / 12 | 0);
 			let toPush = newNoteKeyRelative + 12*(newNoteKeyOctave-this.song.instruments[this.selectedTrack].baseOctave)
-			let keys = this.song.tracks[this.selectedTrack][newNotePos].keys
+			var keys = this.song.tracks[this.selectedTrack][newNotePos].keys
 			if (keys.includes(toPush)) keys.splice(keys.indexOf(toPush), 1);
 			else keys.push(toPush);
-			this.updateTimeDisplay();
+			this.update();
 		}
         
         
@@ -254,14 +260,14 @@
         update() {
             if (this.onUpdate) this.onUpdate(this);
             
-			if (this.playPos>this.song.end) this.playPos=this.song.start;
+			if (this.playPos>=this.song.end) this.playPos=this.song.start;
 			
             this.whichMuted();
 
             for (let track = 0; track < 3; track++) { //melody (non-drum) tracks
                 if (!(this.mutedTracks.includes(track))) {
-					const record = this.song.tracks[track].find((n) => n.pos == this.playPos); //why do all this? don't we just want the pos-th item in the track? or were empty positions not stored with an empty track item, thus necessitating storing pos info in each track item? i don't think i'm doing that here
-					//const record = this.song.tracks[track][this.playPos];
+					//const record = this.song.tracks[track].find((n) => n.pos == this.playPos); //why do all this? don't we just want the pos-th item in the track? or were empty positions not stored with an empty track item, thus necessitating storing pos info in each track item? i don't think i'm doing that here
+					const record = this.song.tracks[track][this.playPos];
 					if (record.keys.length != 0) { //only continue if there is some or the other note at that position
 						let keys = record.keys;
 						for (let i_note=0; i_note<record.keys.length; i_note++) { //iterate over all the notes in the track at one particular position (this was unnecessary in organya)
@@ -272,14 +278,14 @@
 								//const frequencyToPush = 8363*Math.pow(2, octave + key/12);
 								
 								if (this.state[track].keys.length == 0) {
-									this.state[track].keys.push(keys[i_note]);
+									this.state[track].keys.push(key);
 
 									this.state[track].frequencies.push(frequencyToPush);
 									if (!this.state[track].playing) {
 										this.state[track].num_loops = ((octave + 1) * 4);
 									}
-								} else if (this.state[track].keys[i_note] != keys[i_note]) {
-									this.state[track].keys[i_note] = keys[i_note];
+								} else if (this.state[track].keys[i_note] != key) {
+									this.state[track].keys[i_note] = key;
 									this.state[track].frequencies.push(frequencyToPush);
 								}
 
@@ -290,11 +296,10 @@
 								this.state[track].octaves[i_note] = octave;
 								this.state[track].playing = true;
 								this.state[track].looping = true;
-								this.state[track].length = (this.song.instruments[track].envelopeLength/11025)/(this.song.wait/1000); //think about this! currently just finding length of envelope in units of a step
-								this.state[track].length = (1000*this.song.instruments[track].envelopeLength/11025); //milliseconds instead of steps
+								this.state[track].length = (this.song.instruments[track].envelopeLength/11025); //in seconds
 							}
 
-							if (this.state[track].keys[i_note] != 255) {
+							if (this.state[track].keys.length >0) {
 								//if (this.song.instruments[track].vol != 255) this.state[track].vol = this.song.instruments[track].volume;
 								if (this.song.instruments[track].vol != 255) this.state[track].vol = this.song.instruments[track].volume; //piyo doesn't allow changing volume mid-note
 								if (record.pan != 255) this.state[track].pan = record.pan;
@@ -308,9 +313,15 @@
 							this.state[track].looping = false;
 							this.state[track].playing = false;
 							this.state[track].keys = [];
+							this.state[track].frequencies = [];
+							this.state[track].octaves = [];
+							this.state[track].pan = 0;
+							this.state[track].vol = 1;
 							this.state[track].length = 0; //otherwise it seemed to be getting stuck on negatives
+							this.state[track].num_loops = 0;
 						}
-					} else {
+					}
+					else {
 						this.state[track].length -= this.song.wait;
 					}
 				//}
@@ -324,8 +335,14 @@
 					for (let i_note=0; i_note<record.keys.length; i_note++) {
 						if (keys[i_note] != 255) {
 							
+							
+								const octave = ((keys[i_note] / 12) | 0) + this.song.instruments[track].baseOctave;
+								const key = keys[i_note] % 12;
+								const frequencyToPush = freqTable[key] * octTable[octave];
+							
 							//this.state[track].frequencies[i_note] = keys[i_note] * 800 + 100;
-							this.state[track].frequencies.push(keys[i_note] * 800 + 100);
+							this.state[track].frequencies.push(frequencyToPush); //not sure what frequency to put for drums, since while it's not really applicable, it also affects sample rate or something later. I'll go with middle C for now
+							//if (drumTypeTable[keys[i_note]]!=-1) this.state[track].keys.push(keys[i_note]);
 							this.state[track].t = 0;
 							this.state[track].playing = true;
 						}
@@ -338,13 +355,14 @@
         }
 
         stop() {
-            this.node.disconnect();
-            this.ctx.close();
+			if(this.ctx.state!='closed') {
+				this.node.disconnect();
+				this.ctx.close();
+			}
         }
         
         pause() {
-            this.node.disconnect();
-            this.ctx.close();
+			this.node.disconnect();
         }
 
         play(argument) {
@@ -393,14 +411,18 @@
 		drumWaveTable = [];
 		
 		let i = 0;
-        while (i < drumWaveTable.length) {
+        while (drums.length < 6) {
 			const drumfile_offset = i;
 			const wavLen = view_d.getUint32(i, false); i += 4; //wavLen is in bytes. each sample is 2 bytes, though
 			drumWaveTable.push(get2BytesLE(view_d, i, wavLen/2, 'unsigned'));
 			drums.push({ filePos: drumfile_offset, samples: wavLen/2 });
 			i += wavLen;
         }
-
+		for (let i=0; i<6; i++){  //getting it into -100 to 100 range, like melody samples
+			for (let j=0; j<drumWaveTable[i].length; j++){
+				drumWaveTable[i][j] = drumWaveTable[i][j]*100/32768;
+			}
+		}
         window.Organya = Organya;
     };
 })();

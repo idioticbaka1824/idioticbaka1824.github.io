@@ -105,63 +105,14 @@
                 <li><img src="GUI/button_track_3.png"/></li>
                 <li><input type="checkbox" value="2" id="mute_3" name="is3Muted" class="mute"/></li>
             </div>
-            <div id="table">
-                <li><img src="GUI/button_track_4.png"/></li>
-                <li><input type="checkbox" value="3" id="mute_4" name="is4Muted" class="mute"/></li>
-            </div>
-            <div id="table">
-                <li><img src="GUI/button_track_5.png"/></li>
-                <li><input type="checkbox" value="4" id="mute_5" name="is5Muted" class="mute"/></li>
-            </div>
-            <div id="table">
-                <li><img src="GUI/button_track_6.png"/></li>
-                <li><input type="checkbox" value="5" id="mute_6" name="is6Muted" class="mute"/></li>
-            </div>
-            <div id="table">
-                <li><img src="GUI/button_track_7.png"/></li>
-                <li><input type="checkbox" value="6" id="mute_7" name="is7Muted" class="mute"/></li>
-            </div>
-            <div id="table">
-                <li><img src="GUI/button_track_8.png"/></li>
-                <li><input type="checkbox" value="7" id="mute_8" name="is8Muted" class="mute"/></li>
-            </div>
             <button onclick="muteAll('melodies')" style="height:38px;padding:2px;"></button>
             
                 <div style="padding:5px;"></div>
                 
             <div id="table">    
                 <li><img src="GUI/button_track_Q.png"/></li>
-                <li><input type="checkbox" value="8" id="mute_Q" name="isQMuted" class="mute"/></li>
+                <li><input type="checkbox" value="4" id="mute_P" name="isPMuted" class="mute"/></li>
             </div>
-            <div id="table">
-                <li><img src="GUI/button_track_W.png"/></li>
-                <li><input type="checkbox" value="9" id="mute_W" name="isWMuted" class="mute"/></li>
-            </div>
-            <div id="table">
-                <li><img src="GUI/button_track_E.png"/></li>
-                <li><input type="checkbox" value="10" id="mute_E" name="isEMuted" class="mute"/></li>
-            </div>
-            <div id="table">
-                <li><img src="GUI/button_track_R.png"/></li>
-                <li><input type="checkbox" value="11" id="mute_R" name="isRMuted" class="mute"/></li>
-            </div>
-            <div id="table">
-                <li><img src="GUI/button_track_T.png"/></li>
-                <li><input type="checkbox" value="12" id="mute_T" name="isTMuted" class="mute"/></li>
-            </div>
-            <div id="table">
-                <li><img src="GUI/button_track_Y.png"/></li>
-                <li><input type="checkbox" value="13" id="mute_Y" name="isYMuted" class="mute"/></li>
-            </div>
-            <div id="table">
-                <li><img src="GUI/button_track_U.png"/></li>
-                <li><input type="checkbox" value="14" id="mute_U" name="isUMuted" class="mute"/></li>
-            </div>
-            <div id="table">
-                <li><img src="GUI/button_track_I.png"/></li>
-                <li><input type="checkbox" value="15" id="mute_I" name="isIMuted" class="mute"/></li>
-            </div>
-            <button onclick="muteAll('drums')" style="height:38px;padding:2px;"></button>
     
         <div style="padding:10px;"></div>
         <button onclick="muteAll('solo')"><img src="GUI/solo.png" alt="Solo"></button>
@@ -181,7 +132,9 @@
         let new_song=null;
         
         (() => {
-            const songs = `Azarashi.pmd`.split("\n").sort();
+            const songs = `Azarashi.pmd
+			Ikachan.pmd
+			test.pmd`.split("\n").sort();
 
             const songListEl = document.getElementById("songs");
             for (let song of songs) {
@@ -236,7 +189,7 @@
                 console.log("fetching song...");
                 if(document.getElementById('dropDownRadio').checked){
 					songname = songListEl.options[songListEl.selectedIndex].value;
-					songname = new URL("https://raadshaikh.github.io/music/piyopiyo-js/songs/test.pmd");
+					songname = new URL("https://raadshaikh.github.io/music/piyopiyo-js/songs/Ikachan.pmd");
                     res = await fetch(songname);
                     new_song = songListEl.options[songListEl.selectedIndex].value;
                 }
@@ -260,6 +213,7 @@
             window.homeOrg = () => {
                 if (currentOrg != null) {
                     currentOrg.homeOrg();
+                    prev_song = songListEl.options[songListEl.selectedIndex].value; //didn't have this earlier, but it fixes a bug where playing, placing new notes, then clicking home and then playing will erase your changes
                 }
             }
             window.backMeas = () => {
@@ -282,8 +236,8 @@
 				if(currentOrg != null && y>16 && x>36) currentOrg.addNote(x, y, ui.scrollY, );
 			}
             
-            let muteMelodies=['mute_1','mute_2','mute_3','mute_4','mute_5','mute_6','mute_7','mute_8'];
-            let muteDrums=['mute_Q','mute_W','mute_E','mute_R','mute_T','mute_Y','mute_U','mute_I'];
+            let muteMelodies=['mute_1','mute_2','mute_3'];
+            let muteDrums=['mute_P'];
             let muteAll=muteMelodies.concat(muteDrums);
             let shouldUnMuteAll=0;
             window.muteAll = (argument) => {
@@ -294,7 +248,7 @@
                 else if (argument=='drums') {
                     toMute = muteDrums;
                 }
-                else if (argument=='solo'){
+                else if (argument=='solo'){ //something's wrong when one track is soloed and then another is soloed. fix this
                     toMute=muteAll.slice(); //to copy arrays
                     unMute='mute_'+currentTrackDisplay.innerHTML;
                     toMute.splice(toMute.indexOf(unMute), 1);

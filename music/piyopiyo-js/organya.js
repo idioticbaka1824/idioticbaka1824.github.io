@@ -104,7 +104,7 @@
     const panTable = [256, 0, 86, 172, 256, 340, 426, 512]; //piyo has pan values 1 to 7, but '0' is also centred
     const advTable = [1, 1, 2, 2, 4, 8, 16, 32];
     const octTable = [32, 64, 64, 128, 128, 128, 128, 128];
-	const drumTypeTable = [0,0,1,1,2,2,-1,-1,3,3,4,4,5,5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1];
+	const drumTypeTable = [0,0,1,1,4,4,-1,-1,2,2,3,3,5,5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]; //piyodrums.bin has some of the drums switched around
 
     class Organya {
         /**
@@ -129,7 +129,7 @@
                     keys: [],
                     frequencies: [],
                     octaves: [],
-                    pan: 0.0,
+                    pan: [],
                     vol: 1.0,
                     length: [],
                     num_loops: 0,
@@ -191,13 +191,14 @@
 								let s = s1 + (s2 - s1) * fract;
 
 								//envelope volume stuff
-								let fractionOfThisNoteCompleted = Math.min(1 - (this.state[i][i_prec].length[i_note] - this.samplesThisTick/this.sampleRate)/(this.song.instruments[i].envelopeLength/11025), 1);
-								//console.log(this.state[i][i_prec].length);
-								let volumeEnv = (i<3) ? this.song.instruments[i].envelopeSamples[(fractionOfThisNoteCompleted*63 | 0)]/128 : 1; //envelope samples go 0-128
+								let fractionOfThisNoteCompleted = 1 - (this.state[i][i_prec].length[i_note] - this.samplesThisTick/this.sampleRate)/(this.song.instruments[i].envelopeLength/11025);
+								let volumeEnv=1;
+								if (fractionOfThisNoteCompleted>1) {volumeEnv=0;} //in case we're in that little bit of overshoot because of the ticks not lining up with envelope lengths
+								else {volumeEnv = (i<3) ? this.song.instruments[i].envelopeSamples[(fractionOfThisNoteCompleted*63 | 0)]/128 : 1-0.4*(this.state[i][i_prec].keys[i_note]%2==1);} //envelope samples go 0-128. also, odd-key drums are softer. the 0.4 factor is eyeballed
 								
-								s *= Math.pow(10, ((this.state[i][i_prec].vol*volumeEnv - 255) * 8)/2000);// - Math.log10(this.state[i].frequencies.length)); //simultaneous notes are pretty loud
+								s *= Math.pow(10, ((this.state[i][i_prec].vol*volumeEnv - 255) * 8)/2000);
 								
-								const pan = (panTable[this.state[i][i_prec].pan] - 256) * 10;
+								const pan = (panTable[this.state[i][i_prec].pan[i_note]] - 256) * 10;
 								let left = 1, right = 1;
 
 								if (pan < 0) {
@@ -285,13 +286,13 @@
 					const record = this.song.tracks[track][this.playPos];
 					if (record.keys.length != 0) { //only continue if there is some or the other note at that position
 						let keys = record.keys;
-						this.state[track].push({t: [], keys: [], frequencies: [], octaves: [], pan: 0.0, vol: 1.0, length: [], num_loops: 0, playing: [], looping: [] });
+						this.state[track].push({t: [], keys: [], frequencies: [], octaves: [], pan: [], vol: 1.0, length: [], num_loops: 0, playing: [], looping: [] });
 						let lastIndex = this.state[track].length-1;	
 						for (let i_note=0; i_note<record.keys.length; i_note++) { //iterate over all the notes in the track at one particular position (this was unnecessary in organya)
 
 								const octave = ((keys[i_note] / 12) | 0)*(track!=3) + this.song.instruments[track].baseOctave;
 								const key = keys[i_note] % 12;
-								const frequencyToPush = track < 3 ? freqTable[key] * octTable[octave] : 17700; //why this number for drums? no idea. it kinda worked though? need to look into this
+								const frequencyToPush = track < 3 ? freqTable[key] * octTable[octave] : 22500; //why this number for drums? no idea. it kinda worked though? need to look into this
 								//const frequencyToPush = 8363*Math.pow(2, octave + key/12);
 								
 								this.state[track][lastIndex].keys.push(track<3 ? key : keys[i_note]); //keeping a 0-24 range for the drums since otherwise the highest drums sounds like the lowest ones
@@ -315,7 +316,7 @@
 							if (this.state[track][lastIndex].keys.length >0) {
 								//if (this.song.instruments[track].vol != 255) this.state[track].vol = this.song.instruments[track].volume;
 								this.state[track][lastIndex].vol = this.song.instruments[track].volume; //piyo doesn't allow changing volume mid-note
-								this.state[track][lastIndex].pan = record.pan;
+								this.state[track][lastIndex].pan.push(record.pan);
 							}
 						} //ending the 'skip muted tracks' if-block here, rather than at the end, because otherwise, muting while a note played would make that note get stuck
 					}
@@ -352,7 +353,7 @@
         pause() {
 			this.node.disconnect();
 			for(let track=0; track<4; track++){
-				this.state[track]=[{t: [], keys: [], frequencies: [], octaves: [], pan: 0.0, vol: 1.0, length: [], num_loops: 0, playing: [], looping: []}];
+				this.state[track]=[{t: [], keys: [], frequencies: [], octaves: [], pan: [], vol: 1.0, length: [], num_loops: 0, playing: [], looping: []}];
             }//flushing the envelopes out so pressing home and replaying doesn't have a leftover of where you stopped
         }
 
@@ -417,7 +418,7 @@
 		console.log(drumWaveTable);
 		
 		
-		//
+		/* //utility function for downloading the drum samples separately for testing
 		let toDownload = [];
 		for (let i=0; i<drumWaveTable[5].length; i++){
 			toDownload.push(drumWaveTable[5][i]);
@@ -447,7 +448,7 @@
 		}
 
 		//downloadBlob(toDownload, 'drum5.bin', 'application/octet-stream');
-		//
+		*/
 		
         window.Organya = Organya;
     };

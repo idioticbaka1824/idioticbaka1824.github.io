@@ -260,7 +260,7 @@
 					for (var i in toMute) {
                         document.getElementById(toMute[i]).checked=true;
                     }
-                    document.getElementById(unMute).checked=null;
+                    if(argument=='solo') document.getElementById(unMute).checked=null;
 				}
                 else if (shouldUnMuteAll==1){
 					for (var i in muteAll) {

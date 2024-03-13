@@ -42,7 +42,7 @@
 			this.meas = [4, 4]; //I don't think piyopiyo allows for any other type
 			
             this.wait = view.getUint32(p, true); p += 4;
-			this.waitFudge = 1; //thought i'd need this but nah
+			this.waitFudge = 0.1; //thought i'd need this but nah
             this.start = view.getInt32(p, true); p += 4;
             this.end = view.getInt32(p, true); p += 4;
             this.songLength = view.getInt32(p, true); p += 4; //upper bound on number of steps to play or consider

@@ -133,8 +133,19 @@
         
         (() => {
             const songs = `Azarashi.pmd
-			Ikachan.pmd
-			test.pmd`.split("\n").sort();
+			test.pmd
+			Ikachan/Ikachan.pmd
+			Ikachan/Buriki.pmd
+			Ikachan/Magirette.pmd
+			Ikachan/Mizuno.pmd
+			Ikachan/Quake.pmd
+			Ikachan/Tidepool.pmd
+			examples/Sample1.pmd
+			examples/Doggy1.pmd
+			examples/Iron.pmd
+			data/Dark.pmd
+			data/BrokenToy.pmd
+			data/ZaomiZaomi.pmd`.split("\n").sort();
 
             const songListEl = document.getElementById("songs");
             for (let song of songs) {

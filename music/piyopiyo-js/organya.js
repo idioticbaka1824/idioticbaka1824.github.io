@@ -1,6 +1,7 @@
 (() => {
-    let waveTable = new Int8Array(new ArrayBuffer(0));
     let drums = [];
+	let piyoWaveSampleRate = 11025*1.15; //literally what and why
+	let piyoDrumSampleRate = 22050;
 	
 	//utility function to read a bunch of data
 	function getBytesLE(view, pos, n_bytes, unsigned) {
@@ -41,7 +42,7 @@
 			this.meas = [4, 4]; //I don't think piyopiyo allows for any other type
 			
             this.wait = view.getUint32(p, true); p += 4;
-			this.waitFudge = 1.08; //makes the playback speed more accurate, dunno why
+			this.waitFudge = 1; //thought i'd need this but nah
             this.start = view.getInt32(p, true); p += 4;
             this.end = view.getInt32(p, true); p += 4;
             this.songLength = view.getInt32(p, true); p += 4; //upper bound on number of steps to play or consider
@@ -52,17 +53,16 @@
                 const baseOctave = view.getUint8(p, true); p++;
                 const icon = view.getUint8(p, true); p++;
                 const unknown = view.getUint16(p, true); p += 2;
-                const envelopeLength = view.getUint32(p, true); p += 4; //11025 is 1 second	
+                const envelopeLength = view.getUint32(p, true); p += 4; //piyoWaveSampleRate is 1 second	
                 const volume = view.getUint32(p, true); p += 4;
                 const unknown2 = view.getUint32(p, true); p += 4;
                 const unknown3 = view.getUint32(p, true); p += 4;
 				const waveSamples = getBytesLE(view, p, 256, 'signed'); p+=256;
 				const envelopeSamples = getBytesLE(view, p, 64, 'signed'); p+=64;
-                this.instruments[i] = { baseOctave, icon, envelopeLength, volume, waveSamples, envelopeSamples, freq:1000 };
+                this.instruments[i] = { baseOctave, icon, envelopeLength, volume, waveSamples, envelopeSamples };
             }
 			const drumVolume = view.getUint32(p, true); p+= 4; //0 to 300. 0 is still faintly audible
 			this.instruments[3] = {volume:drumVolume, baseOctave:0}; //instruments[3], being the drum track, is qualitatively different from the others. handle it separately when needed
-			console.log(this.instruments);
 			//assert p == track1DataStartAddress at this point
 			
             this.tracks = [];
@@ -130,7 +130,7 @@
                     frequencies: [],
                     octaves: [],
                     pan: [],
-                    vol: 1.0,
+                    vol: [],
                     length: [],
                     num_loops: 0,
                     playing: [],
@@ -156,7 +156,7 @@
 					while (i_prec<this.state[i].length) { //prec stands for position record. a bundle of all the notes at a particular tick. idk why i called it that. the reason organya didn't have this is cuz in piyopiyo each note can last long enough to meld into upcoming ones
 						for(let i_note=0; i_note<this.state[i][i_prec].keys.length; i_note++) {
 							if (this.state[i][i_prec].playing[i_note]) {
-								//console.log(this.state);
+								
 								const samples = (i < 3) ? 256 : drumWaveTable[drumTypeTable[this.state[i][i_prec].keys[i_note]]].length;
 
 								this.state[i][i_prec].t[i_note] += (this.state[i][i_prec].frequencies[i_note] / this.sampleRate) * advTable[this.state[i][i_prec].octaves[i_note]];
@@ -191,12 +191,12 @@
 								let s = s1 + (s2 - s1) * fract;
 
 								//envelope volume stuff
-								let fractionOfThisNoteCompleted = 1 - (this.state[i][i_prec].length[i_note] - this.samplesThisTick/this.sampleRate)/(this.song.instruments[i].envelopeLength/11025);
+								let fractionOfThisNoteCompleted = 1 - (this.state[i][i_prec].length[i_note] - this.samplesThisTick/this.sampleRate)/(this.song.instruments[i].envelopeLength/(piyoWaveSampleRate));
 								let volumeEnv=1;
 								if (fractionOfThisNoteCompleted>1) {volumeEnv=0;} //in case we're in that little bit of overshoot because of the ticks not lining up with envelope lengths
 								else {volumeEnv = (i<3) ? this.song.instruments[i].envelopeSamples[(fractionOfThisNoteCompleted*63 | 0)]/128 : 1-0.4*(this.state[i][i_prec].keys[i_note]%2==1);} //envelope samples go 0-128. also, odd-key drums are softer. the 0.4 factor is eyeballed
 								
-								s *= Math.pow(10, ((this.state[i][i_prec].vol*volumeEnv - 255) * 8)/2000);
+								s *= Math.pow(10, ((this.state[i][i_prec].vol[i_note]*volumeEnv - 300) * 8)/2000);
 								
 								const pan = (panTable[this.state[i][i_prec].pan[i_note]] - 256) * 10;
 								let left = 1, right = 1;
@@ -286,13 +286,13 @@
 					const record = this.song.tracks[track][this.playPos];
 					if (record.keys.length != 0) { //only continue if there is some or the other note at that position
 						let keys = record.keys;
-						this.state[track].push({t: [], keys: [], frequencies: [], octaves: [], pan: [], vol: 1.0, length: [], num_loops: 0, playing: [], looping: [] });
+						this.state[track].push({t: [], keys: [], frequencies: [], octaves: [], pan: [], vol: [], length: [], num_loops: 0, playing: [], looping: [] });
 						let lastIndex = this.state[track].length-1;	
 						for (let i_note=0; i_note<record.keys.length; i_note++) { //iterate over all the notes in the track at one particular position (this was unnecessary in organya)
 
 								const octave = ((keys[i_note] / 12) | 0)*(track!=3) + this.song.instruments[track].baseOctave;
 								const key = keys[i_note] % 12;
-								const frequencyToPush = track < 3 ? freqTable[key] * octTable[octave] : 22500; //why this number for drums? no idea. it kinda worked though? need to look into this
+								const frequencyToPush = track < 3 ? freqTable[key] * octTable[octave] : piyoDrumSampleRate; //the piyoDrumSampleRate value was pretty much titrated, and now i'm realising like oh okay so frequency's in samples per second, not cycles or radians
 								//const frequencyToPush = 8363*Math.pow(2, octave + key/12);
 								
 								this.state[track][lastIndex].keys.push(track<3 ? key : keys[i_note]); //keeping a 0-24 range for the drums since otherwise the highest drums sounds like the lowest ones
@@ -300,7 +300,7 @@
 
 								this.state[track][lastIndex].frequencies.push(frequencyToPush);
 								if (!this.state[track][lastIndex].playing[i_note]) {
-									this.state[track][lastIndex].num_loops = ((octave + 1) * 4);
+									this.state[track][lastIndex].num_loops = ((octave + 1) * 4); //what does this do?
 								}
 								
 								if (!this.state[track][lastIndex].playing[i_note]) {
@@ -310,12 +310,12 @@
 								this.state[track][lastIndex].octaves.push(octave);
 								this.state[track][lastIndex].playing.push(true);
 								this.state[track][lastIndex].looping.push(track!=3);
-								this.state[track][lastIndex].length.push( (track<3) ? (this.song.instruments[track].envelopeLength/11025) : drumWaveTable[drumTypeTable[this.state[track][lastIndex].keys[i_note]]].length/11025); //in seconds
+								this.state[track][lastIndex].length.push( (track<3) ? (this.song.instruments[track].envelopeLength/piyoWaveSampleRate) : drumWaveTable[drumTypeTable[this.state[track][lastIndex].keys[i_note]]].length/piyoDrumSampleRate); //in seconds. not sure why i'm using different sample rates, but it seems to work?
 
 
 							if (this.state[track][lastIndex].keys.length >0) {
 								//if (this.song.instruments[track].vol != 255) this.state[track].vol = this.song.instruments[track].volume;
-								this.state[track][lastIndex].vol = this.song.instruments[track].volume; //piyo doesn't allow changing volume mid-note
+								this.state[track][lastIndex].vol.push(this.song.instruments[track].volume); //piyo doesn't allow changing volume mid-track, but drums can have different volumes and we don't want those overlapping
 								this.state[track][lastIndex].pan.push(record.pan);
 							}
 						} //ending the 'skip muted tracks' if-block here, rather than at the end, because otherwise, muting while a note played would make that note get stuck
@@ -324,7 +324,7 @@
 				let i_prec=0;
 				while (i_prec<this.state[track].length){
 					for(let i_note=0; i_note<this.state[track][i_prec].keys.length; i_note++){
-						if (this.state[track][i_prec].length[i_note] <= 0) { //the length of a note isn't necessarily an integer multiple of a step's length in piyo, so this was running into negatives. figure out how to fix this. maybe go to the playback function and use length in terms of seconds instead? yeah that worked out i guess
+						if (this.state[track][i_prec].length[i_note] <= 0) { //the length of a note isn't necessarily an integer multiple of a tick length in piyo, so this was running into negatives. figure out how to fix this. maybe go to the playback function and use length in terms of seconds instead? yeah that worked out i guess
 							this.state[track][i_prec].frequencies.splice(i_note, 1);
 							this.state[track][i_prec].keys.splice(i_note, 1);
 							this.state[track][i_prec].octaves.splice(i_note, 1);
@@ -332,6 +332,8 @@
 							this.state[track][i_prec].t.splice(i_note, 1);
 							this.state[track][i_prec].playing.splice(i_note, 1);
 							this.state[track][i_prec].looping.splice(i_note, 1);
+							this.state[track][i_prec].pan.splice(i_note, 1);
+							this.state[track][i_prec].vol.splice(i_note, 1);
 						}
 						else {
 							this.state[track][i_prec].length[i_note] -= this.song.wait*this.song.waitFudge/1000;
@@ -353,7 +355,7 @@
         pause() {
 			this.node.disconnect();
 			for(let track=0; track<4; track++){
-				this.state[track]=[{t: [], keys: [], frequencies: [], octaves: [], pan: [], vol: 1.0, length: [], num_loops: 0, playing: [], looping: []}];
+				this.state[track]=[{t: [], keys: [], frequencies: [], octaves: [], pan: [], vol: [], length: [], num_loops: 0, playing: [], looping: []}];
             }//flushing the envelopes out so pressing home and replaying doesn't have a leftover of where you stopped
         }
 
@@ -389,11 +391,6 @@
         //splitting waves and drums into separate wavetables
         
         console.log("Initializing PiyoPiyo...");
-		const waveURL = new URL("https://raadshaikh.github.io/music/piyopiyo-js/WAVE100.bin");
-        const res = await fetch(waveURL);
-        const buf = await res.arrayBuffer();
-        const view = new DataView(buf);
-        waveTable = new Int8Array(buf);
         
 		const drumURL = new URL("https://raadshaikh.github.io/music/piyopiyo-js/piyoDrums.bin");
         const res_d = await fetch(drumURL); //'_d' for 'drum'. Beyond that, code is unchanged
@@ -415,7 +412,6 @@
 				drumWaveTable[i][j] = drumWaveTable[i][j]*100/32768;
 			}
 		}
-		console.log(drumWaveTable);
 		
 		
 		/* //utility function for downloading the drum samples separately for testing

@@ -6,6 +6,8 @@
         constructor(canvas) {
             this.canvas = canvas;
             this.ctx = canvas.getContext("2d");
+			//this.ctx.scale(2,2); //could make a zoom option sometime
+			//this.ctx.imageSmoothingEnabled = false;
             this.organya = null;
             this.requested = false;
             this.scrollY = 8 * 144 - this.canvas.height;

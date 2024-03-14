@@ -212,8 +212,10 @@
                 }
                 if (prev_song != new_song || prev_song == null){
                     stopOrg();
-					shouldUnMuteAll=1; //this doesn't quite work the way i want
-					window.muteAll('solo');
+					if (argument!='doPlay'){
+						shouldUnMuteAll=1; //this doesn't quite work the way i want
+						window.muteAll('solo');
+					}
                     const data = await res.arrayBuffer();
                     await initOrganya();
 

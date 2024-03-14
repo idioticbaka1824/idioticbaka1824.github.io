@@ -53,7 +53,7 @@
                 const baseOctave = view.getUint8(p, true); p++;
                 const icon = view.getUint8(p, true); p++;
                 const unknown = view.getUint16(p, true); p += 2;
-                const envelopeLength = view.getUint32(p, true); p += 4; //piyoWaveSampleRate is 1 second	
+                const envelopeLength = view.getUint32(p, true); p += 4;
                 const volume = view.getUint32(p, true); p += 4;
                 const unknown2 = view.getUint32(p, true); p += 4;
                 const unknown3 = view.getUint32(p, true); p += 4;
@@ -63,6 +63,7 @@
             }
 			const drumVolume = view.getUint32(p, true); p+= 4; //0 to 300. 0 is still faintly audible
 			this.instruments[3] = {volume:drumVolume, baseOctave:0}; //instruments[3], being the drum track, is qualitatively different from the others. handle it separately when needed
+			console.log(this.instruments);
 			//assert p == track1DataStartAddress at this point
 			
             this.tracks = [];

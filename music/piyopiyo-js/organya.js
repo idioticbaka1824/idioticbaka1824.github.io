@@ -1,6 +1,6 @@
 (() => {
     let drums = [];
-	let piyoWaveSampleRate = 11025*1.15; //literally what and why
+	let piyoWaveSampleRate = 11025*1.15/1.15; //literally what and why
 	let piyoDrumSampleRate = 22050;
 	
 	//utility function to read a bunch of data
@@ -42,7 +42,7 @@
 			this.meas = [4, 4]; //I don't think piyopiyo allows for any other type
 			
             this.wait = view.getUint32(p, true); p += 4;
-			this.waitFudge = 0.1; //thought i'd need this but nah
+			this.waitFudge = 1; //thought i'd need this but nah
             this.start = view.getInt32(p, true); p += 4;
             this.end = view.getInt32(p, true); p += 4;
             this.songLength = view.getInt32(p, true); p += 4; //upper bound on number of steps to play or consider
@@ -197,7 +197,9 @@
 								if (fractionOfThisNoteCompleted>1) {volumeEnv=0;} //in case we're in that little bit of overshoot because of the ticks not lining up with envelope lengths
 								else {volumeEnv = (i<3) ? this.song.instruments[i].envelopeSamples[(fractionOfThisNoteCompleted*63 | 0)]/128 : 1-0.4*(this.state[i][i_prec].keys[i_note]%2==1);} //envelope samples go 0-128. also, odd-key drums are softer. the 0.4 factor is eyeballed
 								
-								s *= Math.pow(10, ((this.state[i][i_prec].vol[i_note]*volumeEnv - 300) * 8)/2000);
+								s *= Math.pow(10, ((this.state[i][i_prec].vol[i_note] - 300) * 8)/2000);
+								//s *= Math.pow(10, 1.2*this.state[i][i_prec].vol[i_note]/300 - 1.45) //my messy eyeballed calculation that i turned out not to need when i figured out how the envelope works
+								s *= volumeEnv; //why didn't i realise this right away i'm so stupid
 								
 								const pan = (panTable[this.state[i][i_prec].pan[i_note]] - 256) * 10;
 								let left = 1, right = 1;

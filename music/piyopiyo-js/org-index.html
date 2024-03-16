@@ -120,11 +120,12 @@
             
     <div id="canvas-container">
         <canvas id="org-canvas"></canvas>
+		<!-- <canvas id="org-canvas2"></canvas> -->
     </div>
 
     <!-- increment before each deploy -->
-    <script src="organya.js?cache_bust=11"></script>
-    <script src="organya-ui.js?cache_bust=11"></script>
+    <script src="organya.js?cache_bust=12"></script>
+    <script src="organya-ui.js?cache_bust=12"></script>
     <!--I have no clue what this cache bust thing is, but apparently it's needed to reflect updates properly-->
     <script>
     
@@ -249,8 +250,13 @@
             }
             
 			window.clickHandling = (x, y) => {
-				if(currentOrg != null && y>=0 && y<=16) currentOrg.cursorUpdate(x);
-				if(currentOrg != null && y>16 && x>36) currentOrg.addNote(x, y, ui.scrollY, );
+				if(currentOrg != null && y>=orgCanvas.height-84-16-76 && y<=orgCanvas.height-84-76) currentOrg.cursorUpdate(x-8);
+				if(currentOrg != null && y>16 && y<orgCanvas.height-84-16-76 && x>36+8) currentOrg.addNote(x-8, y, ui.scrollY);
+				if(currentOrg != null && y>orgCanvas.height-84-76 && y<orgCanvas.height-76) currentOrg.addPan(x-8, y, orgCanvas.height);
+				if(currentOrg != null && y>orgCanvas.height-76 && y<orgCanvas.height-60 && x<256) currentOrg.changeTrack(x,y);
+				if(currentOrg != null && y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-144 && x<orgCanvas.width-144+48) homeOrg();
+				if(currentOrg != null && y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-144+48 && x<orgCanvas.width-144+2*48) playOrg();
+				if(currentOrg != null && y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-144+2*48 && x<orgCanvas.width-144+3*48) pauseOrg();
 			}
             
             let muteMelodies=['mute_1','mute_2','mute_3'];

@@ -1,6 +1,6 @@
 (() => {
     let drums = [];
-	let piyoWaveSampleRate = 11025*1.15/1.15; //literally what and why
+	let piyoWaveSampleRate = 11025;
 	let piyoDrumSampleRate = 22050;
 	
 	//utility function to read a bunch of data
@@ -198,7 +198,7 @@
 								else {volumeEnv = (i<3) ? this.song.instruments[i].envelopeSamples[(fractionOfThisNoteCompleted*63 | 0)]/128 : 1-0.4*(this.state[i][i_prec].keys[i_note]%2==1);} //envelope samples go 0-128. also, odd-key drums are softer. the 0.4 factor is eyeballed
 								
 								s *= Math.pow(10, ((this.state[i][i_prec].vol[i_note] - 300) * 8)/2000);
-								//s *= Math.pow(10, 1.2*this.state[i][i_prec].vol[i_note]/300 - 1.45) //my messy eyeballed calculation that i turned out not to need when i figured out how the envelope works
+								//s *= Math.pow(10, 1.2*this.state[i][i_prec].vol[i_note]/300 - 1.45) //my messy calculation that i turned out not to need when i figured out how the envelope works
 								s *= volumeEnv; //why didn't i realise this right away i'm so stupid
 								
 								const pan = (panTable[this.state[i][i_prec].pan[i_note]] - 256) * 10;
@@ -250,15 +250,15 @@
         }
 		
 		cursorUpdate(x) {
-			let viewPos = ~~(this.playPos/this.MeasxStep)*this.MeasxStep;
-			let newPlayPosOffset = ~~((x-36)/12); //offset from viewpos (the beginning of the viewing window)
+			let viewPos = (this.playPos/this.MeasxStep | 0)*this.MeasxStep;
+			let newPlayPosOffset = ((x-36)/12 | 0); //offset (in beats) from viewpos (the beat # of the beginning of the viewing window)
             this.playPos = viewPos + newPlayPosOffset;
             this.updateTimeDisplay();
         }
 		
 		addNote(x, y, scrollY) {
-			let viewPos = ~~(this.playPos/this.MeasxStep)*this.MeasxStep;
-			let newNotePos = viewPos + ~~((x-36)/12);
+			let viewPos = (this.playPos/this.MeasxStep | 0)*this.MeasxStep;
+			let newNotePos = viewPos + ((x-36)/12 | 0);
 			let newNoteKey = (96 - ((y + scrollY)/12) | 0);
 			let newNoteKeyRelative = newNoteKey % 12;
 			let newNoteKeyOctave = (newNoteKey / 12 | 0);
@@ -266,6 +266,20 @@
 			var keys = this.song.tracks[this.selectedTrack][newNotePos].keys
 			if (keys.includes(toPush)) keys.splice(keys.indexOf(toPush), 1);
 			else if((this.selectedTrack!=3) || (drumTypeTable[newNoteKeyRelative]!=-1 && drumTypeTable[newNoteKeyRelative]!=undefined)) keys.push(toPush);
+			this.update();
+		}
+		
+		addPan(x, y, height) {
+			let viewPos = (this.playPos/this.MeasxStep | 0)*this.MeasxStep;
+			let newPanPos = viewPos + ((x-36)/12 | 0);
+			let newPanVal = ((height-y-76)/12 | 0)+1;
+			this.song.tracks[this.selectedTrack][newPanPos].pan = newPanVal;
+			this.update();
+		}
+		
+		changeTrack(x, y) {
+			let newSelectedTrack = (x/64 | 0);
+			this.selectedTrack = newSelectedTrack;
 			this.update();
 		}
         
@@ -317,7 +331,6 @@
 
 
 							if (this.state[track][lastIndex].keys.length >0) {
-								//if (this.song.instruments[track].vol != 255) this.state[track].vol = this.song.instruments[track].volume;
 								this.state[track][lastIndex].vol.push(this.song.instruments[track].volume); //piyo doesn't allow changing volume mid-track, but drums can have different volumes and we don't want those overlapping
 								this.state[track][lastIndex].pan.push(record.pan);
 							}

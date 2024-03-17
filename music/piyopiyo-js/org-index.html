@@ -134,14 +134,14 @@
         
         (() => {
             const songs = `Azarashi.pmd
-			test.pmd
-			aaa-testnote-Ikachan.pmd
-			Ikachan/Ikachan.pmd
-			Ikachan/Buriki.pmd
-			Ikachan/Magirete.pmd
-			Ikachan/Mizuno.pmd
-			Ikachan/Quake.pmd
-			Ikachan/Tidepool.pmd
+			Test.pmd
+			Testnote-Ikachan.pmd
+			ikachan/Ikachan.pmd
+			ikachan/Buriki.pmd
+			ikachan/Magirete.pmd
+			ikachan/Mizuno.pmd
+			ikachan/Quake.pmd
+			ikachan/Tidepool.pmd
 			examples/Sample1.pmd
 			examples/Doggy1.pmd
 			examples/Iron.pmd
@@ -163,11 +163,12 @@
             const orgCanvas = document.getElementById("org-canvas");
             orgCanvas.width = canvasContainer.clientWidth;
             orgCanvas.height = canvasContainer.clientHeight;
+			orgCanvas.oncontextmenu = function(e) { e.preventDefault(); e.stopPropagation(); } //disabling context menu on the canvas so that right-click can be used for other stuff
             const ui = new OrganyaUI(orgCanvas);
 
             window.addEventListener("resize", () => {
-                orgCanvas.width = canvasContainer.clientWidth;
-                orgCanvas.height = canvasContainer.clientHeight;
+                orgCanvas.width = Math.max(canvasContainer.clientWidth, 640); //minimum size is 640x480, otherwise things can started crowding into each other
+                orgCanvas.height = Math.max(canvasContainer.clientHeight, 480);
                 ui.draw();
             })
             
@@ -205,18 +206,20 @@
 					songname = "https://raadshaikh.github.io/music/piyopiyo-js/" + songname
 					songname = new URL(songname);
                     res = await fetch(songname);
+					prev_song = new_song;
                     new_song = songListEl.options[songListEl.selectedIndex].value;
                 }
                 else if(document.getElementById('urlInputRadio').checked){
                     res = await fetch(document.getElementById('idUrlInput').value);
+					prev_song = new_song;
                     new_song = document.getElementById('idUrlInput').value;
                 }
                 if (prev_song != new_song || prev_song == null){
                     stopOrg();
-					if (argument!='doPlay'){
-						shouldUnMuteAll=1; //this doesn't quite work the way i want
-						window.muteAll('solo');
-					}
+					<!-- if (argument!='doPlay'){ -->
+						<!-- shouldUnMuteAll=1; //this doesn't quite work the way i want -->
+						<!-- window.muteAll('solo'); -->
+					<!-- } -->
                     const data = await res.arrayBuffer();
                     await initOrganya();
 
@@ -248,16 +251,6 @@
                 const scrollAmount = -64*(Number(argument=='up')-Number(argument=='down'));
                 ui.onScroll({ deltaY: scrollAmount });
             }
-            
-			window.clickHandling = (x, y) => {
-				if(currentOrg != null && y>=orgCanvas.height-84-16-76 && y<=orgCanvas.height-84-76) currentOrg.cursorUpdate(x-8);
-				if(currentOrg != null && y>16 && y<orgCanvas.height-84-16-76 && x>36+8) currentOrg.addNote(x-8, y, ui.scrollY);
-				if(currentOrg != null && y>orgCanvas.height-84-76 && y<orgCanvas.height-76) currentOrg.addPan(x-8, y, orgCanvas.height);
-				if(currentOrg != null && y>orgCanvas.height-76 && y<orgCanvas.height-60 && x<256) currentOrg.changeTrack(x,y);
-				if(currentOrg != null && y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-144 && x<orgCanvas.width-144+48) homeOrg();
-				if(currentOrg != null && y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-144+48 && x<orgCanvas.width-144+2*48) playOrg();
-				if(currentOrg != null && y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-144+2*48 && x<orgCanvas.width-144+3*48) pauseOrg();
-			}
             
             let muteMelodies=['mute_1','mute_2','mute_3'];
             let muteDrums=['mute_P'];
@@ -292,8 +285,14 @@
             
             
             let allowedTracks=['1','2','3','4','p']
+			var keyBeingPressed=null;
+            document.addEventListener('keyup', (e) => {
+				keyBeingPressed=null;
+				console.log(keyBeingPressed);
+			}, true);
             document.addEventListener('keydown', (e) => {
-
+					keyBeingPressed = e.key;
+					console.log(keyBeingPressed);
                     if(currentOrg!=null && allowedTracks.includes(e.key)){
 						if(currentOrg.selectedTrack!=allowedTracks.indexOf(e.key)) shouldUnMuteAll=1-shouldUnMuteAll;
                         currentTrackDisplay.innerHTML = e.key == 4 ? 'P' : e.key.toUpperCase(); //both '4' and 'p' are accepted names for the drum track, but it should display 'p'
@@ -313,6 +312,42 @@
                     else if(e.key=="ArrowDown"){
                         window.updown('down');
                     }
+                    else if(e.key==" "){
+                        if(currentOrg.isPlaying==false) window.playOrg();
+                        else if(currentOrg.isPlaying==true) window.pauseOrg();
+                    }
+                    else if(e.key=="Home"){
+                        window.homeOrg();
+                    }
+                    else if(e.key=="Delete" || e.key=="Backspace"){
+                        currentOrg.deleteNotes();
+                    }
+                    else if(e.ctrlKey && e.key=='c'){
+                        currentOrg.changeEditingMode(1);
+						currentOrg.copyNotes();
+                    }
+					else if(e.ctrlKey && e.key=='v'){
+                        currentOrg.pasteNotes(-1, -1);
+                    }
+					else if(e.key=='Tab'){
+                        //currentOrg.changeEditingMode(1-currentOrg.editingMode); //
+						//if(currentOrg.editingMode==1) currentOrg.copyNotes(); //this would make it toggle modes
+                        currentOrg.changeEditingMode(0); //this just sets pencil mode
+                    }
+					else if(e.key=='Enter'){
+						currentOrg.toggleWaveformEditor();
+					}
+					else if(e.key=='s'){
+						window.muteAll('solo');
+					}
+					else if(e.key=='m' && currentOrg!=null){
+						mute_string='mute_'+currentTrackDisplay.innerHTML;
+						mute_element = document.getElementById(mute_string);
+						mute_element.checked = 1-mute_element.checked;
+					}
+					<!-- else if(e.key=='q'){ -->
+						<!-- window.helpHandling(cursor_coords[0], cursor_coord[1]); -->
+					<!-- } -->
                 
             }, true);
 			
@@ -326,7 +361,61 @@
 			
 			orgCanvas.addEventListener('mousedown', (e) => {
                 click_coords = getMousePosition(orgCanvas, e);
-				window.clickHandling(click_coords[0], click_coords[1]);
+				window.clickHandling(click_coords[0], click_coords[1], e=e);
+            }, true);
+            
+			var isSelecting = false;
+			var isEditingSamples = false;
+			var cursor_coords = [0,0];
+			
+			window.clickHandling = (x, y, e) => {
+				if(currentOrg != null) {
+					if(y>=orgCanvas.height-84-16-76 && y<=orgCanvas.height-84-76 && x>36+8) {
+						currentOrg.cursorUpdate(x-8); 
+						if (currentOrg.editingMode==0) isSelecting=true;
+					}
+					if(y>16 && y<orgCanvas.height-84-16-76 && x>36+8) {
+						if (currentOrg.editingMode==0) currentOrg.addNote(x-8, y, ui.scrollY);
+						else if (currentOrg.editingMode==1) currentOrg.pasteNotes(x-8, y);
+					}
+					if(y>orgCanvas.height-84-76 && y<orgCanvas.height-76 && x>36+8) {
+						if(!keyBeingPressed=='q') currentOrg.addPan(x-8, y, orgCanvas.height);
+						else {console.log(x,y);}
+					}
+					if(y>orgCanvas.height-76 && y<orgCanvas.height-60 && x<256) currentOrg.changeTrack(x, e.button); //left/right click either select or mutes a track. i'll handle both of these with the same function
+					if(y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-144 && x<orgCanvas.width-144+48) homeOrg();
+					if(y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-144+48 && x<orgCanvas.width-144+2*48) playOrg();
+					if(y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-144+2*48 && x<orgCanvas.width-144+3*48) pauseOrg();
+					if(y>orgCanvas.height-48 && y<orgCanvas.height-24 && x>orgCanvas.width-144+2*48 && x<orgCanvas.width-144+3*48) currentOrg.deleteNotes();
+					if(y>orgCanvas.height-48 && y<orgCanvas.height-24 && x>orgCanvas.width-144 && x<orgCanvas.width-144+48) currentOrg.changeEditingMode(0);
+					if(y>orgCanvas.height-48 && y<orgCanvas.height-24 && x>orgCanvas.width-144+48 && x<orgCanvas.width-144+2*48) {currentOrg.changeEditingMode(1); currentOrg.copyNotes();};
+					if(y>orgCanvas.height-72 && y<orgCanvas.height-72+32 && x>orgCanvas.width-144-8-32 && x<orgCanvas.width-144-8) currentOrg.changeLoop();
+					if(y>orgCanvas.height-72+32 && y<orgCanvas.height-72+64 && x>orgCanvas.width-144-8-32 && x<orgCanvas.width-144-8) currentOrg.changeLowSpec();
+					if(!currentOrg.isWaveformEditor && y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-144 && x<orgCanvas.width-144+48) currentOrg.toggleWaveformEditor();
+					if(currentOrg.isWaveformEditor && y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-48 && x<orgCanvas.width) currentOrg.toggleWaveformEditor();
+					if(currentOrg.isWaveformEditor && y>274 && y<274+120 && x>64 && x<64+120) currentOrg.updateNoteIcon(x, y);
+					if (currentOrg.isWaveformEditor && cursor_coords[0]>64 && cursor_coords[0]<64+512 && cursor_coords[1]>56 && cursor_coords[1]<56+200) isEditingSamples=true;
+					if (currentOrg.isWaveformEditor && cursor_coords[0]>320 && cursor_coords[0]<320+256 && cursor_coords[1]>274 && cursor_coords[1]<274+128) isEditingSamples=true;
+				}
+			}
+			
+			orgCanvas.addEventListener('mousemove', (e) => {
+                cursor_coords = getMousePosition(orgCanvas, e);
+				if (currentOrg != null) {
+					if (!currentOrg.isWaveformEditor && cursor_coords[0]>orgCanvas.width-8 && cursor_coords[1]<orgCanvas.height-74 && currentOrg.isPlaying==false) window.nextMeas();
+					if (!currentOrg.isWaveformEditor && cursor_coords[0]<8 && cursor_coords[1]<orgCanvas.height-74 && currentOrg.isPlaying==false) window.backMeas();
+					if (isSelecting) currentOrg.selectionUpdate(cursor_coords[0]);
+					if (isEditingSamples && currentOrg.isWaveformEditor && cursor_coords[0]>64 && cursor_coords[0]<64+512 && cursor_coords[1]>56 && cursor_coords[1]<56+200) currentOrg.editWaveSamples(cursor_coords[0], cursor_coords[1]);
+					if (isEditingSamples && currentOrg.isWaveformEditor && cursor_coords[0]>320 && cursor_coords[0]<320+256 && cursor_coords[1]>274 && cursor_coords[1]<274+128) currentOrg.editEnvelopeSamples(cursor_coords[0], cursor_coords[1]);
+				}
+			}, true);
+			
+			orgCanvas.addEventListener('mouseup', (e) => {
+				isSelecting = false;
+				isEditingSamples = false;
+                //cursor_coords = getMousePosition(orgCanvas, e);
+				//if (currentOrg!=null && cursor_coords[0]>orgCanvas.width-8) window.nextMeas();
+				//if (currentOrg!=null && cursor_coords[0]<8) window.backMeas();
             }, true);
             
         })();

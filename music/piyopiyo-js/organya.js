@@ -63,7 +63,7 @@
             }
 			const drumVolume = view.getUint32(p, true); p+= 4; //0 to 300. 0 is still faintly audible
 			this.instruments[3] = {volume:drumVolume, baseOctave:0}; //instruments[3], being the drum track, is qualitatively different from the others. handle it separately when needed
-			console.log(this.instruments);
+			console.log(this);
 			//assert p == track1DataStartAddress at this point
 			
             this.tracks = [];
@@ -112,6 +112,7 @@
          * @param {ArrayBuffer} data 
          */
         constructor(data) {
+			this.isPlaying=false;
             this.song = new Song(data);
             this.MeasxStep=this.song.meas[0]*this.song.meas[1];
             this.node = null;
@@ -121,8 +122,15 @@
             this.samplesPerTick = 0;
             this.samplesThisTick = 0;
             this.state = [];
-            this.mutedTracks=[];
-            this.selectedTrack=0;
+            this.mutedTracks = [];
+            this.selectedTrack = 0;
+			this.selectionStart = 0;
+			this.selectionEnd = 0;
+			this.editingMode = 0; //0 for pencil mode, 1 for duplicate mode
+			this.recordsToPaste = []; //clipboard
+			this.isLoop = true;
+			this.isLowSpec = false;
+			this.isWaveformEditor = false;
             for (let i = 0; i < 4; i++) {
                 this.state[i] = [
 				{
@@ -224,8 +232,13 @@
                     this.samplesThisTick = 0;
 
                     if (this.playPos >= this.song.end) {
-                        this.playPos = this.song.start;
-                        this.updateTimeDisplay();
+						if (this.isLoop == true) {
+							this.playPos = this.song.start;
+							this.updateTimeDisplay();
+						}
+						else if (this.isLoop == false) {
+							this.pause();
+						}
                     }
                 }
             }
@@ -253,6 +266,16 @@
 			let viewPos = (this.playPos/this.MeasxStep | 0)*this.MeasxStep;
 			let newPlayPosOffset = ((x-36)/12 | 0); //offset (in beats) from viewpos (the beat # of the beginning of the viewing window)
             this.playPos = viewPos + newPlayPosOffset;
+			this.selectionStart = this.playPos;
+			this.selectionEnd = this.selectionStart;
+            this.updateTimeDisplay();
+        }
+		
+		selectionUpdate(x) {
+			let viewPos = (this.playPos/this.MeasxStep | 0)*this.MeasxStep;
+			let newSelectionEndOffset = ((x-36)/12 | 0); //offset (in beats) from viewpos (the beat # of the beginning of the viewing window)
+            this.selectionEnd = viewPos + newSelectionEndOffset;
+			if (this.selectionEnd > this.song.songLength) this.selectionEnd = this.song.songLength;
             this.updateTimeDisplay();
         }
 		
@@ -266,7 +289,37 @@
 			var keys = this.song.tracks[this.selectedTrack][newNotePos].keys
 			if (keys.includes(toPush)) keys.splice(keys.indexOf(toPush), 1);
 			else if((this.selectedTrack!=3) || (drumTypeTable[newNoteKeyRelative]!=-1 && drumTypeTable[newNoteKeyRelative]!=undefined)) keys.push(toPush);
-			this.update();
+			if (this.onUpdate) this.onUpdate(this);
+		}
+		
+		deleteNotes() {
+			for(let i=Math.min(this.selectionStart, this.selectionEnd); i<Math.max(this.selectionStart, this.selectionEnd); i++) {
+				this.song.tracks[this.selectedTrack][i].keys=[];
+				this.song.tracks[this.selectedTrack][i].pan=0;
+			}
+			if (this.onUpdate) this.onUpdate(this);
+		}
+		
+		copyNotes() {
+			this.recordsToPaste = [];
+			let selectionStart = Math.min(this.selectionStart, this.selectionEnd);
+			let selectionEnd = Math.max(this.selectionStart, this.selectionEnd);
+			for(let i=0; i<selectionEnd-selectionStart; i++) {
+				let recordToPaste = {keys:[], pan:0};
+				recordToPaste.keys = this.song.tracks[this.selectedTrack][selectionStart+i].keys.slice();
+				recordToPaste.pan = this.song.tracks[this.selectedTrack][selectionStart+i].pan;
+				this.recordsToPaste.push(recordToPaste);
+			}
+		}
+		pasteNotes(x, y) {
+			let viewPos = (this.playPos/this.MeasxStep | 0)*this.MeasxStep;
+			let newNotePos = viewPos + ((x-36)/12 | 0);
+			if(x==-1 && y==-1) newNotePos = this.playPos; //if ctrl+v instead of mouseclick, paste at playPos
+			for(let i=0; i<this.recordsToPaste.length; i++) {
+				this.song.tracks[this.selectedTrack][newNotePos+i].keys = this.recordsToPaste[i].keys.slice();
+				this.song.tracks[this.selectedTrack][newNotePos+i].pan = this.recordsToPaste[i].pan;
+			}
+			if (this.onUpdate) this.onUpdate(this);
 		}
 		
 		addPan(x, y, height) {
@@ -274,26 +327,70 @@
 			let newPanPos = viewPos + ((x-36)/12 | 0);
 			let newPanVal = ((height-y-76)/12 | 0)+1;
 			this.song.tracks[this.selectedTrack][newPanPos].pan = newPanVal;
-			this.update();
+			if (this.onUpdate) this.onUpdate(this);
 		}
 		
-		changeTrack(x, y) {
+		changeTrack(x, click) {
 			let newSelectedTrack = (x/64 | 0);
-			this.selectedTrack = newSelectedTrack;
-			this.update();
+			if(click==0) this.selectedTrack = newSelectedTrack;
+			else if(click==2) {
+				var inputElements = document.getElementsByClassName('mute');
+				inputElements[newSelectedTrack].checked=1-inputElements[newSelectedTrack].checked;
+			}
+			if (this.onUpdate) this.onUpdate(this);
 		}
         
+		changeEditingMode(argument) {
+			this.editingMode=argument;
+			if (this.onUpdate) this.onUpdate(this);
+		};
+		
+		changeLoop() {
+			this.isLoop = 1-this.isLoop;
+			if (this.onUpdate) this.onUpdate(this);
+		}
+		changeLowSpec() {
+			this.isLowSpec = 1-this.isLowSpec;
+			if (this.onUpdate) this.onUpdate(this);
+		}
+		
+		toggleWaveformEditor() {
+			this.pause();
+			this.isWaveformEditor = 1-this.isWaveformEditor;
+			if (this.onUpdate) this.onUpdate(this);
+		}
+		
+		updateNoteIcon(x, y) {
+			x -= 64;
+			y -= 274;
+			let iconID = (x/12 | 0) + 10*(y/12 | 0);
+			this.song.instruments[this.selectedTrack].icon = iconID;
+			if (this.onUpdate) this.onUpdate(this);
+		}
+		
+		editWaveSamples(x, y) {
+			let newPos = ((x-64)/2 | 0);
+			let newSample = 156-y;
+			this.song.instruments[this.selectedTrack].waveSamples[newPos] = newSample;
+			if (this.onUpdate) this.onUpdate(this);
+		}
+		editEnvelopeSamples(x, y) {
+			let newPos = ((x-320)/4 | 0);
+			let newSample = 402-y;
+			this.song.instruments[this.selectedTrack].envelopeSamples[newPos] = newSample;
+			if (this.onUpdate) this.onUpdate(this);
+		}
         
         updateTimeDisplay() {
             currentMeasDisplay.innerHTML=this.playPos/(this.MeasxStep) | 0;
             currentStepDisplay.innerHTML=this.playPos%(this.MeasxStep);
-            this.update(); //this line is so as to update the display when next/previous is pressed, even when not playing
+            if (this.onUpdate) this.onUpdate(this); //this line is so as to update the display when next/previous is pressed, even when not playing
         }
         
         update() {
             if (this.onUpdate) this.onUpdate(this);
             
-			if (this.playPos>=this.song.end) this.playPos=this.song.start;
+			if (this.playPos>=this.song.end && this.isLoop) this.playPos=this.song.start;
 			
             this.whichMuted();
 
@@ -362,6 +459,7 @@
         }
 
         stop() {
+			this.isPlaying=false;
 			if(this.ctx.state!='closed') {
 				this.node.disconnect();
 				this.ctx.close();
@@ -369,6 +467,7 @@
         }
         
         pause() {
+			this.isPlaying=false;
 			this.node.disconnect();
 			for(let track=0; track<4; track++){
 				this.state[track]=[{t: [], keys: [], frequencies: [], octaves: [], pan: [], vol: [], length: [], num_loops: 0, playing: [], looping: []}];
@@ -376,6 +475,7 @@
         }
 
         play(argument) {
+			this.isPlaying = true;
             this.ctx = new (window.AudioContext || window.webkitAudioContext)();
             this.sampleRate = this.ctx.sampleRate;
             this.samplesPerTick = (this.sampleRate / 1000) * this.song.wait*this.song.waitFudge | 0;

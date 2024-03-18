@@ -298,45 +298,6 @@
 						if (e.key=='p') currentOrg.selectedTrack = 3;
                         currentOrg.update();
                     }
-                    else if(e.key=="ArrowLeft"){
-                        window.backMeas();
-                    }
-                    else if(e.key=="ArrowRight"){
-                        window.nextMeas();
-                    }
-                    else if(e.key=="ArrowUp"){
-                        if(!currentOrg.isWaveformEditor) window.updown('up');
-						else if(currentOrg.isWaveformEditor) currentOrg.editNumbers(0, 1); 
-                    }
-                    else if(e.key=="ArrowDown"){
-                        if(!currentOrg.isWaveformEditor) window.updown('down');
-						else currentOrg.editNumbers(0, -1); 
-                    }
-                    else if(e.key==" "){
-                        if(currentOrg.isPlaying==false) window.playOrg();
-                        else if(currentOrg.isPlaying==true) window.pauseOrg();
-                    }
-                    else if(e.key=="Home"){
-                        window.homeOrg();
-                    }
-                    else if(e.key=="Delete" || e.key=="Backspace"){
-                        currentOrg.deleteNotes();
-                    }
-                    else if(e.ctrlKey && e.key=='c'){
-                        currentOrg.changeEditingMode(1);
-						currentOrg.copyNotes();
-                    }
-					else if(e.ctrlKey && e.key=='v'){
-                        currentOrg.pasteNotes(-1, -1);
-                    }
-					else if(e.key=='Tab'){
-                        //currentOrg.changeEditingMode(1-currentOrg.editingMode); //
-						//if(currentOrg.editingMode==1) currentOrg.copyNotes(); //this would make it toggle modes
-                        currentOrg.changeEditingMode(0); //this just sets pencil mode
-                    }
-					else if(e.key=='Enter'){
-						currentOrg.toggleWaveformEditor();
-					}
 					else if(e.key=='s'){
 						window.muteAll('solo');
 					}
@@ -345,9 +306,45 @@
 						mute_element = document.getElementById(mute_string);
 						mute_element.checked = 1-mute_element.checked;
 					}
-					<!-- else if(e.key=='q'){ -->
-						<!-- window.helpHandling(cursor_coords[0], cursor_coord[1]); -->
-					<!-- } -->
+                    else if(e.key==" "){
+                        if(currentOrg.isPlaying==false) window.playOrg();
+                        else if(currentOrg.isPlaying==true) window.pauseOrg();
+                    }
+                    else if(e.key=="Home"){
+                        window.homeOrg();
+                    }
+                    else if(e.key=="ArrowLeft"){
+                        window.backMeas();
+                    }
+                    else if(e.key=="ArrowRight"){
+                        window.nextMeas();
+                    }
+                    else if(currentOrg && !currentOrg.isLowSpec && e.key=="ArrowUp"){
+                        if(!currentOrg.isWaveformEditor) window.updown('up');
+						else if(currentOrg.isWaveformEditor) currentOrg.editNumbers(0, 1); 
+                    }
+                    else if(currentOrg && !currentOrg.isLowSpec && e.key=="ArrowDown"){
+                        if(!currentOrg.isWaveformEditor) window.updown('down');
+						else currentOrg.editNumbers(0, -1); 
+                    }
+                    else if(currentOrg && !currentOrg.isLowSpec && e.key=="Delete" || e.key=="Backspace"){
+                        currentOrg.deleteNotes();
+                    }
+                    else if(currentOrg && !currentOrg.isLowSpec && e.ctrlKey && e.key=='c'){
+                        currentOrg.changeEditingMode(1);
+						currentOrg.copyNotes();
+                    }
+					else if(currentOrg && !currentOrg.isLowSpec && e.ctrlKey && e.key=='v'){
+                        currentOrg.pasteNotes(-1, -1);
+                    }
+					else if(currentOrg && !currentOrg.isLowSpec && e.key=='Tab'){
+                        //currentOrg.changeEditingMode(1-currentOrg.editingMode); //
+						//if(currentOrg.editingMode==1) currentOrg.copyNotes(); //this would make it toggle modes
+                        currentOrg.changeEditingMode(0); //this just sets pencil mode
+                    }
+					else if(currentOrg && !currentOrg.isLowSpec && e.key=='Enter'){
+						currentOrg.toggleWaveformEditor();
+					}
                 
             }, true);
 			
@@ -370,6 +367,10 @@
 			
 			window.clickHandling = (x, y, e) => {
 				if(currentOrg != null) {
+					if(y>orgCanvas.height-76 && y<orgCanvas.height-60 && x<256) {
+						if(keyBeingPressed=='Control') {alert(helpStrings.changeTrack); keyBeingPressed=null;}
+						else currentOrg.changeTrack(x, e.button); //left/right click either select or mutes a track. i'll handle both of these with the same function
+					}
 					if(!currentOrg.isWaveformEditor) {	
 						if(y>=orgCanvas.height-84-16-76 && y<=orgCanvas.height-84-76 && x>36+8) {
 							if(keyBeingPressed=='Control') {alert(helpStrings.cursorUpdate); keyBeingPressed=null;}
@@ -388,10 +389,6 @@
 						if(y>orgCanvas.height-84-76 && y<orgCanvas.height-76 && x>36+8) {
 							if(keyBeingPressed=='Control') {alert(helpStrings.addPan); keyBeingPressed=null;}
 							else currentOrg.addPan(x-8, y, orgCanvas.height);
-						}
-						if(y>orgCanvas.height-76 && y<orgCanvas.height-60 && x<256) {
-							if(keyBeingPressed=='Control') {alert(helpStrings.changeTrack); keyBeingPressed=null;}
-							else currentOrg.changeTrack(x, e.button); //left/right click either select or mutes a track. i'll handle both of these with the same function
 						}
 						if(y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-192 && x<orgCanvas.width-192+48) {
 							if(keyBeingPressed=='Control') {alert(helpStrings.homeOrg); keyBeingPressed=null;}
@@ -501,6 +498,7 @@
 							}
 						}
 					}
+					if (currentOrg.onUpdate) currentOrg.onUpdate(currentOrg);
 				}
 			}
 			
@@ -546,13 +544,13 @@
 			editVolume: "Volume of the selected track (1-300).\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.",
 			editLength: "Duration of one note of the selected track (40-44100).\nA value of 22050 corresponds to 1 second.\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.",
 			editOctave: "Octave of the selected track (0-5).\nPiyoPiyo supports a range of two octaves for any instrument, offset from a baseline octave.\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.",
-			editSize: "Size of the song (16-4096).\nTypically coincides with the end\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.",
-			editWait: "Playback speed of the song (20-1000).\nDuration of one tick/subbeat in milliseconds.\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.",
+			editSize: "Size of the song (16-4096).\nTypically coincides with the end loop marker.\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.",
+			editWait: "Playback speed of the song (20-1000).\nThis is the duration of one tick/subbeat in milliseconds.\nFor a 4x4 time signature, BPM = 15000/songWait\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.",
 			newFile: "Create a new blank song.",
 			loadFile: "Load a .pmd song from your computer.",
 			saveFile: "Save the current song to your computer.",
 			help: "Ctrl+click on anything to learn about it.",
-			about: "PiyoPiyo Player/Editor by Daisuke 'Pixel' Amaya, (c) 1999\nPiyoPiyo-JS (browser port) by IdioticBaka1824, based on Organya-JS by Alula\nPiyoPiyo file format decoding by Gamemanj\n\nThe PiyoPiyo format was developed by Pixel to produce music for Ikachan, Azarashi (1998), and Doggy Wyvern (unreleased).\nIt was eventually superseded by the Organya format, used for Azarashi (2001) and Cave Story.\nThe Ikachan soundtrack, as well as sample songs found bundled with PiyoPiyo player/editor, are available to listen from the drop-down list provided."
+			about: "PiyoPiyo Player/Editor by Daisuke 'Pixel' Amaya, (c) 1998\nPiyoPiyo-JS (browser port) by IdioticBaka1824, based on Organya-JS by Alula\nPiyoPiyo file format decoding by Gamemanj\n\nThe PiyoPiyo format was developed by Pixel to produce music for Ikachan, Azarashi (1998), and Doggy Wyvern (unreleased).\nIt was eventually superseded by the Organya format, used for Azarashi (2001) and Cave Story.\nThe Ikachan soundtrack, as well as sample songs found bundled with PiyoPiyo player/editor, are available to listen from the drop-down list provided."
 		}
 		
     </script>

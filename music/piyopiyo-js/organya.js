@@ -364,7 +364,7 @@
 		toggleWaveformEditor() {
 			this.pause();
 			this.isWaveformEditor = 1-this.isWaveformEditor;
-			this.isEditingNumbers *= -1;
+			if(!this.isWaveformEditor) this.isEditingNumbers = -1;
 			if (this.onUpdate) this.onUpdate(this);
 		}
 		

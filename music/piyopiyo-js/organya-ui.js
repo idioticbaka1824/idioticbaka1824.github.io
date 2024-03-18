@@ -340,7 +340,7 @@
 				this.ctx.drawImage(this.lev, 0, 0, 256, 1, 320, 274+128, 256, 1);
 				this.ctx.drawImage(this.msg, 56, 0, 54, 16, 64, 258, 54, 16); //'note'
 				this.ctx.drawImage(this.noteImg, 0, 0, 120, 120, 64, 274, 120, 120); //note icons
-				if(this.organya.selectedTrack!=3) {	
+				if(this.organya.selectedTrack!=3) {
 					for(let i=0; i<256; i++) {
 						this.ctx.drawImage(this.pianoRoll, 0, 228, 2, 2, 64+2*i, 156-this.organya.song.instruments[this.organya.selectedTrack].waveSamples[i], 2, 2) //wave samples
 					}
@@ -348,9 +348,21 @@
 						this.ctx.drawImage(this.pianoRoll, 0, 228, 2, 2, 320+4*i, 402-this.organya.song.instruments[this.organya.selectedTrack].envelopeSamples[i], 2, 2) //envelope samples
 					}
 				}
+				if(this.organya.isEditingNumbers!=-1) { //flashing arrows for numerical edit boxes (this is beyond me)
+					// setInterval(flashArrows(this), 500);
+					let yIncr = [1,2,3,2,3];
+					let xOffs = [56, 56, 56, 392, 392];
+					this.ctx.drawImage(this.cursor, 0, 16, 8, 18, xOffs[this.organya.isEditingNumbers], height-72+18*yIncr[this.organya.isEditingNumbers], 8, 16)
+				}
 			}
         }
     }
 
     window.OrganyaUI = OrganyaUI;
+	
+	// function flashArrows(OrganyaUI) { //how do I do this???
+		// if(OrganyaUI.organya.isWaveformEditor){
+			// console.log(OrganyaUI.organya.isEditingNumbers);
+		// }
+	// }
 })();

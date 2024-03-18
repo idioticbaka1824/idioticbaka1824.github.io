@@ -167,7 +167,7 @@
             const ui = new OrganyaUI(orgCanvas);
 
             window.addEventListener("resize", () => {
-                orgCanvas.width = Math.max(canvasContainer.clientWidth, 640); //minimum size is 640x480, otherwise things can started crowding into each other
+                orgCanvas.width = Math.max(canvasContainer.clientWidth, 688); //minimum size is 640x480, otherwise things can started crowding into each other
                 orgCanvas.height = Math.max(canvasContainer.clientHeight, 480);
                 ui.draw();
             })
@@ -288,11 +288,9 @@
 			var keyBeingPressed=null;
             document.addEventListener('keyup', (e) => {
 				keyBeingPressed=null;
-				console.log(keyBeingPressed);
 			}, true);
             document.addEventListener('keydown', (e) => {
 					keyBeingPressed = e.key;
-					console.log(keyBeingPressed);
                     if(currentOrg!=null && allowedTracks.includes(e.key)){
 						if(currentOrg.selectedTrack!=allowedTracks.indexOf(e.key)) shouldUnMuteAll=1-shouldUnMuteAll;
                         currentTrackDisplay.innerHTML = e.key == 4 ? 'P' : e.key.toUpperCase(); //both '4' and 'p' are accepted names for the drum track, but it should display 'p'
@@ -307,10 +305,12 @@
                         window.nextMeas();
                     }
                     else if(e.key=="ArrowUp"){
-                        window.updown('up');
+                        if(!currentOrg.isWaveformEditor) window.updown('up');
+						else if(currentOrg.isWaveformEditor) currentOrg.editNumbers(0, 1); 
                     }
                     else if(e.key=="ArrowDown"){
-                        window.updown('down');
+                        if(!currentOrg.isWaveformEditor) window.updown('down');
+						else currentOrg.editNumbers(0, -1); 
                     }
                     else if(e.key==" "){
                         if(currentOrg.isPlaying==false) window.playOrg();
@@ -370,32 +370,137 @@
 			
 			window.clickHandling = (x, y, e) => {
 				if(currentOrg != null) {
-					if(y>=orgCanvas.height-84-16-76 && y<=orgCanvas.height-84-76 && x>36+8) {
-						currentOrg.cursorUpdate(x-8); 
-						if (currentOrg.editingMode==0) isSelecting=true;
+					if(!currentOrg.isWaveformEditor) {	
+						if(y>=orgCanvas.height-84-16-76 && y<=orgCanvas.height-84-76 && x>36+8) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.cursorUpdate); keyBeingPressed=null;}
+							else {
+								currentOrg.cursorUpdate(x-8); 
+								if (currentOrg.editingMode==0) isSelecting=true;
+							}
+						}
+						if(y>16 && y<orgCanvas.height-84-16-76 && x>36+8) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.addNote); keyBeingPressed=null;}
+							else {
+								if (currentOrg.editingMode==0) currentOrg.addNote(x-8, y, ui.scrollY);
+								else if (currentOrg.editingMode==1) currentOrg.pasteNotes(x-8, y);
+							}
+						}
+						if(y>orgCanvas.height-84-76 && y<orgCanvas.height-76 && x>36+8) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.addPan); keyBeingPressed=null;}
+							else currentOrg.addPan(x-8, y, orgCanvas.height);
+						}
+						if(y>orgCanvas.height-76 && y<orgCanvas.height-60 && x<256) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.changeTrack); keyBeingPressed=null;}
+							else currentOrg.changeTrack(x, e.button); //left/right click either select or mutes a track. i'll handle both of these with the same function
+						}
+						if(y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-192 && x<orgCanvas.width-192+48) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.homeOrg); keyBeingPressed=null;}
+							else homeOrg();
+						}
+						if(y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-192+48 && x<orgCanvas.width-192+2*48) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.playOrg); keyBeingPressed=null;}
+							else playOrg();
+						}
+						if(y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-192+2*48 && x<orgCanvas.width-192+3*48) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.pauseOrg); keyBeingPressed=null;}
+							else pauseOrg();
+						}
+						if(y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-192+3*48 && x<orgCanvas.width-192+4*48) {
+							alert(helpStrings.help);
+						}
+						if(y>orgCanvas.height-48 && y<orgCanvas.height-24 && x>orgCanvas.width-192+2*48 && x<orgCanvas.width-192+3*48) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.deleteNotes); keyBeingPressed=null;}
+							else currentOrg.deleteNotes();
+						}
+						if(y>orgCanvas.height-48 && y<orgCanvas.height-24 && x>orgCanvas.width-192 && x<orgCanvas.width-192+48) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.pencilMode); keyBeingPressed=null;}
+							else currentOrg.changeEditingMode(0);
+						}
+						if(y>orgCanvas.height-48 && y<orgCanvas.height-24 && x>orgCanvas.width-192+48 && x<orgCanvas.width-192+2*48) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.duplicationMode); keyBeingPressed=null;}
+							else {currentOrg.changeEditingMode(1); currentOrg.copyNotes();}
+						}
+						if(y>orgCanvas.height-48 && y<orgCanvas.height-24 && x>orgCanvas.width-192+3*48 && x<orgCanvas.width-192+4*48) {
+							alert(helpStrings.about);
+						}
+						if(y>orgCanvas.height-72 && y<orgCanvas.height-72+32 && x>orgCanvas.width-192-8-32 && x<orgCanvas.width-192-8) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.changeLoop); keyBeingPressed=null;}
+							else currentOrg.changeLoop();
+						}
+						if(y>orgCanvas.height-72+32 && y<orgCanvas.height-72+64 && x>orgCanvas.width-192-8-32 && x<orgCanvas.width-192-8) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.changeLowSpec); keyBeingPressed=null;}
+							else currentOrg.changeLowSpec();
+						}
+						if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192 && x<orgCanvas.width-192+48) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.waveformEditor); keyBeingPressed=null;}
+							else currentOrg.toggleWaveformEditor();
+						}
+						if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+48 && x<orgCanvas.width-192+2*48) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.newFile); keyBeingPressed=null;}
+							//else currentOrg.toggleWaveformEditor();
+						}
+						if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+2*48 && x<orgCanvas.width-192+3*48) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.loadFile); keyBeingPressed=null;}
+							//else currentOrg.toggleWaveformEditor();
+						}
+						if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+3*48 && x<orgCanvas.width-192+4*48) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.saveFile); keyBeingPressed=null;}
+							//else currentOrg.toggleWaveformEditor();
+						}
 					}
-					if(y>16 && y<orgCanvas.height-84-16-76 && x>36+8) {
-						if (currentOrg.editingMode==0) currentOrg.addNote(x-8, y, ui.scrollY);
-						else if (currentOrg.editingMode==1) currentOrg.pasteNotes(x-8, y);
+					if(currentOrg.isWaveformEditor) {
+						if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-48 && x<orgCanvas.width) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.ok); keyBeingPressed=null;}
+							else currentOrg.toggleWaveformEditor();
+						}
+						if(y>274 && y<274+120 && x>64 && x<64+120) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.updateNoteIcon); keyBeingPressed=null;}
+							else currentOrg.updateNoteIcon(x, y);
+						}
+						if (x>64 && x<64+512 && y>56 && y<56+200) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.waveSamples); keyBeingPressed=null;}
+							else isEditingSamples=true;
+						}
+						if (x>320 && x<320+256 && y>274 && y<274+128) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.envelopeSamples); keyBeingPressed=null;}
+							else isEditingSamples=true;
+						}
+						if (x>56 && x<56+48 && y>orgCanvas.height-76+18 && y<orgCanvas.height-76+18+16) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.editVolume); keyBeingPressed=null;}
+							else {
+								currentOrg.isEditingNumbers=0;
+								if (e.button==2) {let newValue = prompt('New Volume value:'); currentOrg.editNumbers(newValue);}
+							}
+						}
+						if (x>56 && x<56+48 && y>orgCanvas.height-76+36 && y<orgCanvas.height-76+36+16) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.editLength); keyBeingPressed=null;}
+							else {
+								currentOrg.isEditingNumbers=1;
+								if (e.button==2) {let newValue = prompt('New Length value:'); currentOrg.editNumbers(newValue);}
+							}
+						}
+						if (x>56 && x<56+48 && y>orgCanvas.height-76+54 && y<orgCanvas.height-76+54+16) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.editOctave); keyBeingPressed=null;}
+							else {
+								currentOrg.isEditingNumbers=2;
+								if (e.button==2) {let newValue = prompt('New Octave value:'); currentOrg.editNumbers(newValue);}
+							}
+						}
+						if (x>392 && x<392+48 && y>orgCanvas.height-76+36 && y<orgCanvas.height-76+36+16) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.editSize); keyBeingPressed=null;}
+							else {
+								currentOrg.isEditingNumbers=3;
+								if (e.button==2) {let newValue = prompt('New Music Size value:'); currentOrg.editNumbers(newValue);}
+							}
+						}
+						if (x>392 && x<392+48 && y>orgCanvas.height-76+54 && y<orgCanvas.height-76+54+16) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.editWait); keyBeingPressed=null;}
+							else {
+								currentOrg.isEditingNumbers=4;
+								if (e.button==2) {let newValue = prompt('New Music Wait value:'); currentOrg.editNumbers(newValue);}
+							}
+						}
 					}
-					if(y>orgCanvas.height-84-76 && y<orgCanvas.height-76 && x>36+8) {
-						if(!keyBeingPressed=='q') currentOrg.addPan(x-8, y, orgCanvas.height);
-						else {console.log(x,y);}
-					}
-					if(y>orgCanvas.height-76 && y<orgCanvas.height-60 && x<256) currentOrg.changeTrack(x, e.button); //left/right click either select or mutes a track. i'll handle both of these with the same function
-					if(y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-144 && x<orgCanvas.width-144+48) homeOrg();
-					if(y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-144+48 && x<orgCanvas.width-144+2*48) playOrg();
-					if(y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-144+2*48 && x<orgCanvas.width-144+3*48) pauseOrg();
-					if(y>orgCanvas.height-48 && y<orgCanvas.height-24 && x>orgCanvas.width-144+2*48 && x<orgCanvas.width-144+3*48) currentOrg.deleteNotes();
-					if(y>orgCanvas.height-48 && y<orgCanvas.height-24 && x>orgCanvas.width-144 && x<orgCanvas.width-144+48) currentOrg.changeEditingMode(0);
-					if(y>orgCanvas.height-48 && y<orgCanvas.height-24 && x>orgCanvas.width-144+48 && x<orgCanvas.width-144+2*48) {currentOrg.changeEditingMode(1); currentOrg.copyNotes();};
-					if(y>orgCanvas.height-72 && y<orgCanvas.height-72+32 && x>orgCanvas.width-144-8-32 && x<orgCanvas.width-144-8) currentOrg.changeLoop();
-					if(y>orgCanvas.height-72+32 && y<orgCanvas.height-72+64 && x>orgCanvas.width-144-8-32 && x<orgCanvas.width-144-8) currentOrg.changeLowSpec();
-					if(!currentOrg.isWaveformEditor && y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-144 && x<orgCanvas.width-144+48) currentOrg.toggleWaveformEditor();
-					if(currentOrg.isWaveformEditor && y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-48 && x<orgCanvas.width) currentOrg.toggleWaveformEditor();
-					if(currentOrg.isWaveformEditor && y>274 && y<274+120 && x>64 && x<64+120) currentOrg.updateNoteIcon(x, y);
-					if (currentOrg.isWaveformEditor && cursor_coords[0]>64 && cursor_coords[0]<64+512 && cursor_coords[1]>56 && cursor_coords[1]<56+200) isEditingSamples=true;
-					if (currentOrg.isWaveformEditor && cursor_coords[0]>320 && cursor_coords[0]<320+256 && cursor_coords[1]>274 && cursor_coords[1]<274+128) isEditingSamples=true;
 				}
 			}
 			
@@ -419,6 +524,37 @@
             }, true);
             
         })();
+		
+		const helpStrings = {
+			cursorUpdate: 'Click somewhere along the red line to place the playhead at that position.\nThe display will adjust so that the measure with the playhead appears first on the left of the screen.\nClick and drag along the line to make a selection, useful for copying notes.\nYou can also move to the next measure using the arrow keys, or by moving your cursor to the purple border on either side.',
+			addNote: 'Click anywhere on the piano roll to place or remove a note at that position (in Pencil Mode).\nIn Duplication Mode, the copied notes from the clipboard will be placed.',
+			addPan: "Click in the Pan table to adjust the pan value of a note.",
+			changeTrack: "Left-click on the Track buttons to select that track.\nYou can also press the corresponding number keys to select that track.\nPress 'S' or 'M' to Solo or Mute the selected track.\nRight-click on any track to mute it.",
+			homeOrg: "Go to the beginning of the song.\nKeyboard shortcut: 'Home'",
+			playOrg: "Play the song.\nYou can play and pause with the 'Space' key.",
+			pauseOrg: "Pause the song.\nYou can play and pause with the 'Space' key.",
+			pencilMode: "This mode lets you place or remove individual notes from the piano roll.\nPress 'Tab' to enable.",
+			duplicationMode: "Make a selection and press this button to copy the notes withing the selection region. Then click somewhere in the piano roll to paste the notes at that position.\nYou can also copy notes from the selection region with 'Ctrl+C', and paste at the playhead position with 'Ctrl+V'.",
+			deleteNotes: "Click this button to delete all notes in the selection region.\nKeyboard shortcut: 'Backspace' or 'Delete'",
+			changeLoop: "This option enables looping of the song playback.",
+			changeLowSpec: "This option disables the piano roll display, which may help if the playback is lagging.",
+			waveformEditor: "Open instrument editing window.\nKeyboard shortcut: 'Enter'",
+			ok: "Save instrument/song changes and return to piano roll window.\nKeyboard shortcut: 'Enter'",
+			updateNoteIcon: "Choose an icon for the selected track's notes.",
+			waveSamples: "Click and drag here to draw a waveform for the selected track's instrument.",
+			envelopeSamples: "Click and drag here to set the volume envelope (fade in/out, etc.) for the selected track's instrument.",
+			editVolume: "Volume of the selected track (1-300).\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.",
+			editLength: "Duration of one note of the selected track (40-44100).\nA value of 22050 corresponds to 1 second.\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.",
+			editOctave: "Octave of the selected track (0-5).\nPiyoPiyo supports a range of two octaves for any instrument, offset from a baseline octave.\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.",
+			editSize: "Size of the song (16-4096).\nTypically coincides with the end\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.",
+			editWait: "Playback speed of the song (20-1000).\nDuration of one tick/subbeat in milliseconds.\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.",
+			newFile: "Create a new blank song.",
+			loadFile: "Load a .pmd song from your computer.",
+			saveFile: "Save the current song to your computer.",
+			help: "Ctrl+click on anything to learn about it.",
+			about: "PiyoPiyo Player/Editor by Daisuke 'Pixel' Amaya, (c) 1999\nPiyoPiyo-JS (browser port) by IdioticBaka1824, based on Organya-JS by Alula\nPiyoPiyo file format decoding by Gamemanj\n\nThe PiyoPiyo format was developed by Pixel to produce music for Ikachan, Azarashi (1998), and Doggy Wyvern (unreleased).\nIt was eventually superseded by the Organya format, used for Azarashi (2001) and Cave Story.\nThe Ikachan soundtrack, as well as sample songs found bundled with PiyoPiyo player/editor, are available to listen from the drop-down list provided."
+		}
+		
     </script>
 </body>
 

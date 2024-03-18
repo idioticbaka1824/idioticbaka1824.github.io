@@ -3,6 +3,10 @@
 	let piyoWaveSampleRate = 11025;
 	let piyoDrumSampleRate = 22050;
 	
+	function clamp(number, min, max) {
+		return Math.max(min, Math.min(number, max));
+	}
+	
 	//utility function to read a bunch of data
 	function getBytesLE(view, pos, n_bytes, unsigned) {
 		out=[];
@@ -122,15 +126,18 @@
             this.samplesPerTick = 0;
             this.samplesThisTick = 0;
             this.state = [];
+			
             this.mutedTracks = [];
             this.selectedTrack = 0;
 			this.selectionStart = 0;
 			this.selectionEnd = 0;
 			this.editingMode = 0; //0 for pencil mode, 1 for duplicate mode
 			this.recordsToPaste = []; //clipboard
+			this.archives = []; //history for undo/redo
 			this.isLoop = true;
 			this.isLowSpec = false;
 			this.isWaveformEditor = false;
+			this.isEditingNumbers=-1; //which edit box is active for the numerical stuff in instrument editor? (0,1,2,3,4)=(volume, length, octave, size, wait)
             for (let i = 0; i < 4; i++) {
                 this.state[i] = [
 				{
@@ -357,6 +364,7 @@
 		toggleWaveformEditor() {
 			this.pause();
 			this.isWaveformEditor = 1-this.isWaveformEditor;
+			this.isEditingNumbers *= -1;
 			if (this.onUpdate) this.onUpdate(this);
 		}
 		
@@ -380,6 +388,37 @@
 			this.song.instruments[this.selectedTrack].envelopeSamples[newPos] = newSample;
 			if (this.onUpdate) this.onUpdate(this);
 		}
+		editNumbers(newValueInput, fromKeyboard=0) { //this is such a mess ;_;
+			if(this.isEditingNumbers!=-1 && newValueInput!==null && newValueInput!=='') {
+				const minValues = [1, 40, 0, 16, 20];
+				const maxValues = [300, 44100, 5, 4096, 1000];
+				let newValue = Math.max(newValueInput, minValues[this.isEditingNumbers]);
+				newValue = clamp(newValueInput, minValues[this.isEditingNumbers], maxValues[this.isEditingNumbers]);
+				switch (this.isEditingNumbers) {
+					case 0:
+						this.song.instruments[this.selectedTrack].volume = (fromKeyboard==0) ? newValue : clamp(this.song.instruments[this.selectedTrack].volume + fromKeyboard, minValues[this.isEditingNumbers], maxValues[this.isEditingNumbers]);
+						break;
+					case 1:
+						this.song.instruments[this.selectedTrack].envelopeLength = (fromKeyboard==0) ? newValue : clamp(this.song.instruments[this.selectedTrack].envelopeLength + fromKeyboard, minValues[this.isEditingNumbers], maxValues[this.isEditingNumbers]);
+						break;
+					case 2:
+						this.song.instruments[this.selectedTrack].baseOctave = (fromKeyboard==0) ? newValue : clamp(this.song.instruments[this.selectedTrack].baseOctave + fromKeyboard, minValues[this.isEditingNumbers], maxValues[this.isEditingNumbers]);
+						break;
+					case 3:
+						this.song.songLength = (fromKeyboard==0) ? newValue : clamp(this.song.songLength + fromKeyboard, minValues[this.isEditingNumbers], maxValues[this.isEditingNumbers]);
+						break;
+					case 4:
+						this.song.wait = (fromKeyboard==0) ? newValue : clamp(this.song.wait + fromKeyboard, minValues[this.isEditingNumbers], maxValues[this.isEditingNumbers]);
+						break;
+				}
+				if (this.onUpdate) this.onUpdate(this);
+			}
+		}
+		
+		// undo() {
+		// }
+		// redo() {
+		// }
         
         updateTimeDisplay() {
             currentMeasDisplay.innerHTML=this.playPos/(this.MeasxStep) | 0;

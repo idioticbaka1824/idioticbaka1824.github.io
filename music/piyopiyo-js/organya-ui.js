@@ -306,11 +306,11 @@
 				this.drawNumber(438, height-37, this.organya.song.songLength, 0, false, true); //music size
 				this.drawNumber(438, height-19, this.organya.song.wait, 0, false, true); //music wait
 				if(!this.organya.isWaveformEditor) {
-			this.ctx.drawImage(this.buttons, 0, 0, 144, 72, width-144, height-72, 144, 72); //green buttons
-			this.ctx.drawImage(this.check, 0, 0, 32, 64, width-144-8-32, height-72, 32, 64); //loop and lowspec options
-			this.ctx.drawImage(this.cursor, 16, 0, 16, 16, width-144+48*this.organya.editingMode, height-48, 16, 16); //editing mode indicator
-			if(this.organya.isLoop) this.ctx.drawImage(this.cursor, 32, 0, 16, 16, width-144-8-32, height-72, 16, 16); //loop indicator
-			if(this.organya.isLowSpec) this.ctx.drawImage(this.cursor, 32, 0, 16, 16, width-144-8-32, height-72+32, 16, 16); //lowspec indicator
+					this.ctx.drawImage(this.buttons, 0, 0, 192, 72, width-192, height-72, 192, 72); //green buttons
+					this.ctx.drawImage(this.check, 0, 0, 32, 64, width-192-8-32, height-72, 32, 64); //loop and lowspec options
+					this.ctx.drawImage(this.cursor, 16, 0, 16, 16, width-192+48*this.organya.editingMode, height-48, 16, 16); //editing mode indicator
+					if(this.organya.isLoop) this.ctx.drawImage(this.cursor, 32, 0, 16, 16, width-192-8-32, height-72, 16, 16); //loop indicator
+					if(this.organya.isLowSpec) this.ctx.drawImage(this.cursor, 32, 0, 16, 16, width-192-8-32, height-72+32, 16, 16); //lowspec indicator
 					if(this.organya.selectedTrack!=3) {
 						for(let i=0; i<128; i++) {
 							this.ctx.drawImage(this.pianoRoll, 0, 228, 2, 2, 188+i, height-30-(this.organya.song.instruments[this.organya.selectedTrack].waveSamples[2*i]*50/200 | 0), 2, 2) //wave samples

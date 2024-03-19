@@ -545,7 +545,10 @@
 			orgCanvas.addEventListener('mouseup', (e) => {
 				isSelecting = false;
 				isEditingSamples = false;
-				isDraggingHeadFoot = false;
+				if(isDraggingHeadFoot) {
+					isDraggingHeadFoot = false;
+					currentOrg.archivesUpdate();
+				}
                 //cursor_coords = getMousePosition(orgCanvas, e);
 				//if (currentOrg!=null && cursor_coords[0]>orgCanvas.width-8) window.nextMeas();
 				//if (currentOrg!=null && cursor_coords[0]<8) window.backMeas();

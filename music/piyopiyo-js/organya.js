@@ -294,7 +294,7 @@
             if(headOrFoot=='head') this.song.start = Math.max(viewPos + newPosOffset, 0);
             if(headOrFoot=='foot') this.song.end = Math.max(viewPos + newPosOffset, 0);
             if(headOrFoot=='size') this.song.songLength = Math.max(viewPos + newPosOffset-1, 0);
-			this.archivesUpdate();
+			//this.archivesUpdate(); //this change happens 'continuously' so don't do the update here, do it on mouseup in the html
             this.updateTimeDisplay();
 		}
 		

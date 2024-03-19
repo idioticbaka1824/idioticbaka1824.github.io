@@ -204,11 +204,11 @@
                 console.log("fetching song...");
 				if(openDialog) {document.getElementById('dropDownRadio').checked=false; document.getElementById('urlInputRadio').checked=false;}
                 else if(blankFile) {
-					songname = "https://raadshaikh.github.io/music/piyopiyo-js/songs/blank.pmd"
+					songname = "https://raadshaikh.github.io/music/piyopiyo-js/songs/Blank.pmd"
 					songname = new URL(songname);
                     res = await fetch(songname);
 					prev_song = new_song;
-                    new_song = 'songs/blank.pmd';
+                    new_song = 'songs/Blank.pmd';
 				}
 				else if(document.getElementById('dropDownRadio').checked && !openDialog && !blankFile){
 					var songname = songListEl.options[songListEl.selectedIndex].value;
@@ -363,7 +363,7 @@
 					else if(currentOrg && !currentOrg.isLowSpec && !currentOrg.isWaveformEditor && e.ctrlKey && e.key=='y'){
                         currentOrg.redo();
                     }
-					else if(e.ctrlKey && e.key=='n'){
+					else if(e.ctrlKey && e.key=='b'){
 						window.playOrg('dontPlay', null, false, true);
                     }
 					else if(e.ctrlKey && e.key=='o'){
@@ -371,6 +371,7 @@
 						document.getElementById('fileElem').click();
                     }
 					else if(e.ctrlKey && e.key=='s'){
+						e.preventDefault();
 						//save
                     }
 					else if(currentOrg && !currentOrg.isLowSpec && e.key=='Tab'){
@@ -411,7 +412,7 @@
 				}
 				if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+48 && x<orgCanvas.width-192+2*48) {
 					if(keyBeingPressed=='Control') {alert(helpStrings.newFile); keyBeingPressed=null;}
-					//else ;
+					else window.playOrg('dontPlay', null, false, true);
 				}
 				if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+2*48 && x<orgCanvas.width-192+3*48) {
 					if(keyBeingPressed=='Control') {alert(helpStrings.loadFile); keyBeingPressed=null;}

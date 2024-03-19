@@ -255,6 +255,9 @@
         
         homeOrg() {
 			this.pause();
+			for(let track=0; track<4; track++){
+				this.state[track]=[{t: [], keys: [], frequencies: [], octaves: [], pan: [], vol: [], length: [], num_loops: 0, playing: [], looping: []}];
+            }//flushing the envelopes out so pressing home and replaying doesn't have a leftover of where you stopped
 			this.playPos = 0;
             this.updateTimeDisplay();
         }
@@ -294,7 +297,7 @@
             if(headOrFoot=='head') this.song.start = Math.max(viewPos + newPosOffset, 0);
             if(headOrFoot=='foot') this.song.end = Math.max(viewPos + newPosOffset, 0);
             if(headOrFoot=='size') this.song.songLength = Math.max(viewPos + newPosOffset-1, 0);
-			//this.archivesUpdate(); //this change happens 'continuously' so don't do the update here, do it on mouseup in the html
+			//this.archivesUpdate---(); //this change happens 'continuously' so don't do the update here, do it on mouseup in the html
             this.updateTimeDisplay();
 		}
 		
@@ -557,9 +560,6 @@
         pause() {
 			this.isPlaying=false;
 			this.node.disconnect();
-			for(let track=0; track<4; track++){
-				this.state[track]=[{t: [], keys: [], frequencies: [], octaves: [], pan: [], vol: [], length: [], num_loops: 0, playing: [], looping: []}];
-            }//flushing the envelopes out so pressing home and replaying doesn't have a leftover of where you stopped
         }
 
         play(argument) {

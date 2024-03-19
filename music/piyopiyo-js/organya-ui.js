@@ -292,6 +292,9 @@
 			//settings etc
 			this.ctx.drawImage(this.pianoRoll, 120, 0, 1, 1, 0, height-72+4, width, 72-4); //blacking out the settings area first
 			this.ctx.drawImage(this.setting, 0, 0, 448, 72, 0, height-72, 448, 72); //settings panel
+			if(!this.organya || !this.organya.isWaveformEditor) {
+				this.ctx.drawImage(this.buttons, 0, 0, 192, 72, width-192, height-72, 192, 72); //green buttons
+			}
 			if (this.organya) {
 				this.ctx.drawImage(this.setting, 2, 72, 60, 2, this.organya.selectedTrack*64+2, height-58, 60, 2); //to make the selectedTrack tab look selected
 				this.drawNumber(102, height-55, this.organya.song.instruments[this.organya.selectedTrack].volume, 0, false, true); //volume
@@ -306,7 +309,7 @@
 				this.drawNumber(438, height-37, this.organya.song.songLength, 0, false, true); //music size
 				this.drawNumber(438, height-19, this.organya.song.wait, 0, false, true); //music wait
 				if(!this.organya.isWaveformEditor) {
-					this.ctx.drawImage(this.buttons, 0, 0, 192, 72, width-192, height-72, 192, 72); //green buttons
+					//this.ctx.drawImage(this.buttons, 0, 0, 192, 72, width-192, height-72, 192, 72); //green buttons
 					this.ctx.drawImage(this.check, 0, 0, 32, 64, width-192-8-32, height-72, 32, 64); //loop and lowspec options
 					this.ctx.drawImage(this.cursor, 16, 0, 16, 16, width-192+48*this.organya.editingMode, height-48, 16, 16); //editing mode indicator
 					if(this.organya.isLoop) this.ctx.drawImage(this.cursor, 32, 0, 16, 16, width-192-8-32, height-72, 16, 16); //loop indicator

@@ -116,6 +116,7 @@
     
         <div style="padding:10px;"></div>
         <button onclick="muteAll('solo')"><img src="GUI/solo.png" alt="Solo"></button>
+		<input type="file" id='fileElem' accept='.pmd' style='display:none' />
     </div>
             
     <div id="canvas-container">
@@ -199,19 +200,28 @@
                 }
             }
 
-            window.playOrg = async (argument='doPlay') => {
+            window.playOrg = async (argument='doPlay', res=null, openDialog=false, blankFile=false) => {
                 console.log("fetching song...");
-                if(document.getElementById('dropDownRadio').checked){
-					songname = songListEl.options[songListEl.selectedIndex].value;
+				if(openDialog) {document.getElementById('dropDownRadio').checked=false; document.getElementById('urlInputRadio').checked=false;}
+                else if(blankFile) {
+					songname = "https://raadshaikh.github.io/music/piyopiyo-js/songs/blank.pmd"
+					songname = new URL(songname);
+                    res = await fetch(songname);
+					prev_song = new_song;
+                    new_song = 'songs/blank.pmd';
+				}
+				else if(document.getElementById('dropDownRadio').checked && !openDialog && !blankFile){
+					var songname = songListEl.options[songListEl.selectedIndex].value;
 					songname = "https://raadshaikh.github.io/music/piyopiyo-js/" + songname
 					songname = new URL(songname);
                     res = await fetch(songname);
-					console.log(res);
 					prev_song = new_song;
                     new_song = songListEl.options[songListEl.selectedIndex].value;
                 }
-                else if(document.getElementById('urlInputRadio').checked){
-                    res = await fetch(document.getElementById('idUrlInput').value);
+                else if(document.getElementById('urlInputRadio').checked && !openDialog && !blankFile){
+					var songname = document.getElementById('idUrlInput').value;
+					songname = new URL(songname);
+                    res = await fetch(songname);
 					prev_song = new_song;
                     new_song = document.getElementById('idUrlInput').value;
                 }
@@ -232,6 +242,14 @@
                 }
                 currentOrg.play(argument);
             }
+			
+			const inputElement = document.getElementById("fileElem");
+			inputElement.addEventListener("change", handleFiles, false);
+			function handleFiles() {
+				const fileList = this.files;
+				const myFile = fileList[0];
+				window.playOrg('dontPlay', myFile, true);
+			}
             
             window.homeOrg = () => {
                 if (currentOrg != null) {
@@ -345,6 +363,16 @@
 					else if(currentOrg && !currentOrg.isLowSpec && !currentOrg.isWaveformEditor && e.ctrlKey && e.key=='y'){
                         currentOrg.redo();
                     }
+					else if(e.ctrlKey && e.key=='n'){
+						window.playOrg('dontPlay', null, false, true);
+                    }
+					else if(e.ctrlKey && e.key=='o'){
+						e.preventDefault();
+						document.getElementById('fileElem').click();
+                    }
+					else if(e.ctrlKey && e.key=='s'){
+						//save
+                    }
 					else if(currentOrg && !currentOrg.isLowSpec && e.key=='Tab'){
                         //currentOrg.changeEditingMode(1-currentOrg.editingMode); //
 						//if(currentOrg.editingMode==1) currentOrg.copyNotes(); //this would make it toggle modes
@@ -375,6 +403,26 @@
 			var cursor_coords = [0,0];
 			
 			window.clickHandling = (x, y, e) => {
+				if(y>orgCanvas.height-48 && y<orgCanvas.height-24 && x>orgCanvas.width-192+3*48 && x<orgCanvas.width-192+4*48) {
+					alert(helpStrings.about);
+				}
+				if(y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-192+3*48 && x<orgCanvas.width-192+4*48) {
+					alert(helpStrings.help);
+				}
+				if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+48 && x<orgCanvas.width-192+2*48) {
+					if(keyBeingPressed=='Control') {alert(helpStrings.newFile); keyBeingPressed=null;}
+					//else ;
+				}
+				if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+2*48 && x<orgCanvas.width-192+3*48) {
+					if(keyBeingPressed=='Control') {alert(helpStrings.loadFile); keyBeingPressed=null;}
+					else {
+						document.getElementById('fileElem').click();
+					}
+				}
+				if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+3*48 && x<orgCanvas.width-192+4*48) {
+					if(keyBeingPressed=='Control') {alert(helpStrings.saveFile); keyBeingPressed=null;}
+					//else ;
+				}
 				if(currentOrg != null) {
 					if(y>orgCanvas.height-76 && y<orgCanvas.height-60 && x<256) {
 						if(keyBeingPressed=='Control') {alert(helpStrings.changeTrack); keyBeingPressed=null;}
@@ -425,9 +473,6 @@
 							if(keyBeingPressed=='Control') {alert(helpStrings.pauseOrg); keyBeingPressed=null;}
 							else pauseOrg();
 						}
-						if(y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-192+3*48 && x<orgCanvas.width-192+4*48) {
-							alert(helpStrings.help);
-						}
 						if(y>orgCanvas.height-48 && y<orgCanvas.height-24 && x>orgCanvas.width-192+2*48 && x<orgCanvas.width-192+3*48) {
 							if(keyBeingPressed=='Control') {alert(helpStrings.deleteNotes); keyBeingPressed=null;}
 							else currentOrg.deleteNotes();
@@ -440,9 +485,6 @@
 							if(keyBeingPressed=='Control') {alert(helpStrings.duplicationMode); keyBeingPressed=null;}
 							else {currentOrg.changeEditingMode(1); currentOrg.copyNotes();}
 						}
-						if(y>orgCanvas.height-48 && y<orgCanvas.height-24 && x>orgCanvas.width-192+3*48 && x<orgCanvas.width-192+4*48) {
-							alert(helpStrings.about);
-						}
 						if(y>orgCanvas.height-72 && y<orgCanvas.height-72+32 && x>orgCanvas.width-192-8-32 && x<orgCanvas.width-192-8) {
 							if(keyBeingPressed=='Control') {alert(helpStrings.changeLoop); keyBeingPressed=null;}
 							else currentOrg.changeLoop();
@@ -454,18 +496,6 @@
 						if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192 && x<orgCanvas.width-192+48) {
 							if(keyBeingPressed=='Control') {alert(helpStrings.waveformEditor); keyBeingPressed=null;}
 							else currentOrg.toggleWaveformEditor();
-						}
-						if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+48 && x<orgCanvas.width-192+2*48) {
-							if(keyBeingPressed=='Control') {alert(helpStrings.newFile); keyBeingPressed=null;}
-							//else ;
-						}
-						if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+2*48 && x<orgCanvas.width-192+3*48) {
-							if(keyBeingPressed=='Control') {alert(helpStrings.loadFile); keyBeingPressed=null;}
-							//else ;
-						}
-						if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+3*48 && x<orgCanvas.width-192+4*48) {
-							if(keyBeingPressed=='Control') {alert(helpStrings.saveFile); keyBeingPressed=null;}
-							//else ;
 						}
 					}
 					if(currentOrg.isWaveformEditor) {
@@ -585,7 +615,7 @@
 			newFile: "Create a new blank song.",
 			loadFile: "Load a .pmd song from your computer.",
 			saveFile: "Save the current song to your computer.",
-			help: "Ctrl+click on anything to learn about it.",
+			help: "After loading/starting a song, you can Ctrl+click on any object or element to learn about it.",
 			about: "PiyoPiyo Player/Editor by Daisuke 'Pixel' Amaya, (c) 1998\nPiyoPiyo-JS (browser port) by IdioticBaka1824, based on Organya-JS by Alula\nPiyoPiyo file format decoding by Gamemanj\n\nThe PiyoPiyo format was developed by Pixel to produce music for Ikachan, Azarashi (1998), and Doggy Wyvern (unreleased).\nIt was eventually superseded by the Organya format, used for Azarashi (2001) and Cave Story.\nThe Ikachan soundtrack, as well as sample songs found bundled with PiyoPiyo player/editor, are available to listen from the drop-down list provided."
 		}
 		

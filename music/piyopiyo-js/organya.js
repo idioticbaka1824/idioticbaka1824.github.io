@@ -133,12 +133,14 @@
 			this.selectionEnd = 0;
 			this.editingMode = 0; //0 for pencil mode, 1 for duplicate mode
 			this.recordsToPaste = []; //clipboard
-			this.archives = []; //history for undo/redo
+			this.archives = [structuredClone(this.song)]; //history for undo/redo
+			this.archivesIndex = 0;
 			this.isLoop = true;
 			this.isLowSpec = false;
 			this.isWaveformEditor = false;
 			this.isEditingNumbers=-1; //which edit box is active for the numerical stuff in instrument editor? (0,1,2,3,4)=(volume, length, octave, size, wait)
-            for (let i = 0; i < 4; i++) {
+            this.flashArrowsIndex = null;
+			for (let i = 0; i < 4; i++) {
                 this.state[i] = [
 				{
                     t: [],
@@ -257,15 +259,23 @@
             this.updateTimeDisplay();
         }
         
-        backMeas() {
-            if (this.playPos-(this.MeasxStep+this.playPos%this.MeasxStep)>=0){
-                this.playPos-=(this.MeasxStep+this.playPos%this.MeasxStep);
-            }
+        backMeas(small=false) {
+            if(!small) {
+				if (this.playPos-(this.MeasxStep+this.playPos%this.MeasxStep)>=0){
+					this.playPos-=(this.MeasxStep+this.playPos%this.MeasxStep);
+				}
+			}
+			else {
+				if (this.playPos-1>=0){
+					this.playPos -= 1;
+				}
+			}
             this.updateTimeDisplay();
         }
         
-        nextMeas() {
-            this.playPos+=(this.MeasxStep-this.playPos%this.MeasxStep); //to go to beginning of next measure
+        nextMeas(small=false) {
+            if(!small) this.playPos+=(this.MeasxStep-this.playPos%this.MeasxStep); //to go to beginning of next measure
+			else this.playPos += 1;
             this.updateTimeDisplay();
         }
 		
@@ -275,8 +285,18 @@
             this.playPos = viewPos + newPlayPosOffset;
 			this.selectionStart = this.playPos;
 			this.selectionEnd = this.selectionStart;
-            this.updateTimeDisplay();
+            this.updateTimeDisplay(); //would be nice if i can pass an argument here that suppresses the window redraw to match the new measure, since clicking a little further down completely changes your view (we only want to do that while actually playing)
         }
+		
+		headFootUpdate(x, y, headOrFoot) { //headOrFoot here is 'isDraggingHeadFoot' in the html
+			let viewPos = (this.playPos/this.MeasxStep | 0)*this.MeasxStep;
+			let newPosOffset = ((x-42)/12 | 0);
+            if(headOrFoot=='head') this.song.start = Math.max(viewPos + newPosOffset, 0);
+            if(headOrFoot=='foot') this.song.end = Math.max(viewPos + newPosOffset, 0);
+            if(headOrFoot=='size') this.song.songLength = Math.max(viewPos + newPosOffset-1, 0);
+			this.archivesUpdate();
+            this.updateTimeDisplay();
+		}
 		
 		selectionUpdate(x) {
 			let viewPos = (this.playPos/this.MeasxStep | 0)*this.MeasxStep;
@@ -296,6 +316,7 @@
 			var keys = this.song.tracks[this.selectedTrack][newNotePos].keys
 			if (keys.includes(toPush)) keys.splice(keys.indexOf(toPush), 1);
 			else if((this.selectedTrack!=3) || (drumTypeTable[newNoteKeyRelative]!=-1 && drumTypeTable[newNoteKeyRelative]!=undefined)) keys.push(toPush);
+			this.archivesUpdate();
 			if (this.onUpdate) this.onUpdate(this);
 		}
 		
@@ -304,6 +325,7 @@
 				this.song.tracks[this.selectedTrack][i].keys=[];
 				this.song.tracks[this.selectedTrack][i].pan=0;
 			}
+			this.archivesUpdate();
 			if (this.onUpdate) this.onUpdate(this);
 		}
 		
@@ -326,6 +348,7 @@
 				this.song.tracks[this.selectedTrack][newNotePos+i].keys = this.recordsToPaste[i].keys.slice();
 				this.song.tracks[this.selectedTrack][newNotePos+i].pan = this.recordsToPaste[i].pan;
 			}
+			this.archivesUpdate();
 			if (this.onUpdate) this.onUpdate(this);
 		}
 		
@@ -334,6 +357,7 @@
 			let newPanPos = viewPos + ((x-36)/12 | 0);
 			let newPanVal = ((height-y-76)/12 | 0)+1;
 			this.song.tracks[this.selectedTrack][newPanPos].pan = newPanVal;
+			this.archivesUpdate();
 			if (this.onUpdate) this.onUpdate(this);
 		}
 		
@@ -364,7 +388,10 @@
 		toggleWaveformEditor() {
 			this.pause();
 			this.isWaveformEditor = 1-this.isWaveformEditor;
-			if(!this.isWaveformEditor) this.isEditingNumbers = -1;
+			if(!this.isWaveformEditor) {
+				this.isEditingNumbers = -1;
+				this.archivesUpdate();
+			}
 			if (this.onUpdate) this.onUpdate(this);
 		}
 		
@@ -415,10 +442,32 @@
 			}
 		}
 		
-		// undo() {
-		// }
-		// redo() {
-		// }
+		flashArrows() { //how do I do this??? wow okay i figured it out
+			if (this.flashArrowsIndex==null) this.flashArrowsIndex=0;
+			this.flashArrowsIndex = (this.flashArrowsIndex + 1)%8;
+			//console.log(this);
+			if (this.onUpdate) this.onUpdate(this);
+		}
+		
+		undo() {
+			if(this.archivesIndex>0) {
+				this.archivesIndex--;
+				this.song = structuredClone(this.archives[this.archivesIndex]);
+				this.update();
+			}
+		}
+		redo() {
+			if(this.archivesIndex<this.archives.length-1) {
+				this.archivesIndex++;
+				this.song = structuredClone(this.archives[this.archivesIndex]);
+				this.update();
+			}
+		}
+		archivesUpdate() { //note: actions that should erase archives items after the archivesIndex and then update the archives include:
+			this.archives.splice(this.archivesIndex+1, this.archives.length); // place note, delete note, delete notes, paste notes, change pan, press ok on waveform editor window, change loop points
+			this.archives.push(structuredClone(this.song));
+			this.archivesIndex++;
+		}
         
         updateTimeDisplay() {
             currentMeasDisplay.innerHTML=this.playPos/(this.MeasxStep) | 0;

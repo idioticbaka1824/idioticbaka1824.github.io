@@ -266,9 +266,9 @@
 					for(let i=Math.min(this.organya.selectionStart,this.organya.selectionEnd); i<Math.max(this.organya.selectionStart,this.organya.selectionEnd); i++){
 						this.ctx.drawImage(this.cursor, 56, 0, 12, 16, i*12-scrollX+8, height-84-16-76, 12, 16) //selected section ()
 					}
-					this.drawHeadFoot(this.organya.song.songLength*12-scrollX+8, height-84-16-76, 2); //
-					this.drawHeadFoot(this.organya.song.start*12-scrollX+8, height-84-16-76, 0); //song start/end markers
-					this.drawHeadFoot(this.organya.song.end*12-scrollX+8, height-84-16-76, 1); //
+					this.drawHeadFoot(this.organya.song.songLength*12-scrollX+8, height-84-16-76, 2); // song size marker
+					this.drawHeadFoot(this.organya.song.start*12-scrollX+8, height-84-16-76, 0); //song start marker
+					this.drawHeadFoot(this.organya.song.end*12-scrollX+8, height-84-16-76, 1); // song end marker
 					this.ctx.drawImage(this.cursor, 68, 16, 12, 16, chickX+8, height-84-16-76, 12, 16); //running chick
 				}
 
@@ -348,11 +348,11 @@
 						this.ctx.drawImage(this.pianoRoll, 0, 228, 2, 2, 320+4*i, 402-this.organya.song.instruments[this.organya.selectedTrack].envelopeSamples[i], 2, 2) //envelope samples
 					}
 				}
-				if(this.organya.isEditingNumbers!=-1) { //flashing arrows for numerical edit boxes (this is beyond me)
-					// setInterval(flashArrows(this), 500);
+				if(this.organya.isEditingNumbers!=-1) { //flashing arrows for numerical edit boxes (this is beyond me, have a static sprite instead) (okay never mind i found out how)
+					let sprXs = [0,8,16,24,32,24,16,8];
 					let yIncr = [1,2,3,2,3];
 					let xOffs = [56, 56, 56, 392, 392];
-					this.ctx.drawImage(this.cursor, 0, 16, 8, 18, xOffs[this.organya.isEditingNumbers], height-72+18*yIncr[this.organya.isEditingNumbers], 8, 16)
+					this.ctx.drawImage(this.cursor, sprXs[this.organya.flashArrowsIndex], 16, 8, 18, xOffs[this.organya.isEditingNumbers], height-72+18*yIncr[this.organya.isEditingNumbers], 8, 16)
 				}
 			}
         }
@@ -360,9 +360,4 @@
 
     window.OrganyaUI = OrganyaUI;
 	
-	// function flashArrows(OrganyaUI) { //how do I do this???
-		// if(OrganyaUI.organya.isWaveformEditor){
-			// console.log(OrganyaUI.organya.isEditingNumbers);
-		// }
-	// }
 })();

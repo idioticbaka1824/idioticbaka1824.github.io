@@ -206,6 +206,7 @@
 					songname = "https://raadshaikh.github.io/music/piyopiyo-js/" + songname
 					songname = new URL(songname);
                     res = await fetch(songname);
+					console.log(res);
 					prev_song = new_song;
                     new_song = songListEl.options[songListEl.selectedIndex].value;
                 }
@@ -221,6 +222,7 @@
 						<!-- window.muteAll('solo'); -->
 					<!-- } -->
                     const data = await res.arrayBuffer();
+					console.log(data);
                     await initOrganya();
 
                     currentOrg = new Organya(data);
@@ -237,14 +239,14 @@
                     prev_song = songListEl.options[songListEl.selectedIndex].value; //didn't have this earlier, but it fixes a bug where playing, placing new notes, then clicking home and then playing will erase your changes
                 }
             }
-            window.backMeas = () => {
+            window.backMeas = (small=false) => {
                 if (currentOrg != null) {
-                    currentOrg.backMeas();
+                    currentOrg.backMeas(small);
                 }
             }
-            window.nextMeas = () => {
+            window.nextMeas = (small=false) => {
                 if (currentOrg != null) {
-                    currentOrg.nextMeas();
+                    currentOrg.nextMeas(small);
                 }
             }
             window.updown = (argument) => {
@@ -337,6 +339,12 @@
 					else if(currentOrg && !currentOrg.isLowSpec && e.ctrlKey && e.key=='v'){
                         currentOrg.pasteNotes(-1, -1);
                     }
+					else if(currentOrg && !currentOrg.isLowSpec && !currentOrg.isWaveformEditor && e.ctrlKey && e.key=='z'){
+                        currentOrg.undo();
+                    }
+					else if(currentOrg && !currentOrg.isLowSpec && !currentOrg.isWaveformEditor && e.ctrlKey && e.key=='y'){
+                        currentOrg.redo();
+                    }
 					else if(currentOrg && !currentOrg.isLowSpec && e.key=='Tab'){
                         //currentOrg.changeEditingMode(1-currentOrg.editingMode); //
 						//if(currentOrg.editingMode==1) currentOrg.copyNotes(); //this would make it toggle modes
@@ -361,8 +369,9 @@
 				window.clickHandling(click_coords[0], click_coords[1], e=e);
             }, true);
             
-			var isSelecting = false;
+			var isSelecting = false; //variables to keep track of mouse click-and-dragging events
 			var isEditingSamples = false;
+			var isDraggingHeadFoot = false;
 			var cursor_coords = [0,0];
 			
 			window.clickHandling = (x, y, e) => {
@@ -372,9 +381,23 @@
 						else currentOrg.changeTrack(x, e.button); //left/right click either select or mutes a track. i'll handle both of these with the same function
 					}
 					if(!currentOrg.isWaveformEditor) {	
+						let viewPos = (currentOrg.playPos/currentOrg.MeasxStep | 0)*currentOrg.MeasxStep;
+						let scrollX = viewPos * 12 - 36;
+						if(y>orgCanvas.height-84-16-76 && y<orgCanvas.height-84-16-76+16 && x>currentOrg.song.start*12-scrollX+8 && x<currentOrg.song.start*12-scrollX+8+12) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.head); keyBeingPressed=null;}
+							else if(e.button==2) isDraggingHeadFoot = 'head';
+						}
+						if(y>orgCanvas.height-84-16-76 && y<orgCanvas.height-84-16-76+16 && x>currentOrg.song.end*12-scrollX+8 && x<currentOrg.song.end*12-scrollX+8+12) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.foot); keyBeingPressed=null;}
+							else if(e.button==2) isDraggingHeadFoot = 'foot';
+						}
+						if(y>orgCanvas.height-84-16-76 && y<orgCanvas.height-84-16-76+16 && x>currentOrg.song.songLength*12-scrollX+8 && x<currentOrg.song.songLength*12-scrollX+8+12) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.size); keyBeingPressed=null;}
+							else if(e.button==2) isDraggingHeadFoot = 'size';
+						}
 						if(y>=orgCanvas.height-84-16-76 && y<=orgCanvas.height-84-76 && x>36+8) {
 							if(keyBeingPressed=='Control') {alert(helpStrings.cursorUpdate); keyBeingPressed=null;}
-							else {
+							else if(e.button==0 && keyBeingPressed!=='Control'){
 								currentOrg.cursorUpdate(x-8); 
 								if (currentOrg.editingMode==0) isSelecting=true;
 							}
@@ -434,15 +457,15 @@
 						}
 						if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+48 && x<orgCanvas.width-192+2*48) {
 							if(keyBeingPressed=='Control') {alert(helpStrings.newFile); keyBeingPressed=null;}
-							//else currentOrg.toggleWaveformEditor();
+							//else ;
 						}
 						if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+2*48 && x<orgCanvas.width-192+3*48) {
 							if(keyBeingPressed=='Control') {alert(helpStrings.loadFile); keyBeingPressed=null;}
-							//else currentOrg.toggleWaveformEditor();
+							//else ;
 						}
 						if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+3*48 && x<orgCanvas.width-192+4*48) {
 							if(keyBeingPressed=='Control') {alert(helpStrings.saveFile); keyBeingPressed=null;}
-							//else currentOrg.toggleWaveformEditor();
+							//else ;
 						}
 					}
 					if(currentOrg.isWaveformEditor) {
@@ -465,6 +488,7 @@
 						if (x>56 && x<56+48 && y>orgCanvas.height-76+18 && y<orgCanvas.height-76+18+16) {
 							if(keyBeingPressed=='Control') {alert(helpStrings.editVolume); keyBeingPressed=null;}
 							else {
+								if(currentOrg.flashArrowsIndex==null) setInterval(currentOrg.flashArrows.bind(currentOrg), 100);
 								currentOrg.isEditingNumbers=0;
 								if (e.button==2) {let newValue = prompt('New Volume value:'); currentOrg.editNumbers(newValue);}
 							}
@@ -472,6 +496,7 @@
 						if (x>56 && x<56+48 && y>orgCanvas.height-76+36 && y<orgCanvas.height-76+36+16) {
 							if(keyBeingPressed=='Control') {alert(helpStrings.editLength); keyBeingPressed=null;}
 							else {
+								if(currentOrg.flashArrowsIndex==null) setInterval(currentOrg.flashArrows.bind(currentOrg), 100);
 								currentOrg.isEditingNumbers=1;
 								if (e.button==2) {let newValue = prompt('New Length value:'); currentOrg.editNumbers(newValue);}
 							}
@@ -479,6 +504,7 @@
 						if (x>56 && x<56+48 && y>orgCanvas.height-76+54 && y<orgCanvas.height-76+54+16) {
 							if(keyBeingPressed=='Control') {alert(helpStrings.editOctave); keyBeingPressed=null;}
 							else {
+								if(currentOrg.flashArrowsIndex==null) setInterval(currentOrg.flashArrows.bind(currentOrg), 100);
 								currentOrg.isEditingNumbers=2;
 								if (e.button==2) {let newValue = prompt('New Octave value:'); currentOrg.editNumbers(newValue);}
 							}
@@ -486,6 +512,7 @@
 						if (x>392 && x<392+48 && y>orgCanvas.height-76+36 && y<orgCanvas.height-76+36+16) {
 							if(keyBeingPressed=='Control') {alert(helpStrings.editSize); keyBeingPressed=null;}
 							else {
+								if(currentOrg.flashArrowsIndex==null) setInterval(currentOrg.flashArrows.bind(currentOrg), 100);
 								currentOrg.isEditingNumbers=3;
 								if (e.button==2) {let newValue = prompt('New Music Size value:'); currentOrg.editNumbers(newValue);}
 							}
@@ -493,6 +520,7 @@
 						if (x>392 && x<392+48 && y>orgCanvas.height-76+54 && y<orgCanvas.height-76+54+16) {
 							if(keyBeingPressed=='Control') {alert(helpStrings.editWait); keyBeingPressed=null;}
 							else {
+								if(currentOrg.flashArrowsIndex==null) setInterval(currentOrg.flashArrows.bind(currentOrg), 100);
 								currentOrg.isEditingNumbers=4;
 								if (e.button==2) {let newValue = prompt('New Music Wait value:'); currentOrg.editNumbers(newValue);}
 							}
@@ -505,9 +533,10 @@
 			orgCanvas.addEventListener('mousemove', (e) => {
                 cursor_coords = getMousePosition(orgCanvas, e);
 				if (currentOrg != null) {
-					if (!currentOrg.isWaveformEditor && cursor_coords[0]>orgCanvas.width-8 && cursor_coords[1]<orgCanvas.height-74 && currentOrg.isPlaying==false) window.nextMeas();
-					if (!currentOrg.isWaveformEditor && cursor_coords[0]<8 && cursor_coords[1]<orgCanvas.height-74 && currentOrg.isPlaying==false) window.backMeas();
+					if (!currentOrg.isWaveformEditor && cursor_coords[0]>orgCanvas.width-8 && cursor_coords[1]<orgCanvas.height-74 && currentOrg.isPlaying==false) window.nextMeas(true);
+					if (!currentOrg.isWaveformEditor && cursor_coords[0]<8 && cursor_coords[1]<orgCanvas.height-74 && currentOrg.isPlaying==false) window.backMeas(true);
 					if (isSelecting) currentOrg.selectionUpdate(cursor_coords[0]);
+					if (isDraggingHeadFoot) currentOrg.headFootUpdate(cursor_coords[0], cursor_coords[1], isDraggingHeadFoot);
 					if (isEditingSamples && currentOrg.isWaveformEditor && cursor_coords[0]>64 && cursor_coords[0]<64+512 && cursor_coords[1]>56 && cursor_coords[1]<56+200) currentOrg.editWaveSamples(cursor_coords[0], cursor_coords[1]);
 					if (isEditingSamples && currentOrg.isWaveformEditor && cursor_coords[0]>320 && cursor_coords[0]<320+256 && cursor_coords[1]>274 && cursor_coords[1]<274+128) currentOrg.editEnvelopeSamples(cursor_coords[0], cursor_coords[1]);
 				}
@@ -516,6 +545,7 @@
 			orgCanvas.addEventListener('mouseup', (e) => {
 				isSelecting = false;
 				isEditingSamples = false;
+				isDraggingHeadFoot = false;
                 //cursor_coords = getMousePosition(orgCanvas, e);
 				//if (currentOrg!=null && cursor_coords[0]>orgCanvas.width-8) window.nextMeas();
 				//if (currentOrg!=null && cursor_coords[0]<8) window.backMeas();
@@ -524,9 +554,12 @@
         })();
 		
 		const helpStrings = {
-			cursorUpdate: 'Click somewhere along the red line to place the playhead at that position.\nThe display will adjust so that the measure with the playhead appears first on the left of the screen.\nClick and drag along the line to make a selection, useful for copying notes.\nYou can also move to the next measure using the arrow keys, or by moving your cursor to the purple border on either side.',
-			addNote: 'Click anywhere on the piano roll to place or remove a note at that position (in Pencil Mode).\nIn Duplication Mode, the copied notes from the clipboard will be placed.',
-			addPan: "Click in the Pan table to adjust the pan value of a note.",
+			head: "This marks the beginning of the looping section of the song.\nRight-click+drag to move it.",
+			foot: "This marks the end of the looping section of the song.\nRight-click+drag to move it.",
+			size: "This marks the position of the last possible note in the file. It sets the file size, and typically coincides with the end loop marker.\nKeep in mind that any notes after the end loop marker will never be played.\nRight-click+drag to move it, or change it via the instrument editor (Enter).",
+			cursorUpdate: "Click somewhere along the red line to place the playhead at that position.\nThe display will adjust so that the measure with the playhead appears first on the left of the screen.\nClick and drag along the line to make a selection, useful for copying notes.\nYou can also move to the next measure using the arrow keys, or by moving your cursor to the purple border on either side.",
+			addNote: "Click anywhere on the piano roll to place or remove a note at that position (in Pencil Mode).\nIn Duplication Mode, the copied notes from the clipboard will be placed.\nCtrl+Z and Ctrl+Y to undo/redo.",
+			addPan: "Click in the Pan table to adjust the pan value of a note.\nCtrl+Z and Ctrl+Y to undo/redo.",
 			changeTrack: "Left-click on the Track buttons to select that track.\nYou can also press the corresponding number keys to select that track.\nPress 'S' or 'M' to Solo or Mute the selected track.\nRight-click on any track to mute it.",
 			homeOrg: "Go to the beginning of the song.\nKeyboard shortcut: 'Home'",
 			playOrg: "Play the song.\nYou can play and pause with the 'Space' key.",

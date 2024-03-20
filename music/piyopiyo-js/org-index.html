@@ -148,7 +148,22 @@
 			examples/Iron.pmd
 			data/Dark.pmd
 			data/BrokenToy.pmd
-			data/ZaomiZaomi.pmd`.split("\n").sort();
+			data/ZaomiZaomi.pmd
+			data/Riding in the Air.pmd
+			data/Rain.pmd
+			data/Kirin Musume (Giraffe Girl)/pmd
+			data/Oriki.pmd
+			data/Koi Kuzu (Love Scum).pmd
+			data/End of Sorrow.pmd
+			data/Cave Story.pmd
+			data/Sunset (Moonflower).pmd
+			data/Resort Rubber.pmd
+			data/Foreign Land.pmd
+			data/Deep Sea.pmd
+			data/Weak.pmd
+			data/Saturn
+			data/Aphids
+			data/Skyscraper Wind.pmd`.split("\n").sort();
 
             const songListEl = document.getElementById("songs");
             for (let song of songs) {
@@ -200,15 +215,14 @@
                 }
             }
 
-            window.playOrg = async (argument='doPlay', res=null, openDialog=false, blankFile=false) => {
+            window.playOrg = async (argument='doPlay', openDialog=false, blankFile=false) => {
                 console.log("fetching song...");
-				if(openDialog) {document.getElementById('dropDownRadio').checked=false; document.getElementById('urlInputRadio').checked=false;}
-                else if(blankFile) {
-					songname = "https://raadshaikh.github.io/music/piyopiyo-js/songs/Blank.pmd"
-					songname = new URL(songname);
-                    res = await fetch(songname);
+				if(openDialog) {
+					res = openDialog;
 					prev_song = new_song;
-                    new_song = 'songs/Blank.pmd';
+                    new_song = res.name;
+					document.getElementById('dropDownRadio').checked=false; 
+					document.getElementById('urlInputRadio').checked=false;
 				}
 				else if(document.getElementById('dropDownRadio').checked && !openDialog && !blankFile){
 					var songname = songListEl.options[songListEl.selectedIndex].value;
@@ -225,12 +239,24 @@
 					prev_song = new_song;
                     new_song = document.getElementById('idUrlInput').value;
                 }
-                if (prev_song != new_song || prev_song == null){
+                else if(blankFile || new_song=='songs/Blank.pmd') {
+					songname = "https://raadshaikh.github.io/music/piyopiyo-js/songs/Blank.pmd"
+					songname = new URL(songname);
+                    res = await fetch(songname);
+					prev_song = new_song;
+                    new_song = 'songs/Blank.pmd';
+					document.getElementById('dropDownRadio').checked=false;
+					document.getElementById('urlInputRadio').checked=false;
+				}
+                if (prev_song != new_song || prev_song == null || prev_song=='songs/Blank.pmd'){
                     stopOrg();
 					<!-- if (argument!='doPlay'){ -->
 						<!-- shouldUnMuteAll=1; //this doesn't quite work the way i want -->
 						<!-- window.muteAll('solo'); -->
 					<!-- } -->
+					console.log(prev_song);
+					console.log(new_song);
+					console.log(res);
                     const data = await res.arrayBuffer();
 					console.log(data);
                     await initOrganya();
@@ -248,7 +274,7 @@
 			function handleFiles() {
 				const fileList = this.files;
 				const myFile = fileList[0];
-				window.playOrg('dontPlay', myFile, true);
+				window.playOrg('dontPlay', myFile, false);
 			}
             
             window.homeOrg = () => {
@@ -364,7 +390,7 @@
                         currentOrg.redo();
                     }
 					else if(e.ctrlKey && e.key=='b'){
-						window.playOrg('dontPlay', null, false, true);
+						window.playOrg('dontPlay', false, true); //open blank file
                     }
 					else if(e.ctrlKey && e.key=='o'){
 						e.preventDefault();
@@ -412,7 +438,7 @@
 				}
 				if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+48 && x<orgCanvas.width-192+2*48) {
 					if(keyBeingPressed=='Control') {alert(helpStrings.newFile); keyBeingPressed=null;}
-					else window.playOrg('dontPlay', null, false, true);
+					else window.playOrg('dontPlay', false, true);
 				}
 				if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+2*48 && x<orgCanvas.width-192+3*48) {
 					if(keyBeingPressed=='Control') {alert(helpStrings.loadFile); keyBeingPressed=null;}

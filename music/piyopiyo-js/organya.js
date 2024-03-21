@@ -3,11 +3,41 @@
 	let piyoWaveSampleRate = 11025;
 	let piyoDrumSampleRate = 22050;
 	
+	//utility function to force a number to an allowed interval
 	function clamp(number, min, max) {
 		return Math.max(min, Math.min(number, max));
 	}
 	
-	//utility function to read a bunch of data
+	//utility functions for downloading
+	const downloadURL = (data, fileName) => {
+	  const a = document.createElement('a')
+	  a.href = data
+	  a.download = fileName
+	  document.body.appendChild(a)
+	  a.style.display = 'none'
+	  a.click()
+	  a.remove()
+	}
+
+	const downloadBlob = (data, fileName, mimeType) => {
+	  const blob = new Blob([data], {
+		type: mimeType
+	  })
+	  const url = window.URL.createObjectURL(blob)
+	  downloadURL(url, fileName)
+	  setTimeout(() => window.URL.revokeObjectURL(url), 1000)
+	}
+	
+	//utility function to convert byte array to int32-le array
+	function bytesToInt32(arr) {
+		let out = [];
+		for(let i=0; i<arr.length; i+=4) { //if the array's length isn't divisible by 4, fire and brimstone
+			out.push(arr[i] + arr[i+1]*256 + arr[i+2]*65536 + arr[i+3]*16777216);
+		}
+		return out; //array of numbers that can be interpreted as int32
+	}
+		
+	//utility functions to read a bunch of data
 	function getBytesLE(view, pos, n_bytes, unsigned) {
 		out=[];
 		for (let i=0; i<n_bytes; i++){
@@ -26,6 +56,7 @@
 		out = new Int16Array(out);
 		return out;
 	}
+	
 
     class Song {
         /**
@@ -36,8 +67,8 @@
             let p = 0;
 
             // PiyoPiyo-
-            const isPiyo = view.getUint32(p, true); p += 4;
-            if ((isPiyo).toString(16).slice(-6) != '444d50') { //"PMDx" where 'x' could be anything (wish there was a function to read 3 bytes)
+            this.isPiyo = view.getUint32(p, true); p += 4;
+            if ((this.isPiyo).toString(16).slice(-6) != '444d50') { //"PMDx" where 'x' could be anything (wish there was a function to read 3 bytes)
                 throw "Invalid magic.";
             }
 
@@ -96,7 +127,7 @@
 					}
 					let pan = record.slice(0, 8);
 					pan = parseInt(pan, 2);
-					track[j].pan = pan;
+					track[j].pan = (pan==0) ? 4 : pan; //pan of 0 is considered the same as pan of 4, but 4 is more systematic
 				}
 
                 this.tracks[i] = track;
@@ -255,9 +286,6 @@
         
         homeOrg() {
 			this.pause();
-			for(let track=0; track<4; track++){
-				this.state[track]=[{t: [], keys: [], frequencies: [], octaves: [], pan: [], vol: [], length: [], num_loops: 0, playing: [], looping: []}];
-            }//flushing the envelopes out so pressing home and replaying doesn't have a leftover of where you stopped
 			this.playPos = 0;
             this.updateTimeDisplay();
         }
@@ -452,6 +480,34 @@
 			if (this.onUpdate) this.onUpdate(this);
 		}
 		
+		presets(y) {
+			//0,1,2,3 = sine, square, triangle, sawtooth
+			let yOff = y-80;
+			if(yOff>-1 && yOff<28) {
+				for(let i=0; i<256; i++) {
+					this.song.instruments[this.selectedTrack].waveSamples[i] = 95.0*Math.sin(i*2*Math.PI/256);
+				}
+			}
+			else if(yOff>44 && yOff<28+44) {
+				for(let i=0; i<256; i++) {
+					this.song.instruments[this.selectedTrack].waveSamples[i] = 95.0*(i<128 ? 1.0 : -1.0);
+				}
+			}
+			else if(yOff>88 && yOff<28+88) {
+				for(let i=0; i<256; i++) {
+					let i_ = (i+64)%256;
+					this.song.instruments[this.selectedTrack].waveSamples[i] = 0.95*(-1*Math.abs((i_-128)*200/128)+100);
+				}
+			}
+			else if(yOff>132 && yOff<28+132) {
+				for(let i=0; i<256; i++) {
+					let i_=(i+128)%256;
+					this.song.instruments[this.selectedTrack].waveSamples[i] = 0.95*(i_*200/256 - 100);
+				}
+			}
+			if (this.onUpdate) this.onUpdate(this);
+		}
+		
 		undo() {
 			if(this.archivesIndex>0) {
 				this.archivesIndex--;
@@ -470,6 +526,51 @@
 			this.archives.splice(this.archivesIndex+1, this.archives.length); // place note, delete note, delete notes, paste notes, change pan, press ok on waveform editor window, change loop points
 			this.archives.push(structuredClone(this.song));
 			this.archivesIndex++;
+		}
+		
+		saveFile() {
+			let toDownload = [];
+			toDownload=[this.song.isPiyo, this.song.track1DataStartAddress, this.song.wait, this.song.start, this.song.end, this.song.songLength];
+			
+			for (let i = 0; i < 3; i++) {
+				let baseOctaveIconUnknown = 0;
+				let unknown = 0; //if these turn out to be important we can just save them to the song object during loading and retrieve them here
+				let unknown2 = 0;
+				let unknown3 = 0;
+				baseOctaveIconUnknown += this.song.instruments[i].baseOctave;//
+				baseOctaveIconUnknown += 256*this.song.instruments[i].icon;// most stuff is int32-le, but these are smaller, so i'm combining them to write to the file
+                baseOctaveIconUnknown += 65536*unknown;//
+				toDownload.push(baseOctaveIconUnknown);
+                toDownload.push(this.song.instruments[i].envelopeLength);
+                toDownload.push(this.song.instruments[i].volume);
+                toDownload.push(unknown2);
+                toDownload.push(unknown3);
+				
+				let waveSamplesArray = bytesToInt32(this.song.instruments[i].waveSamples);
+				let envelopeSamplesArray = bytesToInt32(this.song.instruments[i].envelopeSamples);
+				toDownload = toDownload.concat(waveSamplesArray);
+				toDownload = toDownload.concat(envelopeSamplesArray);
+            }
+            toDownload.push(this.song.instruments[3].volume);
+			
+			for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < this.song.songLength; j++) {
+					let keys24 = 0;
+					let pan8 = 0;
+					let record32 = 0;
+					for(let k=0; k<this.song.tracks[i][j].keys.length; k++){
+						keys24 += Math.pow(2, this.song.tracks[i][j].keys[k]);
+					}
+					pan8 = this.song.tracks[i][j].pan;
+					record32 += pan8*16777216;
+					record32 += keys24;
+					toDownload.push(record32);
+				}
+			}
+			
+			toDownload = new Int32Array(toDownload);
+			downloadBlob(toDownload, 'savetest.pmd', 'application/octet-stream');
+			
 		}
         
         updateTimeDisplay() {
@@ -559,6 +660,9 @@
         
         pause() {
 			this.isPlaying=false;
+			for(let track=0; track<4; track++){
+				this.state[track]=[{t: [], keys: [], frequencies: [], octaves: [], pan: [], vol: [], length: [], num_loops: 0, playing: [], looping: []}];
+            }//flushing the envelopes out so pressing home and replaying doesn't have a leftover of where you stopped
 			this.node.disconnect();
         }
 
@@ -616,39 +720,6 @@
 				drumWaveTable[i][j] = drumWaveTable[i][j]*100/32768;
 			}
 		}
-		
-		
-		/* //utility function for downloading the drum samples separately for testing
-		let toDownload = [];
-		for (let i=0; i<drumWaveTable[5].length; i++){
-			toDownload.push(drumWaveTable[5][i]);
-		}
-		
-		const downloadURL = (data, fileName) => {
-		  const a = document.createElement('a')
-		  a.href = data
-		  a.download = fileName
-		  document.body.appendChild(a)
-		  a.style.display = 'none'
-		  a.click()
-		  a.remove()
-		}
-
-		const downloadBlob = (data, fileName, mimeType) => {
-
-		  const blob = new Blob([data], {
-			type: mimeType
-		  })
-
-		  const url = window.URL.createObjectURL(blob)
-
-		  downloadURL(url, fileName)
-
-		  setTimeout(() => window.URL.revokeObjectURL(url), 1000)
-		}
-
-		//downloadBlob(toDownload, 'drum5.bin', 'application/octet-stream');
-		*/
 		
         window.Organya = Organya;
     };

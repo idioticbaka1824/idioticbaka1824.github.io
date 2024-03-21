@@ -250,7 +250,7 @@
 					document.getElementById('dropDownRadio').checked=false;
 					document.getElementById('urlInputRadio').checked=false;
 				}
-                if (prev_song != new_song || prev_song == null || prev_song=='songs/Blank.pmd'){
+                if (prev_song != new_song || prev_song == null){
                     stopOrg();
 					<!-- if (argument!='doPlay'){ -->
 						<!-- shouldUnMuteAll=1; //this doesn't quite work the way i want -->
@@ -268,6 +268,8 @@
                     currentWaitDisplay.innerHTML=currentOrg.song.wait;
                     currentOrg.update();
                 }
+				document.activeElement.blur();
+				orgCanvas.focus();
                 currentOrg.play(argument);
             }
 			
@@ -355,6 +357,7 @@
 						mute_element.checked = 1-mute_element.checked;
 					}
                     else if(e.key==" "){
+						e.preventDefault();
                         if(currentOrg.isPlaying==false) window.playOrg();
                         else if(currentOrg.isPlaying==true) window.pauseOrg();
                     }
@@ -392,6 +395,7 @@
                         currentOrg.redo();
                     }
 					else if(e.ctrlKey && e.key=='b'){
+						document.getElementById('songs').disabled = true;
 						window.playOrg('dontPlay', false, true); //open blank file
                     }
 					else if(e.ctrlKey && e.key=='o'){
@@ -400,7 +404,7 @@
                     }
 					else if(e.ctrlKey && e.key=='s'){
 						e.preventDefault();
-						//save
+						//savefile
                     }
 					else if(currentOrg && !currentOrg.isLowSpec && e.key=='Tab'){
                         //currentOrg.changeEditingMode(1-currentOrg.editingMode); //
@@ -440,7 +444,10 @@
 				}
 				if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+48 && x<orgCanvas.width-192+2*48) {
 					if(keyBeingPressed=='Control') {alert(helpStrings.newFile); keyBeingPressed=null;}
-					else window.playOrg('dontPlay', false, true);
+					else {
+						document.getElementById('songs').disabled = true;
+						window.playOrg('dontPlay', false, true);
+					}
 				}
 				if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+2*48 && x<orgCanvas.width-192+3*48) {
 					if(keyBeingPressed=='Control') {alert(helpStrings.loadFile); keyBeingPressed=null;}
@@ -450,7 +457,7 @@
 				}
 				if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+3*48 && x<orgCanvas.width-192+4*48) {
 					if(keyBeingPressed=='Control') {alert(helpStrings.saveFile); keyBeingPressed=null;}
-					//else ;
+					else currentOrg.saveFile();
 				}
 				if(currentOrg != null) {
 					if(y>orgCanvas.height-76 && y<orgCanvas.height-60 && x<256) {
@@ -584,6 +591,10 @@
 								if (e.button==2) {let newValue = prompt('New Music Wait value:'); currentOrg.editNumbers(newValue);}
 							}
 						}
+						if(x>600 && x<656 && y>80 && y<80+160) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.presets); keyBeingPressed=null;}
+							else currentOrg.presets(y);
+						}
 					}
 					if (currentOrg.onUpdate) currentOrg.onUpdate(currentOrg);
 				}
@@ -641,6 +652,7 @@
 			editOctave: "Octave of the selected track (0-5).\nPiyoPiyo supports a range of two octaves for any instrument, offset from a baseline octave.\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.",
 			editSize: "Size of the song (16-4096).\nTypically coincides with the end loop marker.\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.",
 			editWait: "Playback speed of the song (20-1000).\nThis is the duration of one tick/subbeat in milliseconds.\nFor a 4x4 time signature, BPM = 15000/songWait\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.",
+			presets: "Click one of these presets to start with a basic waveform.",
 			newFile: "Create a new blank song.",
 			loadFile: "Load a .pmd song from your computer.",
 			saveFile: "Save the current song to your computer.",

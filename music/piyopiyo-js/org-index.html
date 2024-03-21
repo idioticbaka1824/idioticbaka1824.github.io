@@ -436,28 +436,30 @@
 			var cursor_coords = [0,0];
 			
 			window.clickHandling = (x, y, e) => {
-				if(y>orgCanvas.height-48 && y<orgCanvas.height-24 && x>orgCanvas.width-192+3*48 && x<orgCanvas.width-192+4*48) {
-					alert(helpStrings.about);
-				}
-				if(y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-192+3*48 && x<orgCanvas.width-192+4*48) {
-					alert(helpStrings.help);
-				}
-				if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+48 && x<orgCanvas.width-192+2*48) {
-					if(keyBeingPressed=='Control') {alert(helpStrings.newFile); keyBeingPressed=null;}
-					else {
-						document.getElementById('songs').disabled = true;
-						window.playOrg('dontPlay', false, true);
+				if(currentOrg==null || !currentOrg.isWaveformEditor) {
+					if(y>orgCanvas.height-48 && y<orgCanvas.height-24 && x>orgCanvas.width-192+3*48 && x<orgCanvas.width-192+4*48) {
+						alert(helpStrings.about);
 					}
-				}
-				if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+2*48 && x<orgCanvas.width-192+3*48) {
-					if(keyBeingPressed=='Control') {alert(helpStrings.loadFile); keyBeingPressed=null;}
-					else {
-						document.getElementById('fileElem').click();
+					if(y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-192+3*48 && x<orgCanvas.width-192+4*48) {
+						alert(helpStrings.help);
 					}
-				}
-				if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+3*48 && x<orgCanvas.width-192+4*48) {
-					if(keyBeingPressed=='Control') {alert(helpStrings.saveFile); keyBeingPressed=null;}
-					else currentOrg.saveFile();
+					if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+48 && x<orgCanvas.width-192+2*48) {
+						if(keyBeingPressed=='Control') {alert(helpStrings.newFile); keyBeingPressed=null;}
+						else {
+							document.getElementById('songs').disabled = true;
+							window.playOrg('dontPlay', false, true);
+						}
+					}
+					if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+2*48 && x<orgCanvas.width-192+3*48) {
+						if(keyBeingPressed=='Control') {alert(helpStrings.loadFile); keyBeingPressed=null;}
+						else {
+							document.getElementById('fileElem').click();
+						}
+					}
+					if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+3*48 && x<orgCanvas.width-192+4*48) {
+						if(keyBeingPressed=='Control') {alert(helpStrings.saveFile); keyBeingPressed=null;}
+						else currentOrg.saveFile();
+					}
 				}
 				if(currentOrg != null) {
 					if(y>orgCanvas.height-76 && y<orgCanvas.height-60 && x<256) {

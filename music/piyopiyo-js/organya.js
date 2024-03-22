@@ -193,9 +193,19 @@
          * @param {Float32Array} leftBuffer 
          * @param {Float32Array} rightBuffer
          */
-        synth(leftBuffer, rightBuffer) {
+        synth(leftBuffer, rightBuffer, preview) {
             for (let sample = 0; sample < leftBuffer.length; sample++) {
-                if (this.samplesThisTick == 0) this.update(); //update works in increments of song wait time, so anything finer than that is probably handled by this synth function
+                if (this.samplesThisTick == 0) {
+					if (preview==false) this.update(); //update works in increments of song wait time, so anything finer than that is probably handled by this synth function
+					else {
+						if (this.state[this.selectedTrack][0].length[0] <= 0) {
+							this.pause();
+						}
+						else {
+							this.state[this.selectedTrack][0].length[0] -= this.song.wait*this.song.waitFudge/1000;
+						}
+					}
+				}
 
                 leftBuffer[sample] = 0;
                 rightBuffer[sample] = 0;
@@ -267,9 +277,11 @@
                 }
 
                 if (++this.samplesThisTick == this.samplesPerTick) {
-                    this.playPos += 1;
-                    this.updateTimeDisplay();
                     this.samplesThisTick = 0;
+					if(preview==false) {
+						this.playPos += 1;
+						this.updateTimeDisplay();
+					}
 
                     if (this.playPos >= this.song.end) {
 						if (this.isLoop == true) {
@@ -345,10 +357,15 @@
 			let newNoteKeyOctave = (newNoteKey / 12 | 0);
 			let toPush = newNoteKeyRelative + 12*(newNoteKeyOctave-this.song.instruments[this.selectedTrack].baseOctave)
 			var keys = this.song.tracks[this.selectedTrack][newNotePos].keys
-			if (keys.includes(toPush)) keys.splice(keys.indexOf(toPush), 1);
-			else if((this.selectedTrack!=3) || (drumTypeTable[newNoteKeyRelative]!=-1 && drumTypeTable[newNoteKeyRelative]!=undefined)) keys.push(toPush);
-			this.archivesUpdate();
-			if (this.onUpdate) this.onUpdate(this);
+			if(newNoteKeyOctave-this.song.instruments[this.selectedTrack].baseOctave >= 0 && newNoteKeyOctave-this.song.instruments[this.selectedTrack].baseOctave <= 1) { //the if condition here is to restrict the newly added note to the supported two octaves as determined by the instrument's baseOctave
+				this.previewNote(y, scrollY);
+				if (keys.includes(toPush)) keys.splice(keys.indexOf(toPush), 1);
+				else if((this.selectedTrack!=3) || (drumTypeTable[newNoteKeyRelative]!=-1 && drumTypeTable[newNoteKeyRelative]!=undefined)) {
+					keys.push(toPush);
+				}
+				this.archivesUpdate();
+				if (this.onUpdate) this.onUpdate(this);
+			}
 		}
 		
 		deleteNotes() {
@@ -528,6 +545,44 @@
 			this.archivesIndex++;
 		}
 		
+		previewNote(y, scrollY) {
+			let viewPos = (this.playPos/this.MeasxStep | 0)*this.MeasxStep;
+			let newNoteKey = (96 - ((y + scrollY)/12) | 0);
+			let newNoteKeyRelative = newNoteKey % 12;
+			let newNoteKeyOctave = (newNoteKey / 12 | 0);
+			if((this.selectedTrack!=3) || (drumTypeTable[newNoteKeyRelative]!=-1 && drumTypeTable[newNoteKeyRelative]!=undefined)) {
+				if(newNoteKeyOctave-this.song.instruments[this.selectedTrack].baseOctave >= 0 && newNoteKeyOctave-this.song.instruments[this.selectedTrack].baseOctave <= 1) {
+					for (let i = 0; i < 4; i++) {
+						this.state[i] = [
+						{
+							t: [],
+							keys: [],
+							frequencies: [],
+							octaves: [],
+							pan: [],
+							vol: [],
+							length: [],
+							num_loops: 0,
+							playing: [],
+							looping: [],
+						}
+						];
+					}
+					this.state[this.selectedTrack][0].t.push(0);
+					this.state[this.selectedTrack][0].keys.push(newNoteKeyRelative);
+					this.state[this.selectedTrack][0].frequencies.push(this.selectedTrack < 3 ? freqTable[newNoteKeyRelative] * octTable[newNoteKeyOctave] : piyoDrumSampleRate);
+					this.state[this.selectedTrack][0].octaves.push(newNoteKeyOctave);
+					this.state[this.selectedTrack][0].pan.push(4);
+					this.state[this.selectedTrack][0].vol.push(this.song.instruments[this.selectedTrack].volume);
+					this.state[this.selectedTrack][0].length.push((this.selectedTrack<3) ? (this.song.instruments[this.selectedTrack].envelopeLength/piyoWaveSampleRate) : drumWaveTable[drumTypeTable[newNoteKeyRelative]].length/piyoDrumSampleRate);
+					this.state[this.selectedTrack][0].num_loops = (newNoteKeyOctave+1)*4;
+					this.state[this.selectedTrack][0].playing.push(true);
+					this.state[this.selectedTrack][0].looping.push(this.selectedTrack!=3);
+					if(!this.isPlaying) this.play('doPlay', true);
+				}
+			}
+		}
+		
 		saveFile() {
 			let toDownload = [];
 			toDownload=[this.song.isPiyo, this.song.track1DataStartAddress, this.song.wait, this.song.start, this.song.end, this.song.songLength];
@@ -588,7 +643,7 @@
 
             for (let track = 0; track < 4; track++) { //melody (non-drum) tracks
                 if (!(this.mutedTracks.includes(track))) {
-					//const record = this.song.tracks[track].find((n) => n.pos == this.playPos); //why do all this? don't we just want the pos-th item in the track? or were empty positions not stored with an empty track item, thus necessitating storing pos info in each track item? i don't think i'm doing that here
+					//const record = this.song.tracks[track].find((n) => n.pos == this.playPos); //why all this hassle? don't we just want the pos-th item in the track? or were empty positions not stored with an empty track item, thus necessitating storing pos info in each track item? i don't think i'm doing that here
 					const record = this.song.tracks[track][this.playPos];
 					if (record.keys.length != 0) { //only continue if there is some or the other note at that position
 						let keys = record.keys;
@@ -666,19 +721,22 @@
 			this.node.disconnect();
         }
 
-        play(argument) {
-			this.isPlaying = true;
-            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-            this.sampleRate = this.ctx.sampleRate;
-            this.samplesPerTick = (this.sampleRate / 1000) * this.song.wait*this.song.waitFudge | 0;
-            this.samplesThisTick = 0;
+        play(argument, preview=false) {
+			if(this.isPlaying==false){
+				this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+				this.sampleRate = this.ctx.sampleRate;
+				this.samplesPerTick = (this.sampleRate / 1000) * this.song.wait*this.song.waitFudge | 0;
+				this.samplesThisTick = 0;
+			
 
-            this.node = this.ctx.createScriptProcessor(8192, 0, 2);
-            
-            if(argument=='doPlay'){ //the point of this bit is to change the display as soon as a new org is selected
-                this.node.onaudioprocess = (e) => this.synth(e.outputBuffer.getChannelData(0), e.outputBuffer.getChannelData(1));
-                this.node.connect(this.ctx.destination);
-            }
+				this.node = this.ctx.createScriptProcessor(8192, 0, 2);
+				
+				if(argument=='doPlay'){ //the point of this bit is to change the display as soon as a new org is selected
+					this.isPlaying = true;
+					this.node.onaudioprocess = (e) => this.synth(e.outputBuffer.getChannelData(0), e.outputBuffer.getChannelData(1), preview);
+					this.node.connect(this.ctx.destination);
+				}
+			}
         }
         
         whichMuted() {

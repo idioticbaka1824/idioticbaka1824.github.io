@@ -138,14 +138,14 @@
 			Test.pmd
 			Testnote-Ikachan.pmd
 			ikachan/Ikachan.pmd
-			ikachan/Buriki.pmd
-			ikachan/Magirete.pmd
-			ikachan/Mizuno.pmd
+			ikachan/Buriki (Tinplate March).pmd
+			ikachan/Magirete (Under the Rain).pmd
+			ikachan/Mizuno (In the Water).pmd
 			ikachan/Quake.pmd
 			ikachan/Tidepool.pmd
-			examples/Sample1.pmd
+			examples/Sample1 (Maguman).pmd
 			examples/Doggy1.pmd
-			examples/Iron.pmd
+			examples/Iron (Lost Child of Iron).pmd
 			data/Dark.pmd
 			data/BrokenToy.pmd
 			data/ZaomiZaomi.pmd
@@ -499,6 +499,10 @@
 							if(keyBeingPressed=='Control') {alert(helpStrings.addPan); keyBeingPressed=null;}
 							else currentOrg.addPan(x-8, y, orgCanvas.height);
 						}
+						if(y>16 && y<orgCanvas.height-84-16-76 && x>8 && x<36+8) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.pianoRoll); keyBeingPressed=null;}
+							else currentOrg.previewNote(y, ui.scrollY);
+						}
 						if(y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-192 && x<orgCanvas.width-192+48) {
 							if(keyBeingPressed=='Control') {alert(helpStrings.homeOrg); keyBeingPressed=null;}
 							else homeOrg();
@@ -633,7 +637,8 @@
 			foot: "This marks the end of the looping section of the song.\nRight-click+drag to move it.",
 			size: "This marks the position of the last possible note in the file. It sets the file size, and typically coincides with the end loop marker.\nKeep in mind that any notes after the end loop marker will never be played.\nRight-click+drag to move it, or change it via the instrument editor (Enter).",
 			cursorUpdate: "Click somewhere along the red line to place the playhead at that position.\nThe display will adjust so that the measure with the playhead appears first on the left of the screen.\nClick and drag along the line to make a selection, useful for copying notes.\nYou can also move to the next measure using the arrow keys, or by moving your cursor to the purple border on either side.",
-			addNote: "Click anywhere on the piano roll to place or remove a note at that position (in Pencil Mode).\nIn Duplication Mode, the copied notes from the clipboard will be placed.\nCtrl+Z and Ctrl+Y to undo/redo.",
+			pianoRoll: "Click on the piano roll to preview a note. The note will also preview when being added/deleted.\nKeep in mind that PiyoPiyo only supports a range of two octaves for any particular instrument.",
+			addNote: "Click anywhere on the piano roll to place or remove a note at that position (in Pencil Mode).\nIn Duplication Mode, the copied notes from the clipboard will be placed.\nCtrl+Z and Ctrl+Y to undo/redo.\nKeep in mind that PiyoPiyo only supports a range of two octaves for any particular instrument.",
 			addPan: "Click in the Pan table to adjust the pan value of a note.\nCtrl+Z and Ctrl+Y to undo/redo.",
 			changeTrack: "Left-click on the Track buttons to select that track.\nYou can also press the corresponding number keys to select that track.\nPress 'S' or 'M' to Solo or Mute the selected track.\nRight-click on any track to mute it.",
 			homeOrg: "Go to the beginning of the song.\nKeyboard shortcut: 'Home'",

@@ -624,7 +624,7 @@
 			}
 			
 			toDownload = new Int32Array(toDownload);
-			downloadBlob(toDownload, 'savetest.pmd', 'application/octet-stream');
+			downloadBlob(toDownload, 'NewData.pmd', 'application/octet-stream');
 			
 		}
         

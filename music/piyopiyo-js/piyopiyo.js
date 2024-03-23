@@ -202,7 +202,7 @@
 							this.pause();
 						}
 						else {
-							this.state[this.selectedTrack][0].length[0] -= this.song.wait*this.song.waitFudge/1000;
+							this.state[this.selectedTrack][0].length[0] -= this.song.wait*this.song.waitFudge/1000; //??
 						}
 					}
 				}
@@ -356,8 +356,8 @@
 			let newNoteKey = (96 - ((y + scrollY)/12) | 0);
 			let newNoteKeyRelative = newNoteKey % 12;
 			let newNoteKeyOctave = (newNoteKey / 12 | 0);
-			let toPush = newNoteKeyRelative + 12*(newNoteKeyOctave-this.song.instruments[this.selectedTrack].baseOctave)
-			var keys = this.song.tracks[this.selectedTrack][newNotePos].keys
+			let toPush = newNoteKeyRelative + 12*(newNoteKeyOctave-this.song.instruments[this.selectedTrack].baseOctave);
+			var keys = this.song.tracks[this.selectedTrack][newNotePos].keys;
 			if(newNoteKeyOctave-this.song.instruments[this.selectedTrack].baseOctave >= 0 && newNoteKeyOctave-this.song.instruments[this.selectedTrack].baseOctave <= 1) { //the if condition here is to restrict the newly added note to the supported two octaves as determined by the instrument's baseOctave
 				if (keys.includes(toPush)) keys.splice(keys.indexOf(toPush), 1);
 				else if((this.selectedTrack!=3) || (drumTypeTable[newNoteKeyRelative]!=-1 && drumTypeTable[newNoteKeyRelative]!=undefined)) {

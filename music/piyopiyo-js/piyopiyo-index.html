@@ -1,7 +1,7 @@
 <html>
 
 <head>
-    <title>PiyoPiyo Player (soon hopefully)</title>
+    <title>PiyoPiyo Editor</title>
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
     <style>
         body {
@@ -64,8 +64,8 @@
 
 <body>
     <div id="toolbar">
-        <input type="radio" id="dropDownRadio" name="orgSelect" value="dropDownOn" onchange="radioOnChange()" checked>
-        <select id="songs" onchange="playOrg('dontPlay')"></select>
+        <input type="radio" id="dropDownRadio" name="orgSelect" value="dropDownOn" onchange="radioOnChange()">
+        <select id="songs" onchange="playOrg('dontPlay')" disabled></select>
         <input type="radio" id="urlInputRadio" name="orgSelect" value="urlInputOn" onchange="radioOnChange()">
         <input type="url" id="idUrlInput" name="nameUrlInput" minlength="2" maxlength="256" size="10" placeholder="Enter URL" disabled>
         
@@ -125,8 +125,8 @@
     </div>
 
     <!-- increment before each deploy -->
-    <script src="organya.js?cache_bust=12"></script>
-    <script src="organya-ui.js?cache_bust=12"></script>
+    <script src="piyopiyo.js?cache_bust=12"></script>
+    <script src="piyopiyo-ui.js?cache_bust=12"></script>
     <!--I have no clue what this cache bust thing is, but apparently it's needed to reflect updates properly-->
     <script>
     
@@ -185,7 +185,7 @@
             const ui = new OrganyaUI(orgCanvas);
 
             window.addEventListener("resize", () => {
-                orgCanvas.width = Math.max(canvasContainer.clientWidth, 688); //minimum size is 640x480, otherwise things can started crowding into each other
+                orgCanvas.width = Math.max(canvasContainer.clientWidth, 688); //minimum size is 688x480, otherwise things can started crowding into each other
                 orgCanvas.height = Math.max(canvasContainer.clientHeight, 480);
                 ui.draw();
             })
@@ -213,7 +213,7 @@
             window.pauseOrg = () => {
                 if (currentOrg != null) {
                     currentOrg.pause();
-                    prev_song = songListEl.options[songListEl.selectedIndex].value;
+                    prev_song = new_song;
                 }
             }
 
@@ -251,16 +251,15 @@
 					document.getElementById('urlInputRadio').checked=false;
 				}
                 if (prev_song != new_song || prev_song == null){
+					console.log(prev_song);
+					console.log(new_song);
                     stopOrg();
 					<!-- if (argument!='doPlay'){ -->
 						<!-- shouldUnMuteAll=1; //this doesn't quite work the way i want -->
 						<!-- window.muteAll('solo'); -->
 					<!-- } -->
-					console.log(prev_song);
-					console.log(new_song);
-					console.log(res);
                     const data = await res.arrayBuffer();
-					console.log(data);
+					prev_song = new_song;
                     await initOrganya();
 
                     currentOrg = new Organya(data);

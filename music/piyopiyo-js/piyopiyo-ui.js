@@ -297,6 +297,9 @@
 			}
 			if (this.organya) {
 				this.ctx.drawImage(this.setting, 2, 72, 60, 2, this.organya.selectedTrack*64+2, height-58, 60, 2); //to make the selectedTrack tab look selected
+				for(let i=0; i<this.organya.mutedTracks.length; i++) {//greying out muted tracks' labels
+					this.ctx.drawImage(this.setting, 64*this.organya.mutedTracks[i], 74, 64, 14, 64*this.organya.mutedTracks[i], height-72, 64, 14);
+				}
 				this.drawNumber(102, height-55, this.organya.song.instruments[this.organya.selectedTrack].volume, 0, false, true); //volume
 				if (this.organya.selectedTrack!=3) {
 					this.drawNumber(102, height-37, this.organya.song.instruments[this.organya.selectedTrack].envelopeLength, 0, false, true); //(envelope) length

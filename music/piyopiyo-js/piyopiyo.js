@@ -255,7 +255,7 @@
 								if (fractionOfThisNoteCompleted>1) {volumeEnv=0;} //in case we're in that little bit of overshoot because of the ticks not lining up with envelope lengths
 								else {volumeEnv = (i<3) ? this.song.instruments[i].envelopeSamples[(fractionOfThisNoteCompleted*63 | 0)]/128 : 1-0.4*(this.state[i][i_prec].keys[i_note]%2==1);} //envelope samples go 0-128. also, odd-key drums are softer. the 0.4 factor is eyeballed
 								
-								s *= Math.pow(10, ((this.state[i][i_prec].vol[i_note] - 300) * 8)/2000);
+								s *= Math.pow(10, ((this.state[i][i_prec].vol[i_note] - 256) * 8)/2000);
 								//s *= Math.pow(10, 1.2*this.state[i][i_prec].vol[i_note]/300 - 1.45) //my messy calculation that i turned out not to need when i figured out how the envelope works
 								s *= volumeEnv; //why didn't i realise this right away i'm so stupid
 								
@@ -307,6 +307,7 @@
 				if (this.playPos-(this.MeasxStep+this.playPos%this.MeasxStep)>=0){
 					this.playPos-=(this.MeasxStep+this.playPos%this.MeasxStep);
 				}
+				else this.playPos = 0;
 			}
 			else {
 				if (this.playPos-1>=0){
@@ -358,9 +359,9 @@
 			let toPush = newNoteKeyRelative + 12*(newNoteKeyOctave-this.song.instruments[this.selectedTrack].baseOctave)
 			var keys = this.song.tracks[this.selectedTrack][newNotePos].keys
 			if(newNoteKeyOctave-this.song.instruments[this.selectedTrack].baseOctave >= 0 && newNoteKeyOctave-this.song.instruments[this.selectedTrack].baseOctave <= 1) { //the if condition here is to restrict the newly added note to the supported two octaves as determined by the instrument's baseOctave
-				this.previewNote(y, scrollY);
 				if (keys.includes(toPush)) keys.splice(keys.indexOf(toPush), 1);
 				else if((this.selectedTrack!=3) || (drumTypeTable[newNoteKeyRelative]!=-1 && drumTypeTable[newNoteKeyRelative]!=undefined)) {
+					this.previewNote(y, scrollY);
 					keys.push(toPush);
 				}
 				this.archivesUpdate();
@@ -416,7 +417,7 @@
 				var inputElements = document.getElementsByClassName('mute');
 				inputElements[newSelectedTrack].checked=1-inputElements[newSelectedTrack].checked;
 			}
-			if (this.onUpdate) this.onUpdate(this);
+			this.update();
 		}
         
 		changeEditingMode(argument) {
@@ -696,7 +697,7 @@
 							this.state[track][i_prec].vol.splice(i_note, 1);
 						}
 						else {
-							this.state[track][i_prec].length[i_note] -= this.song.wait*this.song.waitFudge/1000;
+							this.state[track][i_prec].length[i_note] -= 1.72*this.song.wait*this.song.waitFudge/1000; //why am I multiplying this 1.7 thing here? I have no idea why I'm having to do this. But playback is too slow without it. More like notes are too long without it. What is going on??
 						}
 					}
 					if(this.state[track][i_prec].length.length==0) {this.state[track].splice(i_prec, 1);}

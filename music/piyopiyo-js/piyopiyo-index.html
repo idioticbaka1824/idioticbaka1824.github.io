@@ -241,7 +241,7 @@
 					prev_song = new_song;
                     new_song = document.getElementById('idUrlInput').value;
                 }
-                else if(blankFile || new_song=='songs/Blank.pmd') {
+                else if(blankFile) {
 					songname = "https://raadshaikh.github.io/music/piyopiyo-js/songs/Blank.pmd"
 					songname = new URL(songname);
                     res = await fetch(songname);
@@ -251,8 +251,6 @@
 					document.getElementById('urlInputRadio').checked=false;
 				}
                 if (prev_song != new_song || prev_song == null){
-					console.log(prev_song);
-					console.log(new_song);
                     stopOrg();
 					<!-- if (argument!='doPlay'){ -->
 						<!-- shouldUnMuteAll=1; //this doesn't quite work the way i want -->
@@ -283,7 +281,7 @@
             window.homeOrg = () => {
                 if (currentOrg != null) {
                     currentOrg.homeOrg();
-                    prev_song = songListEl.options[songListEl.selectedIndex].value; //didn't have this earlier, but it fixes a bug where playing, placing new notes, then clicking home and then playing will erase your changes
+                    prev_song = new_song; //didn't have this earlier, but it fixes a bug where playing, placing new notes, then clicking home and then playing will erase your changes
                 }
             }
             window.backMeas = (small=false) => {

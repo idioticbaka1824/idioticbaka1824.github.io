@@ -77,7 +77,7 @@
 			this.meas = [4, 4]; //I don't think piyopiyo allows for any other type
 			
             this.wait = view.getUint32(p, true); p += 4;
-			this.waitFudge = 1; //thought i'd need this but nah
+			this.waitFudge = 1.1; //why am i having to do this??
             this.start = view.getInt32(p, true); p += 4;
             this.end = view.getInt32(p, true); p += 4;
             this.songLength = view.getInt32(p, true); p += 4; //upper bound on number of steps to play or consider
@@ -697,7 +697,7 @@
 							this.state[track][i_prec].vol.splice(i_note, 1);
 						}
 						else {
-							this.state[track][i_prec].length[i_note] -= 1.72*this.song.wait*this.song.waitFudge/1000; //why am I multiplying this 1.7 thing here? I have no idea why I'm having to do this. But playback is too slow without it. More like notes are too long without it. What is going on??
+							this.state[track][i_prec].length[i_note] -= 1.7*this.song.wait*this.song.waitFudge/1000; //why am I multiplying this 1.7 thing here? I have no idea why I'm having to do this. But playback is too slow without it. More like notes are too long without it. What is going on??
 						}
 					}
 					if(this.state[track][i_prec].length.length==0) {this.state[track].splice(i_prec, 1);}
@@ -716,6 +716,7 @@
         
         pause() {
 			this.isPlaying=false;
+			prev_song = new_song;
 			for(let track=0; track<4; track++){
 				this.state[track]=[{t: [], keys: [], frequencies: [], octaves: [], pan: [], vol: [], length: [], num_loops: 0, playing: [], looping: []}];
             }//flushing the envelopes out so pressing home and replaying doesn't have a leftover of where you stopped

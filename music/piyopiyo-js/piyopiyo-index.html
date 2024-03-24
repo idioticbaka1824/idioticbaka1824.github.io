@@ -404,6 +404,7 @@
 						//savefile
                     }
 					else if(currentOrg && !currentOrg.isLowSpec && e.key=='Tab'){
+						e.preventDefault();
                         //currentOrg.changeEditingMode(1-currentOrg.editingMode); //
 						//if(currentOrg.editingMode==1) currentOrg.copyNotes(); //this would make it toggle modes
                         currentOrg.changeEditingMode(0); //this just sets pencil mode

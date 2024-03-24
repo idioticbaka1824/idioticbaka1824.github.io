@@ -337,9 +337,22 @@
 			let newPosOffset = ((x-42)/12 | 0);
             if(headOrFoot=='head') this.song.start = Math.max(viewPos + newPosOffset, 0);
             if(headOrFoot=='foot') this.song.end = Math.max(viewPos + newPosOffset, 0);
-            if(headOrFoot=='size') this.song.songLength = Math.max(viewPos + newPosOffset-1, 0);
+            if(headOrFoot=='size') {
+				let oldLength = this.song.songLength;
+				this.song.songLength = Math.max(viewPos + newPosOffset-1, 0);
+				this.extendSong(oldLength, this.song.songLength);
+			}
 			//this.archivesUpdate---(); //this change happens 'continuously' so don't do the update here, do it on mouseup in the html
             this.updateTimeDisplay();
+		}
+		
+		extendSong(oldLength, newLength) {
+			for(let track=0; track<4; track++) {
+				for(let j=oldLength; j<newLength; j++) {
+					let emptyRecord = {keys:[], pan:4, pos:j};
+					this.song.tracks[track].push(emptyRecord);
+				}
+			}
 		}
 		
 		selectionUpdate(x) {
@@ -360,7 +373,7 @@
 			var keys = this.song.tracks[this.selectedTrack][newNotePos].keys;
 			if(newNoteKeyOctave-this.song.instruments[this.selectedTrack].baseOctave >= 0 && newNoteKeyOctave-this.song.instruments[this.selectedTrack].baseOctave <= 1) { //the if condition here is to restrict the newly added note to the supported two octaves as determined by the instrument's baseOctave
 				if (keys.includes(toPush)) keys.splice(keys.indexOf(toPush), 1);
-				else if((this.selectedTrack!=3) || (drumTypeTable[newNoteKeyRelative]!=-1 && drumTypeTable[newNoteKeyRelative]!=undefined)) {
+				else if((this.selectedTrack!=3) || (drumTypeTable[newNoteKey]!=-1 && drumTypeTable[newNoteKey]!=undefined)) {
 					this.previewNote(y, scrollY);
 					keys.push(toPush);
 				}
@@ -481,7 +494,9 @@
 						this.song.instruments[this.selectedTrack].baseOctave = (fromKeyboard==0) ? newValue : clamp(this.song.instruments[this.selectedTrack].baseOctave + fromKeyboard, minValues[this.isEditingNumbers], maxValues[this.isEditingNumbers]);
 						break;
 					case 3:
+						let oldLength = this.song.songLength;
 						this.song.songLength = (fromKeyboard==0) ? newValue : clamp(this.song.songLength + fromKeyboard, minValues[this.isEditingNumbers], maxValues[this.isEditingNumbers]);
+						this.extendSong(oldLength, this.song.songLength);
 						break;
 					case 4:
 						this.song.wait = (fromKeyboard==0) ? newValue : clamp(this.song.wait + fromKeyboard, minValues[this.isEditingNumbers], maxValues[this.isEditingNumbers]);
@@ -551,7 +566,7 @@
 			let newNoteKey = (96 - ((y + scrollY)/12) | 0);
 			let newNoteKeyRelative = newNoteKey % 12;
 			let newNoteKeyOctave = (newNoteKey / 12 | 0);
-			if((this.selectedTrack!=3) || (drumTypeTable[newNoteKeyRelative]!=-1 && drumTypeTable[newNoteKeyRelative]!=undefined)) {
+			if((this.selectedTrack!=3) || (drumTypeTable[newNoteKey]!=-1 && drumTypeTable[newNoteKey]!=undefined)) {
 				if(newNoteKeyOctave-this.song.instruments[this.selectedTrack].baseOctave >= 0 && newNoteKeyOctave-this.song.instruments[this.selectedTrack].baseOctave <= 1) {
 					for (let i = 0; i < 4; i++) {
 						this.state[i] = [
@@ -570,13 +585,13 @@
 						];
 					}
 					this.state[this.selectedTrack][0].t.push(0);
-					this.state[this.selectedTrack][0].keys.push(newNoteKeyRelative);
+					this.state[this.selectedTrack][0].keys.push(this.selectedTrack < 3 ? newNoteKeyRelative : newNoteKey);
 					this.state[this.selectedTrack][0].frequencies.push(this.selectedTrack < 3 ? freqTable[newNoteKeyRelative] * octTable[newNoteKeyOctave] : piyoDrumSampleRate);
-					this.state[this.selectedTrack][0].octaves.push(newNoteKeyOctave);
+					this.state[this.selectedTrack][0].octaves.push(newNoteKeyOctave*(this.selectedTrack!=3));
 					this.state[this.selectedTrack][0].pan.push(4);
 					this.state[this.selectedTrack][0].vol.push(this.song.instruments[this.selectedTrack].volume);
-					this.state[this.selectedTrack][0].length.push((this.selectedTrack<3) ? (this.song.instruments[this.selectedTrack].envelopeLength/piyoWaveSampleRate) : drumWaveTable[drumTypeTable[newNoteKeyRelative]].length/piyoDrumSampleRate);
-					this.state[this.selectedTrack][0].num_loops = (newNoteKeyOctave+1)*4;
+					this.state[this.selectedTrack][0].length.push((this.selectedTrack<3) ? (this.song.instruments[this.selectedTrack].envelopeLength/piyoWaveSampleRate) : drumWaveTable[drumTypeTable[newNoteKey]].length/piyoDrumSampleRate);
+					this.state[this.selectedTrack][0].num_loops = (newNoteKeyOctave-this.song.instruments[this.selectedTrack].baseOctave+1)*4;
 					this.state[this.selectedTrack][0].playing.push(true);
 					this.state[this.selectedTrack][0].looping.push(this.selectedTrack!=3);
 					if(!this.isPlaying) this.play('doPlay', true);

@@ -348,18 +348,23 @@
 		
 		extendSong(oldLength, newLength) {
 			for(let track=0; track<4; track++) {
-				for(let j=oldLength; j<newLength; j++) {
+				for(let j=oldLength+1; j<newLength; j++) {
 					let emptyRecord = {keys:[], pan:4, pos:j};
 					this.song.tracks[track].push(emptyRecord);
 				}
 			}
 		}
 		
-		selectionUpdate(x) {
-			let viewPos = (this.playPos/this.MeasxStep | 0)*this.MeasxStep;
-			let newSelectionEndOffset = ((x-36)/12 | 0); //offset (in beats) from viewpos (the beat # of the beginning of the viewing window)
-            this.selectionEnd = viewPos + newSelectionEndOffset;
-			if (this.selectionEnd > this.song.songLength) this.selectionEnd = this.song.songLength;
+		selectionUpdate(x, fromKeyboard=false) {
+			if(fromKeyboard==false) {
+				let viewPos = (this.playPos/this.MeasxStep | 0)*this.MeasxStep;
+				let newSelectionEndOffset = ((x-36)/12 | 0); //offset (in beats) from viewpos (the beat # of the beginning of the viewing window)
+				this.selectionEnd = viewPos + newSelectionEndOffset;
+			}
+			else if(typeof fromKeyboard=='number') {
+				this.selectionEnd = this.selectionEnd+fromKeyboard;
+			}
+			this.selectionEnd = clamp(this.selectionEnd, 0, this.song.songLength);
             this.updateTimeDisplay();
         }
 		
@@ -411,6 +416,13 @@
 				this.song.tracks[this.selectedTrack][newNotePos+i].pan = this.recordsToPaste[i].pan;
 			}
 			this.archivesUpdate();
+			if (this.onUpdate) this.onUpdate(this);
+		}
+		
+		transposeNotes(argument) {
+			for(let i=this.selectionStart; i<this.selectionEnd; i++) {
+				this.song.tracks[this.selectedTrack][i].keys = this.song.tracks[this.selectedTrack][i].keys.map(a => clamp(a+argument, 0, 23));
+			}
 			if (this.onUpdate) this.onUpdate(this);
 		}
 		

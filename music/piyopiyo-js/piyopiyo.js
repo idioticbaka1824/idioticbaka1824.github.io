@@ -348,7 +348,7 @@
 		
 		extendSong(oldLength, newLength) {
 			for(let track=0; track<4; track++) {
-				for(let j=oldLength+1; j<newLength; j++) {
+				for(let j=oldLength; j<newLength; j++) {
 					let emptyRecord = {keys:[], pan:4, pos:j};
 					this.song.tracks[track].push(emptyRecord);
 				}

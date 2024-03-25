@@ -157,6 +157,7 @@
             this.samplesPerTick = 0;
             this.samplesThisTick = 0;
             this.state = [];
+			this.d = new Date();
 			
             this.mutedTracks = [];
             this.selectedTrack = 0;
@@ -196,6 +197,7 @@
         synth(leftBuffer, rightBuffer, preview) {
             for (let sample = 0; sample < leftBuffer.length; sample++) {
                 if (this.samplesThisTick == 0) {
+					//console.log(Date.now()-this.beginTime);
 					if (preview==false) this.update(); //update works in increments of song wait time, so anything finer than that is probably handled by this synth function
 					else {
 						if (this.state[this.selectedTrack][0].length[0] <= 0) {
@@ -525,7 +527,7 @@
 			if (this.onUpdate) this.onUpdate(this);
 		}
 		
-		presets(y) {
+		presetsWave(y) {
 			//0,1,2,3 = sine, square, triangle, sawtooth
 			let yOff = y-80;
 			if(yOff>-1 && yOff<28) {
@@ -548,6 +550,77 @@
 				for(let i=0; i<256; i++) {
 					let i_=(i+128)%256;
 					this.song.instruments[this.selectedTrack].waveSamples[i] = 0.95*(i_*200/256 - 100);
+				}
+			}
+			if (this.onUpdate) this.onUpdate(this);
+		}
+		presetsEnve(y) {
+			//0,1,2,3,4,5,6,7
+			let yOff = y-274;
+			let A=13/14;
+			if(yOff>=0 && yOff<16) {
+				for(let i=0; i<64; i++) {
+					let x = i/64;
+					let y = A;
+					this.song.instruments[this.selectedTrack].envelopeSamples[i] = 128*y;
+				}
+			}
+			else if(yOff>=16 && yOff<16*2) {
+				for(let i=0; i<64; i++) {
+					let x = i/64;
+					let y = A*(1-Math.pow(Math.abs(2*x-1), 7));
+					this.song.instruments[this.selectedTrack].envelopeSamples[i] = 128*y;
+				}
+			}
+			else if(yOff>=16*2 && yOff<16*3) {
+				for(let i=0; i<64; i++) {
+					let x = i/64;
+					let y = A*(1-Math.pow(2*x-1, 2));
+					this.song.instruments[this.selectedTrack].envelopeSamples[i] = 128*y;
+				}
+			}
+			else if(yOff>=16*3 && yOff<16*4) {
+				for(let i=0; i<64; i++) {
+					let x = i/64;
+					let y = A*(1-x);
+					this.song.instruments[this.selectedTrack].envelopeSamples[i] = 128*y;
+				}
+			}
+			else if(yOff>=16*4 && yOff<16*5) {
+				for(let i=0; i<64; i++) {
+					let x = i/64;
+					let y = A*(1-Math.pow(2*x-1, 2))*0.93/(2*x + 0.2);
+					this.song.instruments[this.selectedTrack].envelopeSamples[i] = 128*y;
+				}
+			}
+			else if(yOff>=16*5 && yOff<16*6) {
+				for(let i=0; i<64; i++) {
+					let x = i/64;
+					let y = x<0.1 ? 10*x : 1-Math.pow(x-0.1, 0.3);
+					this.song.instruments[this.selectedTrack].envelopeSamples[i] = A*128*y;
+				}
+			}
+			else if(yOff>=16*6 && yOff<16*7) { //what a mess i've made of this
+				function f1(x){return 10*x;}
+				function f2(x){return 0.4+40*Math.pow(x-0.2,2);}
+				function f3(x){return 0.2+32*Math.pow(x-0.4,2);}
+				function f4(x){return 0.1+36*Math.pow(x-0.6,2);}
+				function f5(x){return 2*Math.pow(x-1,2);}
+				for(let i=0; i<64; i++) {
+					let x = i/64;
+					let y = (x<0.1)*f1(x) + (x>=0.1&&x<0.29)*f2(x) + (x>=0.29&&x<0.5)*f3(x) + (x>=0.5&&x<0.66)*f4(x) + (x>=0.66)*f5(x);
+					this.song.instruments[this.selectedTrack].envelopeSamples[i] = 128*y;
+				}
+			}
+			else if(yOff>=16*7 && yOff<16*8) {
+				function g1(x){return 0.5-50*Math.pow(x-0.1,2);}
+				function g2(x){return 1+8*(x-0.23);}
+				function g3(x){return 0.8+90*Math.pow(x-0.27,2);}
+				function g4(x){return 3.6*Math.pow(x-1,4);}
+				for(let i=0; i<64; i++) {
+					let x = i/64;
+					let y = (x<=0.15)*g1(x) + (x>0.15&&x<=0.23)*g2(x) + (x>0.23&&x<=0.3)*g3(x) + (x>0.3)*g4(x);
+					this.song.instruments[this.selectedTrack].envelopeSamples[i] = 128*y;
 				}
 			}
 			if (this.onUpdate) this.onUpdate(this);
@@ -664,6 +737,7 @@
         
         update() {
             if (this.onUpdate) this.onUpdate(this);
+			//console.log(Date.now()-this.beginTime);
             
 			if (this.playPos>=this.song.end && this.isLoop) this.playPos=this.song.start;
 			
@@ -756,7 +830,8 @@
 				this.sampleRate = this.ctx.sampleRate;
 				this.samplesPerTick = (this.sampleRate / 1000) * this.song.wait*this.song.waitFudge | 0;
 				this.samplesThisTick = 0;
-			
+				this.beginTime = this.d.getTime();
+				//console.log(this.beginTime);
 
 				this.node = this.ctx.createScriptProcessor(8192, 0, 2);
 				

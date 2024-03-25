@@ -361,6 +361,7 @@
 					this.ctx.drawImage(this.cursor, sprXs[this.organya.flashArrowsIndex], 16, 8, 18, xOffs[this.organya.isEditingNumbers], height-72+18*yIncr[this.organya.isEditingNumbers], 8, 16)
 				}
 				this.ctx.drawImage(this.msg, 0, 32, 88, 200, 64+512+12, 40, 88, 200); //presets
+				this.ctx.drawImage(this.msg, 94, 72, 34, 130, 320+256+36, 274, 34, 130); //presets
 			}
         }
     }

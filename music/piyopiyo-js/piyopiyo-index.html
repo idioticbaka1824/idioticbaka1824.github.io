@@ -448,9 +448,11 @@
 			window.clickHandling = (x, y, e) => {
 				if(currentOrg==null || !currentOrg.isWaveformEditor) {
 					if(y>orgCanvas.height-48 && y<orgCanvas.height-24 && x>orgCanvas.width-192+3*48 && x<orgCanvas.width-192+4*48) {
+						if(currentOrg) currentOrg.pause();
 						alert(helpStrings.about);
 					}
 					if(y>orgCanvas.height-76 && y<orgCanvas.height-48 && x>orgCanvas.width-192+3*48 && x<orgCanvas.width-192+4*48) {
+						if(currentOrg) currentOrg.pause();
 						alert(helpStrings.help);
 					}
 					if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+48 && x<orgCanvas.width-192+2*48) {

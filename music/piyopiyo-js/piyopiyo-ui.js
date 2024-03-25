@@ -143,7 +143,7 @@
             if (this.scrollY > maxY) this.scrollY = maxY;
 
             const meas = this.organya ? this.organya.song.meas : [4, 4];
-            const startMeas = this.organya ? (this.organya.playPos / (meas[0] * meas[1]) | 0) : 0;
+            const startMeas = this.organya ? this.organya.startMeas : 0;
 			
 			this.ctx.drawImage(this.piyo, 0, 0, 128, 128, width/2-128/2, height/2-128/2, 128, 128); //splash image
 

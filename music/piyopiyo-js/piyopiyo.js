@@ -157,8 +157,9 @@
             this.samplesPerTick = 0;
             this.samplesThisTick = 0;
             this.state = [];
-			this.d = new Date();
+			//this.d = new Date();
 			
+			this.startMeas = 0;
             this.mutedTracks = [];
             this.selectedTrack = 0;
 			this.selectionStart = 0;
@@ -282,6 +283,7 @@
                     this.samplesThisTick = 0;
 					if(preview==false) {
 						this.playPos += 1;
+						this.startMeas = (this.playPos/this.MeasxStep | 0);
 						this.updateTimeDisplay();
 					}
 
@@ -316,17 +318,19 @@
 					this.playPos -= 1;
 				}
 			}
+			this.startMeas = (this.playPos/this.MeasxStep | 0);
             this.updateTimeDisplay();
         }
         
         nextMeas(small=false) {
             if(!small) this.playPos+=(this.MeasxStep-this.playPos%this.MeasxStep); //to go to beginning of next measure
 			else this.playPos += 1;
+			this.startMeas = (this.playPos/this.MeasxStep | 0);
             this.updateTimeDisplay();
         }
 		
 		cursorUpdate(x) {
-			let viewPos = (this.playPos/this.MeasxStep | 0)*this.MeasxStep;
+			let viewPos = this.startMeas*this.MeasxStep;
 			let newPlayPosOffset = ((x-36)/12 | 0); //offset (in beats) from viewpos (the beat # of the beginning of the viewing window)
             this.playPos = viewPos + newPlayPosOffset;
 			this.selectionStart = this.playPos;
@@ -335,7 +339,7 @@
         }
 		
 		headFootUpdate(x, y, headOrFoot) { //headOrFoot here is 'isDraggingHeadFoot' in the html
-			let viewPos = (this.playPos/this.MeasxStep | 0)*this.MeasxStep;
+			let viewPos = this.startMeas*this.MeasxStep;
 			let newPosOffset = ((x-42)/12 | 0);
             if(headOrFoot=='head') this.song.start = Math.max(viewPos + newPosOffset, 0);
             if(headOrFoot=='foot') this.song.end = Math.max(viewPos + newPosOffset, 0);
@@ -359,7 +363,7 @@
 		
 		selectionUpdate(x, fromKeyboard=false) {
 			if(fromKeyboard==false) {
-				let viewPos = (this.playPos/this.MeasxStep | 0)*this.MeasxStep;
+				let viewPos = this.startMeas*this.MeasxStep;
 				let newSelectionEndOffset = ((x-36)/12 | 0); //offset (in beats) from viewpos (the beat # of the beginning of the viewing window)
 				this.selectionEnd = viewPos + newSelectionEndOffset;
 			}
@@ -371,7 +375,7 @@
         }
 		
 		addNote(x, y, scrollY) {
-			let viewPos = (this.playPos/this.MeasxStep | 0)*this.MeasxStep;
+			let viewPos = this.startMeas*this.MeasxStep;
 			let newNotePos = viewPos + ((x-36)/12 | 0);
 			let newNoteKey = (96 - ((y + scrollY)/12) | 0);
 			let newNoteKeyRelative = newNoteKey % 12;
@@ -410,7 +414,7 @@
 			}
 		}
 		pasteNotes(x, y) {
-			let viewPos = (this.playPos/this.MeasxStep | 0)*this.MeasxStep;
+			let viewPos = this.startMeas*this.MeasxStep;
 			let newNotePos = viewPos + ((x-36)/12 | 0);
 			if(x==-1 && y==-1) newNotePos = this.playPos; //if ctrl+v instead of mouseclick, paste at playPos
 			for(let i=0; i<this.recordsToPaste.length; i++) {
@@ -429,7 +433,7 @@
 		}
 		
 		addPan(x, y, height) {
-			let viewPos = (this.playPos/this.MeasxStep | 0)*this.MeasxStep;
+			let viewPos = this.startMeas*this.MeasxStep;
 			let newPanPos = viewPos + ((x-36)/12 | 0);
 			let newPanVal = ((height-y-76)/12 | 0)+1;
 			this.song.tracks[this.selectedTrack][newPanPos].pan = newPanVal;
@@ -647,7 +651,6 @@
 		}
 		
 		previewNote(y, scrollY) {
-			let viewPos = (this.playPos/this.MeasxStep | 0)*this.MeasxStep;
 			let newNoteKey = (96 - ((y + scrollY)/12) | 0);
 			let newNoteKeyRelative = newNoteKey % 12;
 			let newNoteKeyOctave = (newNoteKey / 12 | 0);
@@ -830,7 +833,7 @@
 				this.sampleRate = this.ctx.sampleRate;
 				this.samplesPerTick = (this.sampleRate / 1000) * this.song.wait*this.song.waitFudge | 0;
 				this.samplesThisTick = 0;
-				this.beginTime = this.d.getTime();
+				//this.beginTime = this.d.getTime();
 				//console.log(this.beginTime);
 
 				this.node = this.ctx.createScriptProcessor(8192, 0, 2);

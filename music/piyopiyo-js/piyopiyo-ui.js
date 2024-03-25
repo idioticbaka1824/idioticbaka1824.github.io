@@ -357,7 +357,7 @@
 				if(this.organya.isEditingNumbers!=-1) { //flashing arrows for numerical edit boxes (this is beyond me, have a static sprite instead) (okay never mind i found out how)
 					let sprXs = [0,8,16,24,32,24,16,8];
 					let yIncr = [1,2,3,2,3];
-					let xOffs = [56, 56, 56, 392, 392];
+					let xOffs = [57, 57, 57, 393, 393];
 					this.ctx.drawImage(this.cursor, sprXs[this.organya.flashArrowsIndex], 16, 8, 18, xOffs[this.organya.isEditingNumbers], height-72+18*yIncr[this.organya.isEditingNumbers], 8, 16)
 				}
 				this.ctx.drawImage(this.msg, 0, 32, 88, 200, 64+512+12, 40, 88, 200); //presets

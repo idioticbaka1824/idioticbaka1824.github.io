@@ -318,7 +318,7 @@
 					this.playPos -= 1;
 				}
 			}
-			this.startMeas = (this.playPos/this.MeasxStep | 0);
+			this.startMeas = Math.min(this.startMeas, (this.playPos/this.MeasxStep | 0));
             this.updateTimeDisplay();
         }
         

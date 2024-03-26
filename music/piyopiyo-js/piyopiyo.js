@@ -31,7 +31,7 @@
 	//utility function to convert byte array to int32-le array
 	function bytesToInt32(arr) {
 		let out = [];
-		for(let i=0; i<arr.length; i+=4) { //if the array's length isn't divisible by 4, fire and brimstone
+		for(let i=0; i<arr.length; i+=4) { //if the array's length isn't divisible by 4, fire and brimstone, not my problem
 			out.push(arr[i] + arr[i+1]*256 + arr[i+2]*65536 + arr[i+3]*16777216);
 		}
 		return out; //array of numbers that can be interpreted as int32
@@ -157,7 +157,7 @@
             this.samplesPerTick = 0;
             this.samplesThisTick = 0;
             this.state = [];
-			//this.d = new Date();
+			this.d = new Date();
 			
 			this.startMeas = 0;
             this.mutedTracks = [];
@@ -196,9 +196,9 @@
          * @param {Float32Array} rightBuffer
          */
         synth(leftBuffer, rightBuffer, preview) {
+				var bufferStartTime = Date.now()-this.beginTime;
             for (let sample = 0; sample < leftBuffer.length; sample++) {
                 if (this.samplesThisTick == 0) {
-					//console.log(Date.now()-this.beginTime);
 					if (preview==false) this.update(); //update works in increments of song wait time, so anything finer than that is probably handled by this synth function
 					else {
 						if (this.state[this.selectedTrack][0].length[0] <= 0) {
@@ -298,6 +298,8 @@
                     }
                 }
             }
+				var bufferEndTime = Date.now()-this.beginTime;
+				//console.log(bufferEndTime-bufferStartTime); //amount of time taken to compute the audio data for one buffer-full (~170ms worth of sound)
         }
         
         homeOrg() {
@@ -833,14 +835,14 @@
 				this.sampleRate = this.ctx.sampleRate;
 				this.samplesPerTick = (this.sampleRate / 1000) * this.song.wait*this.song.waitFudge | 0;
 				this.samplesThisTick = 0;
-				//this.beginTime = this.d.getTime();
+				this.beginTime = this.d.getTime();
 				//console.log(this.beginTime);
 
 				this.node = this.ctx.createScriptProcessor(8192, 0, 2);
 				
 				if(argument=='doPlay'){ //the point of this bit is to change the display as soon as a new org is selected
 					this.isPlaying = true;
-					this.node.onaudioprocess = (e) => this.synth(e.outputBuffer.getChannelData(0), e.outputBuffer.getChannelData(1), preview);
+					this.node.onaudioprocess = (e) => {this.synth(e.outputBuffer.getChannelData(0), e.outputBuffer.getChannelData(1), preview);}
 					this.node.connect(this.ctx.destination);
 				}
 			}

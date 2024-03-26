@@ -283,6 +283,12 @@
                     prev_song = new_song; //didn't have this earlier, but it fixes a bug where playing, placing new notes, then clicking home and then playing will erase your changes
                 }
             }
+			window.endOrg = () => {
+                if (currentOrg != null) {
+                    currentOrg.endOrg();
+                    prev_song = new_song;
+				}
+            }
             window.backMeas = (small=false) => {
                 if (currentOrg != null) {
                     currentOrg.backMeas(small);
@@ -359,6 +365,9 @@
                     }
                     else if(e.key=="Home"){
                         window.homeOrg();
+                    }
+                    else if(e.key=="End"){
+                        window.endOrg();
                     }
                     else if(e.key=="ArrowLeft" && !e.shiftKey){
                         window.backMeas();

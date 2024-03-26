@@ -305,8 +305,15 @@
         homeOrg() {
 			this.pause();
 			this.playPos = 0;
+			this.startMeas=0;
             this.updateTimeDisplay();
         }
+		endOrg() {
+			this.pause();
+			this.playPos = this.song.end-this.MeasxStep;
+			this.startMeas=(this.playPos/this.MeasxStep | 0);
+			this.updateTimeDisplay();
+		}
         
         backMeas(small=false) {
             if(!small) {
@@ -803,7 +810,7 @@
 							this.state[track][i_prec].vol.splice(i_note, 1);
 						}
 						else {
-							this.state[track][i_prec].length[i_note] -= 1.7*this.song.wait*this.song.waitFudge/1000; //why am I multiplying this 1.7 thing here? I have no idea why I'm having to do this. But playback is too slow without it. More like notes are too long without it. What is going on??
+							this.state[track][i_prec].length[i_note] -= 1.6*this.song.wait*this.song.waitFudge/1000; //why am I multiplying this extra number thing here? and the waitfudge too. I have no idea why I'm having to do this. But playback is too slow without it. More like notes are too long without it. What is going on??
 						}
 					}
 					if(this.state[track][i_prec].length.length==0) {this.state[track].splice(i_prec, 1);}

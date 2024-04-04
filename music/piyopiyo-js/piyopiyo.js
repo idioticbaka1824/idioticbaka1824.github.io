@@ -697,6 +697,7 @@
 		}
 		
 		saveFile() {
+			this.pause();
 			let toDownload = [];
 			toDownload=[this.song.isPiyo, this.song.track1DataStartAddress, this.song.wait, this.song.start, this.song.end, this.song.songLength];
 			
@@ -737,8 +738,44 @@
 			}
 			
 			toDownload = new Int32Array(toDownload);
-			downloadBlob(toDownload, 'NewData.pmd', 'application/octet-stream');
+			downloadBlob(toDownload, new_song_trimmed+'.pmd', 'application/octet-stream');
 			
+		}
+		
+		exportMIDI() {
+			this.pause();
+			let loops = prompt('How many times should the looping section repeat in the exported MIDI?'); 
+			if(isNaN(parseInt(loops))) return;
+			const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+			const drumNotes = [36, 36, 43, 43, 40, 40, -1, -1, 42, 42, 44, 44, 46, 46]; //matched by ear to GM percussion instruments (midi channel 10). not sure of these though
+			var midiTracks=[];
+			for(let n_track=0; n_track<4; n_track++){
+				const track = new MidiWriter.Track();
+				track.setTempo(15000/(this.song.wait*this.song.waitFudge) | 0);
+				for(let i_raw=0; i_raw<this.song.start+loops*(this.song.end-this.song.start); i_raw++){
+					let i = this.song.start + (i_raw-this.song.start)%(this.song.end-this.song.start);
+					let record = this.song.tracks[n_track][i];
+					let pitches = [];
+					for(let j=0; j<record.keys.length; j++){
+						let relativeNote = record.keys[j]%12;
+						let totalOctave = (record.keys[j]/12 | 0) + this.song.instruments[n_track].baseOctave;
+						let pitch=0;
+						if(n_track!=3) pitch = noteNames[relativeNote] + totalOctave;
+						if(n_track==3) pitch = drumNotes[12*totalOctave + relativeNote];
+						pitches.push(pitch);
+					}
+					let noteDuration = 'T' + ((128/this.song.meas[1])*(this.song.instruments[n_track].envelopeLength/piyoDrumSampleRate)/(this.song.wait/1000) | 0); //yes, i meant to use drumsamplerate for all instruments here. it works for some reason
+					let noteVelocity = (100*this.song.instruments[n_track].volume/300 | 0);
+					if(n_track==3) {noteDuration = '4';}
+					let startTime = (128/this.song.meas[1])*i_raw | 0;
+					const note = new MidiWriter.NoteEvent({pitch: pitches, duration: noteDuration, channel: (n_track!=3) ? n_track+1 : 10, tick:startTime, velocity:noteVelocity});
+					track.addEvent(note);
+				}
+				midiTracks.push(track);
+			}
+			const write = new MidiWriter.Writer(midiTracks);
+			const toDownload = new Int8Array(write.buildFile());
+			downloadBlob(toDownload, new_song_trimmed+'.mid', 'audio/midi');
 		}
         
         updateTimeDisplay() {
@@ -789,7 +826,7 @@
 
 
 							if (this.state[track][lastIndex].keys.length >0) {
-								this.state[track][lastIndex].vol.push(this.song.instruments[track].volume); //piyo doesn't allow changing volume mid-track, but drums can have different volumes and we don't want those overlapping
+								this.state[track][lastIndex].vol.push(this.song.instruments[track].volume); //piyopiyo doesn't allow changing volume mid-track, but drums can have different volumes and we don't want those overlapping
 								this.state[track][lastIndex].pan.push(record.pan);
 							}
 						} //ending the 'skip muted tracks' if-block here, rather than at the end, because otherwise, muting while a note played would make that note get stuck

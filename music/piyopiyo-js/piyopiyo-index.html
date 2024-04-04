@@ -125,8 +125,10 @@
     </div>
 
     <!-- increment before each deploy -->
-    <script src="piyopiyo.js?cache_bust=12"></script>
+	<script type="module">import MidiWriter from 'https://cdn.jsdelivr.net/npm/midi-writer-js@3.1.1/+esm'; window.MidiWriter=MidiWriter;</script>
+    <script defer src="piyopiyo.js?cache_bust=12"></script>
     <script src="piyopiyo-ui.js?cache_bust=12"></script>
+
     <!--I have no clue what this cache bust thing is, but apparently it's needed to reflect updates properly-->
     <script>
     
@@ -266,6 +268,7 @@
                 }
 				document.activeElement.blur();
 				orgCanvas.focus();
+				window.new_song_trimmed=new_song.substring(1+new_song.lastIndexOf('/'),new_song.length-4);;
                 currentOrg.play(argument);
             }
 			
@@ -353,7 +356,7 @@
 					else if(e.key=='s'){
 						window.muteAll('solo');
 					}
-					else if(e.key=='m' && currentOrg!=null){
+					else if(e.key=='m' && currentOrg!=null && !e.ctrlKey){
 						mute_string='mute_'+currentTrackDisplay.innerHTML;
 						mute_element = document.getElementById(mute_string);
 						mute_element.checked = 1-mute_element.checked;
@@ -417,11 +420,20 @@
 					else if(e.ctrlKey && e.altKey && e.key=='d'){
 						currentOrg.transposeNotes(-1);
                     }
+					else if(e.ctrlKey && e.altKey && e.key=='m'){
+						currentOrg.exportMIDI();
+                    }
 					else if(e.shiftKey && e.key=='ArrowRight'){
 						currentOrg.selectionUpdate(null, 1);
                     }
 					else if(e.shiftKey && e.key=='ArrowLeft'){
 						currentOrg.selectionUpdate(null, -1);
+                    }
+					else if(e.ctrlKey && e.key=='a'){
+						e.preventDefault();
+						currentOrg.selectionStart=currentOrg.song.start;
+						currentOrg.selectionEnd=currentOrg.song.end;
+						currentOrg.update();
                     }
 					else if(currentOrg && !currentOrg.isLowSpec && e.key=='Tab'){
 						e.preventDefault();
@@ -478,7 +490,8 @@
 					}
 					if(y>orgCanvas.height-24 && y<orgCanvas.height && x>orgCanvas.width-192+3*48 && x<orgCanvas.width-192+4*48) {
 						if(keyBeingPressed=='Control') {alert(helpStrings.saveFile); keyBeingPressed=null;}
-						else currentOrg.saveFile();
+						else if(e.button==0) currentOrg.saveFile();
+						else if(e.button==2) currentOrg.exportMIDI();
 					}
 				}
 				if(currentOrg != null) {
@@ -653,6 +666,18 @@
 				//if (currentOrg!=null && cursor_coords[0]>orgCanvas.width-8) window.nextMeas();
 				//if (currentOrg!=null && cursor_coords[0]<8) window.backMeas();
             }, true);
+			
+			orgCanvas.addEventListener('dragover', (e) => {
+				e.preventDefault();
+            }, true);
+			orgCanvas.addEventListener('drop', (e) => {
+				e.preventDefault();
+				var fileList = e.dataTransfer.files;
+				if(fileList.length>0) {
+					var myFile = fileList[0];
+					window.playOrg('dontPlay', myFile, false);
+				}
+            }, true);
             
         })();
 		
@@ -685,12 +710,11 @@
 			editWait: "Playback speed of the song (20-1000).\nThis is the duration of one tick/subbeat in milliseconds.\nFor a 4x4 time signature, BPM = 15000/songWait\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.",
 			presets: "Click one of these presets to start with a basic waveform or envelope shape.",
 			newFile: "Create a new blank song.",
-			loadFile: "Load a .pmd song from your computer.",
-			saveFile: "Save the current song to your computer.",
+			loadFile: "Click here to load a .pmd song from your computer.\nYou can also drag-and-drop a .pmd file onto the page.",
+			saveFile: "Click here to save the current song to your computer as a .pmd file.\n\nRight-click (or Ctrl+Alt+M) to export it as MIDI.\n(Some programs may not be able to open this MIDI.)",
 			help: "After loading/starting a song, you can Ctrl+click on any object or element to learn about it.",
-			about: "PiyoPiyo Player/Editor by Daisuke 'Pixel' Amaya, (c) 1998\nPiyoPiyo-JS (browser port) by IdioticBaka1824, based on Organya-JS by Alula\nPiyoPiyo file format decoding by Gamemanj\nTwo obscure sample songs found by Shinseikatsu\n\nThe PiyoPiyo format was developed by Pixel to produce music for Ikachan, Azarashi (1998), and Doggy Wyvern (unreleased).\nIt was eventually superseded by the Organya format, used for Azarashi (2001) and Cave Story.\nThe Ikachan soundtrack, as well as sample songs found bundled with PiyoPiyo player/editor, are available to listen from the drop-down list provided."
-		}
-		
+			about: "PiyoPiyo Player/Editor by Daisuke 'Pixel' Amaya, (c) 1998\nPiyoPiyo-JS (browser port) by IdioticBaka1824, based on Organya-JS by Alula\nPiyoPiyo file format decoding by Gamemanj\nTwo obscure sample songs found by Shinseikatsu\nMIDI export functionality by Grimmdude (MidiWriterJS)\n\nThe PiyoPiyo format was developed by Pixel to produce music for Ikachan, Azarashi (1998), and Doggy Wyvern (unreleased).\nIt was eventually superseded by the Organya format, used for Azarashi (2001) and Cave Story.\nThe Ikachan soundtrack, as well as sample songs found bundled with PiyoPiyo player/editor, are available to listen from the drop-down list provided."
+		}		
     </script>
 </body>
 

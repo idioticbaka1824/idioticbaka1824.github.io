@@ -354,7 +354,7 @@
             if(headOrFoot=='foot') this.song.end = Math.max(viewPos + newPosOffset, 0);
             if(headOrFoot=='size') {
 				let oldLength = this.song.songLength;
-				this.song.songLength = Math.max(viewPos + newPosOffset-1, 0);
+				this.song.songLength = Math.max(viewPos + newPosOffset, 0);
 				this.extendSong(oldLength, this.song.songLength);
 			}
 			//this.archivesUpdate---(); //this change happens 'continuously' so don't do the update here, do it on mouseup in the html
@@ -542,7 +542,7 @@
 		
 		presetsWave(y) {
 			//0,1,2,3 = sine, square, triangle, sawtooth
-			let yOff = y-80;
+			let yOff = y-74;
 			if(yOff>-1 && yOff<28) {
 				for(let i=0; i<256; i++) {
 					this.song.instruments[this.selectedTrack].waveSamples[i] = 95.0*Math.sin(i*2*Math.PI/256);

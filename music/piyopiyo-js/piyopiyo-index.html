@@ -463,6 +463,8 @@
 			var isSelecting = false; //variables to keep track of mouse click-and-dragging events
 			var isEditingSamples = false;
 			var isDraggingHeadFoot = false;
+			var isClickingFish = false;
+			window.isClickingFish = isClickingFish;
 			var cursor_coords = [0,0];
 			
 			window.clickHandling = (x, y, e) => {
@@ -492,6 +494,10 @@
 						if(keyBeingPressed=='Control') {alert(helpStrings.saveFile); keyBeingPressed=null;}
 						else if(e.button==0) currentOrg.saveFile();
 						else if(e.button==2) currentOrg.exportMIDI();
+					}
+					if(y>orgCanvas.height-72+16 && y<orgCanvas.height-72+16+36 && x>104 && x<104+68) {
+						window.isClickingFish=true;
+						ui.draw();
 					}
 				}
 				if(currentOrg != null) {
@@ -630,7 +636,7 @@
 								if (e.button==2) {let newValue = prompt('New Music Wait value:'); currentOrg.editNumbers(newValue);}
 							}
 						}
-						if(x>600 && x<656 && y>80 && y<80+160) {
+						if(x>600 && x<656 && y>74 && y<74+160) {
 							if(keyBeingPressed=='Control') {alert(helpStrings.presets); keyBeingPressed=null;}
 							else currentOrg.presetsWave(y);
 						}
@@ -658,6 +664,7 @@
 			orgCanvas.addEventListener('mouseup', (e) => {
 				isSelecting = false;
 				isEditingSamples = false;
+				window.isClickingFish = false;
 				if(isDraggingHeadFoot) {
 					isDraggingHeadFoot = false;
 					currentOrg.archivesUpdate();
@@ -665,6 +672,7 @@
                 //cursor_coords = getMousePosition(orgCanvas, e);
 				//if (currentOrg!=null && cursor_coords[0]>orgCanvas.width-8) window.nextMeas();
 				//if (currentOrg!=null && cursor_coords[0]<8) window.backMeas();
+				ui.draw();
             }, true);
 			
 			orgCanvas.addEventListener('dragover', (e) => {

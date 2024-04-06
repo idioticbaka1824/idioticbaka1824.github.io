@@ -292,6 +292,7 @@
 			//settings etc
 			this.ctx.drawImage(this.pianoRoll, 120, 0, 1, 1, 0, height-72+4, width, 72-4); //blacking out the settings area first
 			this.ctx.drawImage(this.setting, 0, 0, 448, 72, 0, height-72, 448, 72); //settings panel
+			if(window.isClickingFish) this.ctx.drawImage(this.setting, 448, 17, 64, 36, 104, height-72+16, 64, 36);
 			if(!this.organya || !this.organya.isWaveformEditor) {
 				this.ctx.drawImage(this.buttons, 0, 0, 192, 72, width-192, height-72, 192, 72); //green buttons
 			}

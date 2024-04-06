@@ -190,7 +190,8 @@
                 orgCanvas.height = Math.max(canvasContainer.clientHeight, 480);
                 ui.draw();
             })
-            
+			
+			       
             window.radioOnChange = () => {
                 if(document.getElementById('dropDownRadio').checked){
                     document.getElementById('songs').disabled=false;
@@ -268,7 +269,7 @@
                 }
 				document.activeElement.blur();
 				orgCanvas.focus();
-				window.new_song_trimmed=new_song.substring(1+new_song.lastIndexOf('/'),new_song.length-4);;
+				window.new_song_trimmed=new_song.substring(1+new_song.lastIndexOf('/'),new_song.length-4);
                 currentOrg.play(argument);
             }
 			
@@ -686,8 +687,32 @@
 					window.playOrg('dontPlay', myFile, false);
 				}
             }, true);
+			
+			
+			//to allow people to send links directly to a particular song, using questionmark stuff in the url
+			const myUrl = window.location.href;
+			console.log(myUrl);
+			qIndex = myUrl.indexOf('?');
+			if(qIndex != -1){
+				if(myUrl.substring(qIndex+1, qIndex+1+6)=='DDsong'){
+					document.getElementById('dropDownRadio').checked = true;
+					songUrl = myUrl.substring(qIndex+1+6+1, myUrl.length);
+					songUrl = decodeURIComponent(songUrl);
+					var songs_trimmed = [];
+					for(let song of songs){
+						songs_trimmed.push(song.trim());
+					}
+					songListEl.selectedIndex = songs_trimmed.indexOf(songUrl);
+					console.log(songs_trimmed);
+					console.log(songUrl);
+					console.log(songs_trimmed.indexOf(songUrl));
+					playOrg('dontplay');
+				}
+			}
+			
             
         })();
+		
 		
 		const helpStrings = {
 			head: "This marks the beginning of the looping section of the song.\nRight-click+drag to move it.",

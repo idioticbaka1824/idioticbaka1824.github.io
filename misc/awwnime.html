@@ -1,0 +1,150 @@
+<html>
+<head>
+</head>
+<body onKeyDown='keyboardHandling(event);' bgcolor='black'>
+<input id='myTextInput' type='text' value='100mr' size=5>
+<button onclick=load()>load</button>
+<div id='myImgDiv' style='border:1px solid white' hidden>
+<img id='myImgID' usemap="#workmap" src='https://cdn.awwni.me/100mr.jpg'>
+</div>
+<map name='workmap'>
+  <area id='myArea1' shape='rect' coords='' onclick='forward()'>
+  <area id='myArea2' shape='rect' coords='' onclick='backward()'>
+</map>
+
+<script>
+let urlHead = 'https://cdn.awwni.me/';
+let myTextInput = document.getElementById('myTextInput');
+let id = '100mr';
+let x = 0;
+let myImg = document.getElementById('myImgID');
+let myDiv = document.getElementById('myImgDiv');
+let myArea1 = document.getElementById('myArea1');
+let myArea2 = document.getElementById('myArea2');
+
+const alphabet = '0123456789abcdefghijklmnopqrstuvwxyz';
+
+const extensions = ['.jpg', '.png', '.gif'];
+
+
+let myUrl = window.location.href;
+let noQUrl = window.location.href;
+let qIndex = myUrl.indexOf('?');
+let extIndex = myUrl.lastIndexOf('.');
+if(qIndex != -1){
+	noQUrl = myUrl.substring(0, qIndex);
+	if(myUrl.substring(qIndex+1, qIndex+1+2)=='id'){
+		myImg.src = '';
+		id = myUrl.substring(qIndex+1+2+1, myUrl.length);
+		myTextInput.value = id;
+		load();
+	}
+}
+
+
+function b36to10(input){
+	let output = 0;
+	for(let i=input.length-1; i>=0; i--){
+		output += alphabet.indexOf(input[i])*Math.pow(36, input.length-1-i);
+	}
+	return output;
+}
+
+function b10to36(input){
+	let output = '';
+	let n = 1;
+	while(input>0){
+		output = alphabet[input % 36] + output;
+		input = input/36 | 0;
+	}
+	return output;
+} 
+
+
+function keyboardHandling(event){
+	if(event.key == 'ArrowRight' && !event.shiftKey){
+		forward();
+	}
+	else if(event.key == 'ArrowLeft' && !event.shiftKey){
+		backward();
+	}
+	else if(event.key == 'Enter'){
+		load();
+	}
+	else if(event.key == 'i'){
+		window.open(urlHead + id + extensions[x], '_blank');
+	}
+	else if(event.key == 's'){
+		search('s');
+	}
+	else if(event.key == 'g'){
+		search('g');
+	}
+	else if(event.key == 'z'){
+		if(myImg.style['object-fit'] == 'contain'){
+			myImg.style['object-fit'] = 'none';
+			myImg.style['height'] = 'auto';
+			myImg.style['width'] = 'auto';
+			myImg.style['display'] = 'block';
+			myImg.style['margin'] = 'auto';
+		}
+		else if(myImg.style['object-fit'] == 'none'){
+			myImg.style['object-fit'] = 'contain';
+			myImg.style['width'] = '90%';
+			myImg.style['height'] = '95%';
+		}
+	}
+}
+
+myImg.addEventListener('error', () => {
+	x = (x+1) % extensions.length;
+	load();
+})
+
+function load(){
+	id = myTextInput.value;
+	myDiv.hidden = false;
+	let fullUrl = urlHead + id + extensions[x];
+	myImg.src = fullUrl;
+	myImg.style.width = '90%';
+	myImg.style.height = '95%';
+	myImg.style['object-fit'] = 'contain';
+	
+	let divWidth = myDiv.clientWidth;
+	let divHeight = myDiv.clientHeight;
+	let myCoords1 = ''+(divWidth/2 | 0)+', '+'0, '+divWidth+', '+divHeight;
+	myArea1.coords = myCoords1;
+	let myCoords2 = '0, 0, '+(divWidth/2 | 0)+', '+divHeight;
+	myArea2.coords = myCoords2;
+	
+	window.history.replaceState(null, null, noQUrl+'?id='+id);
+}
+
+function forward(){
+	id = b10to36(b36to10(id)+1);
+	myTextInput.value = id;
+	load();
+}
+
+function backward(){
+	id = b10to36(b36to10(id)-1);
+	myTextInput.value = id;
+	load();
+}
+
+function search(site){
+	let searchUrlHead = '';
+	if(site=='s'){
+		searchUrlHead = 'https://saucenao.com/search.php?url=';
+	}
+	if(site=='g'){
+		searchUrlHead = 'https://lens.google.com/uploadbyurl?url=';
+	}
+	let searchUrl = searchUrlHead + urlHead + id + extensions[x];
+	window.open(searchUrl, '_blank');
+}
+
+</script>
+
+</body>
+</html>

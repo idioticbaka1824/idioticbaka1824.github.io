@@ -696,17 +696,23 @@
 			if(qIndex != -1){
 				if(myUrl.substring(qIndex+1, qIndex+1+6)=='DDsong'){
 					document.getElementById('dropDownRadio').checked = true;
-					songUrl = myUrl.substring(qIndex+1+6+1, myUrl.length);
+					let songUrl = myUrl.substring(qIndex+1+6+1, myUrl.length);
 					songUrl = decodeURIComponent(songUrl);
 					var songs_trimmed = [];
 					for(let song of songs){
 						songs_trimmed.push(song.trim());
 					}
 					songListEl.selectedIndex = songs_trimmed.indexOf(songUrl);
-					console.log(songs_trimmed);
-					console.log(songUrl);
-					console.log(songs_trimmed.indexOf(songUrl));
 					playOrg('dontplay');
+				}
+				else if(myUrl.substring(qIndex+1, qIndex+1+3)=='url'){
+					document.getElementById('urlInputRadio').checked = true;
+					let songUrl = myUrl.substring(qIndex+1+3+1, myUrl.length);
+					songUrl = decodeURIComponent(songUrl);
+					document.getElementById('idUrlInput').value = songUrl;
+					prev_song = new_song;
+                    new_song = document.getElementById('idUrlInput').value;
+					playOrg('dontplay');					
 				}
 			}
 			

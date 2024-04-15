@@ -71,16 +71,16 @@ function keyboardHandling(event){
 	else if(event.key == 'Enter'){
 		load();
 	}
-	else if(event.key == 'i'){
+	else if(event.key == 'i' && document.activeElement!=myTextInput){
 		window.open(urlHead + id + extensions[x], '_blank');
 	}
-	else if(event.key == 's'){
+	else if(event.key == 's' && document.activeElement!=myTextInput){
 		search('s');
 	}
-	else if(event.key == 'g'){
+	else if(event.key == 'g' && document.activeElement!=myTextInput){
 		search('g');
 	}
-	else if(event.key == 'z'){
+	else if(event.key == 'z' && document.activeElement!=myTextInput){
 		if(myImg.style['object-fit'] == 'contain'){
 			myImg.style['object-fit'] = 'none';
 			myImg.style['height'] = 'auto';

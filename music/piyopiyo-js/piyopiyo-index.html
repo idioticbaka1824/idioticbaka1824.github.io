@@ -60,6 +60,7 @@
         text-align:center;
     }
     </style>
+	<link rel="icon" href="../../favicon.ico"></link>
 </head>
 
 <body>
@@ -203,6 +204,7 @@
                 else{
                     document.getElementById('songs').disabled=true;
                     document.getElementById('idUrlInput').disabled=false;
+					playOrg('doNotPlay');
                 }
             }
 
@@ -369,16 +371,16 @@
                         if(currentOrg.isPlaying==false) window.playOrg();
                         else if(currentOrg.isPlaying==true) window.pauseOrg();
                     }
-                    else if(e.key=="Home"){
+                    else if(e.key=="Home" && document.activeElement!=document.getElementById('idUrlInput')){
                         window.homeOrg();
                     }
-                    else if(e.key=="End"){
+                    else if(e.key=="End" && document.activeElement!=document.getElementById('idUrlInput')){
                         window.endOrg();
                     }
-                    else if(e.key=="ArrowLeft" && !e.shiftKey){
+                    else if(e.key=="ArrowLeft" && !e.shiftKey && document.activeElement!=document.getElementById('idUrlInput')){
                         window.backMeas();
                     }
-                    else if(e.key=="ArrowRight" && !e.shiftKey){
+                    else if(e.key=="ArrowRight" && !e.shiftKey && document.activeElement!=document.getElementById('idUrlInput')){
                         window.nextMeas();
                     }
                     else if(currentOrg && !currentOrg.isLowSpec && e.key=="ArrowUp"){
@@ -426,10 +428,10 @@
 					else if(e.ctrlKey && e.altKey && e.key=='m'){
 						currentOrg.exportMIDI();
                     }
-					else if(e.shiftKey && e.key=='ArrowRight'){
+					else if(e.shiftKey && e.key=='ArrowRight' && document.activeElement!=document.getElementById('idUrlInput')){
 						currentOrg.selectionUpdate(null, 1);
                     }
-					else if(e.shiftKey && e.key=='ArrowLeft'){
+					else if(e.shiftKey && e.key=='ArrowLeft' && document.activeElement!=document.getElementById('idUrlInput')){
 						currentOrg.selectionUpdate(null, -1);
                     }
 					else if(e.ctrlKey && e.key=='a' && document.activeElement!=document.getElementById('idUrlInput')){

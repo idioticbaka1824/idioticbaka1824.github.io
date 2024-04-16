@@ -17,6 +17,7 @@ let urlHead = 'https://cdn.awwni.me/';
 let myTextInput = document.getElementById('myTextInput');
 let id = '100mr';
 let x = 0;
+let x_total = 0;
 let myImg = document.getElementById('myImgID');
 let myDiv = document.getElementById('myImgDiv');
 let myArea1 = document.getElementById('myArea1');
@@ -30,7 +31,6 @@ const extensions = ['.jpg', '.png', '.gif'];
 let myUrl = window.location.href;
 let noQUrl = window.location.href;
 let qIndex = myUrl.indexOf('?');
-let extIndex = myUrl.lastIndexOf('.');
 if(qIndex != -1){
 	noQUrl = myUrl.substring(0, qIndex);
 	if(myUrl.substring(qIndex+1, qIndex+1+2)=='id'){
@@ -62,10 +62,10 @@ function b10to36(input){
 
 
 function keyboardHandling(event){
-	if(event.key == 'ArrowRight' && !event.shiftKey){
+	if(event.key == 'ArrowRight' && document.activeElement!=myTextInput){
 		forward();
 	}
-	else if(event.key == 'ArrowLeft' && !event.shiftKey){
+	else if(event.key == 'ArrowLeft' && document.activeElement!=myTextInput){
 		backward();
 	}
 	else if(event.key == 'Enter'){
@@ -96,15 +96,22 @@ function keyboardHandling(event){
 	}
 }
 
+myImg.addEventListener('load', () => {
+	x = 0;
+	x_total = 0;
+})
 myImg.addEventListener('error', () => {
 	x = (x+1) % extensions.length;
-	load();
+	x_total++;
+	let notFound = x_total>extensions.length;
+	load(notFound);
 })
 
-function load(){
+function load(notFound=false){
 	id = myTextInput.value;
 	myDiv.hidden = false;
 	let fullUrl = urlHead + id + extensions[x];
+	if(notFound) fullUrl = '404.jpg';
 	myImg.src = fullUrl;
 	myImg.style.width = '90%';
 	myImg.style.height = '95%';

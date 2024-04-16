@@ -70,7 +70,7 @@
         <input type="url" id="idUrlInput" name="nameUrlInput" minlength="2" maxlength="256" size="10" placeholder="Enter URL" disabled>
         
         <div style="padding: 5px;"> </div>
-        <button onclick="shareSong()">Copy link to song</button>
+        <button id='shareButton' style='width: 9em' onclick="shareSong()">Copy link to song</button>
         <div style="padding: 10px;"> </div>
         
         <button onclick="homeOrg()"><img src="GUI/org_home.png" alt="Home"></button>
@@ -729,6 +729,8 @@
 						songUrl += new_song;
 					}
 					navigator.clipboard.writeText(songUrl);
+					document.getElementById('shareButton').innerHTML='Copied!';
+					setTimeout("document.getElementById('shareButton').innerHTML='Copy link to song';", 750)
 				}
 			}
             

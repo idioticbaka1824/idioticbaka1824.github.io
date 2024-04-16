@@ -5,7 +5,7 @@
 <input id='myTextInput' type='text' value='100mr' size=5>
 <button onclick=load()>load</button>
 <div id='myImgDiv' style='border:1px solid white' hidden>
-<img id='myImgID' usemap="#workmap" src='https://cdn.awwni.me/100mr.jpg'>
+<img id='myImgID' usemap="#workmap" src='https://cdn.awwni.me/100mr.jpg' style='display:block; margin:auto'>
 </div>
 <map name='workmap'>
   <area id='myArea1' shape='rect' coords='' onclick='forward()'>
@@ -85,8 +85,6 @@ function keyboardHandling(event){
 			myImg.style['object-fit'] = 'none';
 			myImg.style['height'] = 'auto';
 			myImg.style['width'] = 'auto';
-			myImg.style['display'] = 'block';
-			myImg.style['margin'] = 'auto';
 		}
 		else if(myImg.style['object-fit'] == 'none'){
 			myImg.style['object-fit'] = 'contain';

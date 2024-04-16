@@ -67,7 +67,7 @@
         <input type="radio" id="dropDownRadio" name="orgSelect" value="dropDownOn" onchange="radioOnChange()">
         <select id="songs" onchange="playOrg('dontPlay')"></select>
         <input type="radio" id="urlInputRadio" name="orgSelect" value="urlInputOn" onchange="radioOnChange()">
-        <input type="url" id="idUrlInput" name="nameUrlInput" minlength="2" maxlength="256" size="10" placeholder="Enter URL" disabled>
+        <input type="url" id="idUrlInput" onchange="playOrg('dontPlay')" name="nameUrlInput" minlength="2" maxlength="256" size="10" placeholder="Enter URL" disabled>
         
         <div style="padding: 5px;"> </div>
         <button id='shareButton' style='width: 9em' onclick="shareSong()">Copy link to song</button>
@@ -432,7 +432,7 @@
 					else if(e.shiftKey && e.key=='ArrowLeft'){
 						currentOrg.selectionUpdate(null, -1);
                     }
-					else if(e.ctrlKey && e.key=='a'){
+					else if(e.ctrlKey && e.key=='a' && document.activeElement!=document.getElementById('idUrlInput')){
 						e.preventDefault();
 						currentOrg.selectionStart=currentOrg.song.start;
 						currentOrg.selectionEnd=currentOrg.song.end;
@@ -444,7 +444,7 @@
 						//if(currentOrg.editingMode==1) currentOrg.copyNotes(); //this would make it toggle modes
                         currentOrg.changeEditingMode(0); //this just sets pencil mode
                     }
-					else if(currentOrg && !currentOrg.isLowSpec && e.key=='Enter'){
+					else if(currentOrg && !currentOrg.isLowSpec && e.key=='Enter' && document.activeElement!=document.getElementById('idUrlInput')){
 						currentOrg.toggleWaveformEditor();
 					}
                 
@@ -722,7 +722,7 @@
 					let songUrl = noQUrl;
 					if(document.getElementById('dropDownRadio').checked == true){
 						songUrl += '?DDsong=';
-						songUrl += new_song.substring(6, new_song.length); //trimming 'songs/' from the beginning
+						songUrl += encodeURIComponent(new_song.substring(6, new_song.length)); //trimming 'songs/' from the beginning
 					}
 					else if(document.getElementById('urlInputRadio').checked == true){
 						songUrl += '?url=';

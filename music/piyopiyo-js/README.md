@@ -20,6 +20,7 @@ UI graphics were taken from the original PiyoPiyo Editor executable: https://www
 - The playback kind of sucks, it's inaccurate and sounds weirdly stretched out as compared to the original player. I don't know why this is happening, please help (╥﹏╥) For the time being I pulled some weird hacks to make it sound as close as possible, marked by double question marks (??) in comments in the code.
 - Probably related to the above, but the playback isn't visually 'smooth': the cursor sort of jumps between notes and doesn't proceed at a uniform speed.
 - Sometimes the page doesn't work, but if you try refreshing it a couple of times, it starts working.
+- Sound preview (when clicking the piano keys or placing a note) does not work for most drums.
 
 ---
 

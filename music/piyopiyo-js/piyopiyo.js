@@ -1,9 +1,9 @@
 (() => {
     let drums = [];
-	let piyoWaveSampleRate = 11025;
+	let piyoWaveSampleRate = 11025; //not sure if they're really different, but this just seems to kinda work i guess
 	let piyoDrumSampleRate = 22050;
 	
-	//utility function to force a number to an allowed interval
+	//utility function to force a number to within an allowed interval
 	function clamp(number, min, max) {
 		return Math.max(min, Math.min(number, max));
 	}
@@ -116,7 +116,7 @@
 						if (bitfield[key] == '1') keys.push(23-key);
 					}
 					track[j].keys = keys; //keys is an array of the pitch of all the notes at position j. values can be 0-23 (relative to baseOctave). note that in organya, keys.length could only be 1 (no overlapping notes)
-					if(i==3){ //some drum frequencies are empty, if those notes exist then delete them
+					if(i==3){ //some drum keys are actually empty, if those notes exist then delete them
 						let key=0;
 						while(key<track[j].keys.length){
 							if(drumTypeTable[track[j].keys[key]]==-1 || drumTypeTable[track[j].keys[key]]==undefined){ //some drum frequencies are empty
@@ -171,7 +171,7 @@
 			this.isLoop = true;
 			this.isLowSpec = false;
 			this.isWaveformEditor = false;
-			this.isEditingNumbers=-1; //which edit box is active for the numerical stuff in instrument editor? (0,1,2,3,4)=(volume, length, octave, size, wait)
+			this.isEditingNumbers=-1; //which edit box is active for the numerical stuff in instrument editor? (0,1,2,3,4,5,6)=(volume, length, octave, size, wait, start, end)
             this.flashArrowsIndex = null;
 			for (let i = 0; i < 4; i++) {
                 this.state[i] = [
@@ -506,8 +506,8 @@
 		}
 		editNumbers(newValueInput, fromKeyboard=0) { //this is such a mess ;_;
 			if(this.isEditingNumbers!=-1 && newValueInput!==null && newValueInput!=='') {
-				const minValues = [1, 40, 0, 16, 20];
-				const maxValues = [300, 44100, 5, 4096, 1000];
+				const minValues = [1, 40, 0, 16, 20, 0, 0];
+				const maxValues = [300, 44100, 5, 4096, 1000, this.song.songLength, this.song.songLength];
 				let newValue = Math.max(newValueInput, minValues[this.isEditingNumbers]);
 				newValue = clamp(newValueInput, minValues[this.isEditingNumbers], maxValues[this.isEditingNumbers]);
 				switch (this.isEditingNumbers) {
@@ -527,6 +527,12 @@
 						break;
 					case 4:
 						this.song.wait = (fromKeyboard==0) ? newValue : clamp(this.song.wait + fromKeyboard, minValues[this.isEditingNumbers], maxValues[this.isEditingNumbers]);
+						break;
+					case 5:
+						this.song.start = (fromKeyboard==0) ? newValue : clamp(this.song.start + fromKeyboard, minValues[this.isEditingNumbers], maxValues[this.isEditingNumbers]);
+						break;
+					case 6:
+						this.song.end = (fromKeyboard==0) ? newValue : clamp(this.song.end + fromKeyboard, minValues[this.isEditingNumbers], maxValues[this.isEditingNumbers]);
 						break;
 				}
 				if (this.onUpdate) this.onUpdate(this);

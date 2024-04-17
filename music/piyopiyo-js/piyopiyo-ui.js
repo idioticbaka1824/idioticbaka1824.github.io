@@ -292,7 +292,7 @@
 			//settings etc
 			this.ctx.drawImage(this.pianoRoll, 120, 0, 1, 1, 0, height-72+4, width, 72-4); //blacking out the settings area first
 			this.ctx.drawImage(this.setting, 0, 0, 448, 72, 0, height-72, 448, 72); //settings panel
-			if(window.isClickingFish) this.ctx.drawImage(this.setting, 448, 17, 64, 36, 104, height-72+16, 64, 36);
+			if(window.isClickingFish) this.ctx.drawImage(this.setting, 104, 88, 64, 36, 104, height-72+16, 64, 36);
 			if(!this.organya || !this.organya.isWaveformEditor) {
 				this.ctx.drawImage(this.buttons, 0, 0, 192, 72, width-192, height-72, 192, 72); //green buttons
 			}
@@ -331,6 +331,9 @@
 			
 			//waveform editor
 			if (this.organya && this.organya.isWaveformEditor) {
+				this.ctx.drawImage(this.setting, 319, 84, 129, 40, 448-1, height-40, 129, 40); //music start/end options
+				this.drawNumber(566, height-37, this.organya.song.start, 0, false, true); //
+				this.drawNumber(566, height-19, this.organya.song.end, 0, false, true); //and their numbers
 				this.ctx.fillRect(0, 0, width, height-80); //clear splash image from background but leave settings panels
 				this.ctx.drawImage(this.ok, 0, 0, 48, 24, width-48, height-24, 48, 24); //ok button
 				this.ctx.drawImage(this.msg, 0, 0, 54, 16, 64, 40, 54, 16); //'wave'
@@ -357,8 +360,8 @@
 				}
 				if(this.organya.isEditingNumbers!=-1) { //flashing arrows for numerical edit boxes (this is beyond me, have a static sprite instead) (okay never mind i found out how)
 					let sprXs = [0,8,16,24,32,24,16,8];
-					let yIncr = [1,2,3,2,3];
-					let xOffs = [57, 57, 57, 393, 393];
+					let yIncr = [1,2,3,2,3,2,3];
+					let xOffs = [57, 57, 57, 393, 393, 521, 521];
 					this.ctx.drawImage(this.cursor, sprXs[this.organya.flashArrowsIndex], 16, 8, 18, xOffs[this.organya.isEditingNumbers], height-72+18*yIncr[this.organya.isEditingNumbers], 8, 16)
 				}
 				this.ctx.drawImage(this.msg, 0, 32, 88, 200, 64+512+12, 40, 88, 200); //presets

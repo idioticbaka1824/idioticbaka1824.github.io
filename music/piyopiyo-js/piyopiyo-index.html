@@ -643,6 +643,22 @@
 								if (e.button==2) {let newValue = prompt('New Music Wait value:'); currentOrg.editNumbers(newValue);}
 							}
 						}
+						if (x>520 && x<520+48 && y>orgCanvas.height-76+36 && y<orgCanvas.height-76+36+16) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.editStart); keyBeingPressed=null;}
+							else {
+								if(currentOrg.flashArrowsIndex==null) setInterval(currentOrg.flashArrows.bind(currentOrg), 100);
+								currentOrg.isEditingNumbers=5;
+								if (e.button==2) {let newValue = prompt('New Music Start value:'); currentOrg.editNumbers(newValue);}
+							}
+						}
+						if (x>520 && x<520+48 && y>orgCanvas.height-76+54 && y<orgCanvas.height-76+54+16) {
+							if(keyBeingPressed=='Control') {alert(helpStrings.editEnd); keyBeingPressed=null;}
+							else {
+								if(currentOrg.flashArrowsIndex==null) setInterval(currentOrg.flashArrows.bind(currentOrg), 100);
+								currentOrg.isEditingNumbers=6;
+								if (e.button==2) {let newValue = prompt('New Music End value:'); currentOrg.editNumbers(newValue);}
+							}
+						}
 						if(x>600 && x<656 && y>74 && y<74+160) {
 							if(keyBeingPressed=='Control') {alert(helpStrings.presets); keyBeingPressed=null;}
 							else currentOrg.presetsWave(y);
@@ -766,8 +782,10 @@
 			editVolume: "Volume of the selected track (1-300).\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.",
 			editLength: "Duration of one note of the selected track (40-44100).\nA value of 22050 corresponds to 1 second.\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.",
 			editOctave: "Octave of the selected track (0-5).\nPiyoPiyo supports a range of two octaves for any instrument, offset from a baseline octave.\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.",
-			editSize: "Size of the song (16-4096).\nTypically coincides with the end loop marker.\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.",
+			editSize: "Size of the song (16-4096).\nTypically coincides with the end loop marker.\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.\n(You can also right-click+drag the marker on the playback bar.)",
 			editWait: "Playback speed of the song (20-1000).\nThis is the duration of one tick/subbeat in milliseconds.\nFor a 4x4 time signature, BPM = 15000/songWait\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.",
+			editStart: "Start of the song's loop section. (0-song length).\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.\n(You can also right-click+drag the marker on the playback bar.)",
+			editEnd: "End of the song's loop section (0-song length).\nClick and then use up/down to increment/decrement.\nRight-click to enter new value directly.\n(You can also right-click+drag the marker on the playback bar.)",
 			presets: "Click one of these presets to start with a basic waveform or envelope shape.",
 			newFile: "Create a new blank song.",
 			loadFile: "Click here to load a .pmd song from your computer.\nYou can also drag-and-drop a .pmd file onto the page.",

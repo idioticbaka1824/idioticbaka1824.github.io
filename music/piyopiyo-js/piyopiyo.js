@@ -196,7 +196,7 @@
          * @param {Float32Array} rightBuffer
          */
         synth(leftBuffer, rightBuffer, preview) {
-				var bufferStartTime = Date.now()-this.beginTime;
+				var bufferStartTime = Date.now()-this.beginTime; //for debugging, but didn't work out. ignore
             for (let sample = 0; sample < leftBuffer.length; sample++) {
                 if (this.samplesThisTick == 0) {
 					if (preview==false) this.update(); //update works in increments of song wait time, so anything finer than that is probably handled by this synth function
@@ -883,7 +883,7 @@
 			if(this.isPlaying==false){
 				this.ctx = new (window.AudioContext || window.webkitAudioContext)();
 				this.sampleRate = this.ctx.sampleRate;
-				this.samplesPerTick = (this.sampleRate / 1000) * this.song.wait*this.song.waitFudge | 0;
+				this.samplesPerTick = (this.sampleRate / 1000) * this.song.wait*this.song.waitFudge | 0; //??
 				this.samplesThisTick = 0;
 				this.beginTime = this.d.getTime();
 				//console.log(this.beginTime);

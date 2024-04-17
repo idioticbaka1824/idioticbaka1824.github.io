@@ -1,3 +1,6 @@
+(The following is the license from Organya-JS, which PiyoPiyo-JS is just an edit of.)
+(I don't know anything about licensing, so I guess just stick with the rules given below?)
+
 BSD 3-Clause License
 
 Copyright (c) 2021, Alula, Rxo Inverse, Studio Pixel

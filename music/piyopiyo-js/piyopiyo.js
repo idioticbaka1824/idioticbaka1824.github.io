@@ -539,7 +539,7 @@
 			}
 		}
 		
-		flashArrows() { //how do I do this??? wow okay i figured it out
+		flashArrows() { //how do I do this? wow okay i figured it out
 			if (this.flashArrowsIndex==null) this.flashArrowsIndex=0;
 			this.flashArrowsIndex = (this.flashArrowsIndex + 1)%8;
 			//console.log(this);

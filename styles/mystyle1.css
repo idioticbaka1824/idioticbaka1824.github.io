@@ -54,7 +54,7 @@ iframe {
 }
 
 .left_bar {
-    position: relative;
+    position: fixed;
 	float: left;
 	min-width: min-content;
 	width: 18vw;
@@ -100,7 +100,7 @@ iframe {
 	float: right;
 	position: relative;
 	min-width: 72vw;
-	max-width: 72vw;
+	max-width: 73vw;
 	min-height: 100%;
 	height: 100%;
 	margin: 0vw;
@@ -119,9 +119,9 @@ iframe {
 .page {
   background-color: var(--whiteAlpha);
   min-height: 100%;
-  height: 100%;
+  height: fit-content;
   box-sizing: border-box;
-  padding: 60px 30px 30px 30px;
+  padding: 60px 40px 30px 40px;
   margin : 0px auto;
 }
 

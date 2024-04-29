@@ -1,12 +1,13 @@
 # piyopiyo-js
 
 By [IdioticBaka1824](https://github.com/raadshaikh), based on [Alula](https://github.com/alula)'s [Organya-JS](https://github.com/alula/organya-js).
+(I would have forked that, but I already forked it once earlier to add org-3 drum support.)
 
 PiyoPiyo in your browser! A Javascript-based player and editor for PiyoPiyo music files.
 
 PiyoPiyo is a chiptune music format created by [Daisuke "Pixel" Amaya](https://twitter.com/oxizn), meant for use in his game [Ikachan](https://www.cavestory.org/pixels-works/ikachan.php).
 
-Demo page: https://raadshaikh.github.io/piyopiyo-js/piyopiyo-index.html.
+Demo page: [https://raadshaikh.github.io/piyopiyo-js/piyopiyo-index.html](https://raadshaikh.github.io/piyopiyo-js/piyopiyo-index.html).
 
 - piyopiyo.js - the main player component, it's all you need for playing .pmd files in browser.
 - piyopiyo-ui.js - optional component that renders a piano roll on HTML5 canvas.
@@ -21,6 +22,7 @@ UI graphics were taken from the original PiyoPiyo Editor executable: https://www
 - Probably related to the above, but the playback isn't visually 'smooth': the cursor sort of jumps between notes and doesn't proceed at a uniform speed.
 - Sometimes the page doesn't work, but if you try refreshing it a couple of times, it starts working.
 - Sound preview (when clicking the piano keys or placing a note) does not work for most drums.
+- The fish cursor isn't working when I deploy this repository as a site ([it does work when I publish this page as a regular website](https://raadshaikh.github.io/music/piyopiyo-js/piyopiyo-index.html))
 
 ---
 
@@ -63,6 +65,13 @@ UI graphics were taken from the original PiyoPiyo Editor executable: https://www
 - Music Wait is the duration of one sub-beat in milliseconds. It is equal to 15000/BPM.
 - Music Size is the file size, in sub-beats. This is the maximum number of sub-beats the song will store. Typically this coincides with the end marker of the looping section.
 - Music Start/End set the boundaries of the looping section of the song.
+
+##### Credits
+- [PiyoPiyo Editor/Player](https://www.cavestory.org/pixels-works/piyopiyo.php) by [Daisuke "Pixel" Amaya](https://twitter.com/oxizn)
+- [Organya-JS](https://github.com/alula/organya-js) by [Alula](https://github.com/alula)
+- [PiyoPiyo file format decoding](https://forum.cavestory.org/threads/piyopiyo-file-format.5917/) by [Gamemanj/20kdc](https://github.com/20kdc)
+- Two obscure sample songs provided by [Ahotcho](https://forum.cavestory.org/members/ahotcho.10652/)
+- MIDI export functionality by [Grimmdude](https://github.com/grimmdude/MidiWriterJS)
 
 ---
 

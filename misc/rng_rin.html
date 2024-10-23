@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../styles/mystyle1.css"><script>
+function showResult() {
+	let genres = `Action
+Adventure
+Cars
+Comedy
+Dementia
+Demons
+Drama
+Ecchi
+Fantasy
+Game
+Harem
+Historical
+Horror
+Isekai
+Josei
+Kids
+Magic
+MahouShoujo
+MartialArts
+Mecha
+Military
+Music
+Mystery
+Parody
+Police
+Psychological
+Romance
+Samurai
+School
+SciFi
+Seinen
+Shoujo
+ShoujoAi
+Shounen
+ShounenAi
+SliceOfLife
+Space
+Sports
+Supernatural
+SuperPower
+Thriller
+Vampire`.split('\n');
+let out = '/sg difficulty:Hard number-of-rounds:5 genres:';
+out = out + genres[Math.floor(Math.random()*genres.length)];
+console.log(out);
+navigator.clipboard.writeText(out);
+}
+</script>
+</head>
+<body>
+
+<div class="body2">
+</div>
+
+<div class="left_bar clearfix">
+ <div class="menu menu-text">
+
+<h1>Misc</h1>
+<hr>
+
+<div class="nav-placeholder clearfix">
+<iframe name="navigation" src="../nav.html"></iframe>
+</div>
+ </div>
+</div>
+
+
+<div class="right_bar clearfix">
+ <div class="pagebg">
+  <div class="page page-text">
+
+<button onclick='showResult()'>Click me to copy prompt to clipboard</button>
+<div id='result_box'></div>
+
+  </div>
+ </div>
+</div>
+
+</body>
+</html>

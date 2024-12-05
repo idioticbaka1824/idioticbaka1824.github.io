@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../styles/mystyle1.css">
+</head>
+<body>
+
+<div class="body2">
+</div>
+
+<div class="left_bar clearfix">
+ <div class="menu menu-text">
+
+<h1>Music</h1>
+<hr>
+
+<div class="nav-placeholder clearfix">
+<iframe name="navigation" src="../nav.html"></iframe>
+</div>
+ </div>
+</div>
+
+
+<div class="right_bar clearfix">
+ <div class="pagebg">
+  <div class="page page-text">
+
+	Back in around 2014, I saw <a href=https://www.youtube.com/watch?v=FogHn1yTY2o>this</a> music box cover of the track 'Pulse' from Cave Story. The cover was made by <a href=https://nightmargin.weebly.com/>Nightmargin</a>, who would go on to make the game <a href=https://store.steampowered.com/app/420530/OneShot/>OneShot</a>. I was mesmerised by the sound and the art, and decided I'd try making similar covers myself.
+	<br><br>
+	Here's the first one I made, <a href=https://www.youtube.com/watch?v=IvlzNcazlr4>Toroko's Theme</a>. Yeah, the rest weren't much better, either. I just took a MIDI converted from the original ORG ('Organya') format, changed the instrument to Music Box, and ran it through SolMiRe, an online tool to render MIDI to MP3 that is sadly no longer with us. I didn't even remember to remove the drums. I did get some nice comments, but after covering a few of my favourite tracks, I decided not to embarrass myself any further and stopped.
+	<br><br>
+	After getting busy with and finishing high school and college, I found myself with some time on my hands and realised Cave Story's 20th anniversary was coming up soon. What could I do for the occasion? I remembered those music box covers I made so long ago, and decided to revisit them but do it right this time. And cover the whole soundtrack in the process. This is the result:
+	<br><br>
+	<b style="font-size: 1.5rem;"><a href=https://www.youtube.com/playlist?list=PLu8j5rGJYJ7q7woIPxYT96dvmeBePB6v1>The Cave Story 20th Anniversary Music Box Project.</a></b>
+	<br><br>
+	The modus operandi was like so: Download the ORG files from the <a href=https://www.cavestory.org/download/music.php>Tribute Site</a>, use <a href=https://www.cavestory.org/download/music-tools.php>OrgMid</a> to convert them all to MIDI. (Choose as many repeats as are deemed appropriate for the song.) Then open <a href=https://www.reaper.fm/>Reaper</a>, import  MIDI as multiple tracks, delete the drum track, open in the in-built MIDI editor, divide the BPM by 1.25 (the slower feel goes well with the music box ambiance), change the instruments to music box, transpose tracks if necessary (higher notes sound better in music box), and delete all notes lower than C1 (because some soundfonts change these notes to winding sounds). Then I used the <a href=https://samcycle.blogspot.com/2012/08/m-box-virtual-music-box-vsti.html>Samsara Cycle Music Box</a> plugin to render the sound. Here I selected 'Music Box 3' and turned on Reverb. The high-pitched notes can sound harsh, so I applied an equaliser to reduce the amplitude of the higher frequencies, as well as a limiter to soften the louder sounds. Finally export as mp3, and use <a href=https://www.ffmpeg.org/>ffmpeg</a> to combine with the cover art to make an mp4 video. (The cover art features <a href=https://studiopixel.sakura.ne.jp/ame/>Ame</a>, who is Studio Pixel's mascot character and appears in OrgView, the dedicated program for listening to Cave Story's soundtrack. The art was drawn in <a href=https://www.systemax.jp/en/sai/>Paint Tool SAI</a>, mostly with the acrylic brush.)
+	<br><br>
+	Some notes on the soundtrack itself:
+	<ul>
+	<li>I've included some beta or unreleased songs that were not used in the final version of Cave Story: Wind Fortress, Halloween 2, Pier Walk, People of the Root, Rockorg, and Meltdown.</li>
+	<li>I have also included beta versions of some songs when I felt that the beta versions were sufficiently different to almost be their own song. This was the case with Plant, Hero's End, Oppression, and White.</li>
+	<li>There is also the theme song of the game <a href=https://www.cavestory.org/pixels-works/azarashi.php>Azarashi</a>, which is the only game other than Cave Story to use the ORG music format.</li>
+	<li>The 'song' internally known as XXXX is naturally omitted because it is just a loop filled with silence. I had originally considered adding this as a joke for the sake of completeness, maybe just a silent video or perhaps put a winding sound in it to anticipate something and abruptly end the video. Never bothered going through with it, though.</li>
+	<li>Tyrant, the theme that plays during the Doctor's cutscene, was especially hard to adapt since it's mostly just drums with a low bassline. In the end I somehow tried to translate the drums into harmonic content, with different kinds of drums converted to notes of different pitches, making this the only cover to keep the drums in some sense.</li>
+	<li>I had to transpose down the highest track in The Way Back Home because it just hurt my ears otherwise.</li>
+	</ul>
+	Enjoy!
+  </div>
+ </div>
+</div>
+
+</body>
+</html>

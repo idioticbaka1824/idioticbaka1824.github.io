@@ -39,6 +39,7 @@ var pdfDoc = null;
    * @param num Page number.
    */
   function renderPage(num, canvas, ctx) {
+if(typeof canvas !== 'undefined'){
     pageRendering = true;
     // Using promise to fetch the page
     pdfDoc.getPage(num).then(function(page) {
@@ -67,6 +68,7 @@ var pdfDoc = null;
     // Update page counters
     document.getElementById('page_num').value = num-1;
   }
+}
 
   /**
    * If another page rendering in progress, waits until the rendering is

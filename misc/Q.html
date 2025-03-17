@@ -1,0 +1,167 @@
+<html>
+<head>
+<style>
+#canvas1, #canvas2 {
+  border: 1px solid black;
+  margin: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs" type="module"></script>
+
+<script type="module">
+  // If absolute URL from the remote server is provided, configure the CORS
+  // header on that server.
+  var url = 'https://corsproxy.io/?' + encodeURIComponent('https://files.catbox.moe/ypuj1o.pdf');
+  var url = 'https://files.catbox.moe/ypuj1o.pdf';
+  // Loaded via <script> tag, create shortcut to access PDF.js exports.
+  var { pdfjsLib } = globalThis;
+
+  // The workerSrc property shall be specified.
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.mjs';
+
+var pageNum=0;
+var pdfDoc = null;
+      window.scale = document.getElementById('zoom').value;
+  var pageRendering = false,
+      pageNumPending = null,
+      canvas1 = document.getElementById('canvas1'),
+      ctx1 = canvas1.getContext('2d');
+      var canvas2 = document.getElementById('canvas2'),
+      ctx2 = canvas2.getContext('2d');
+
+
+  /**
+   * Get page info from document, resize canvas accordingly, and render page.
+   * @param num Page number.
+   */
+  function renderPage(num, canvas, ctx) {
+    pageRendering = true;
+    // Using promise to fetch the page
+    pdfDoc.getPage(num).then(function(page) {
+      var viewport = page.getViewport({scale: scale});
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      // Render PDF page into canvas context
+      var renderContext = {
+        canvasContext: ctx,
+        viewport: viewport
+      };
+      var renderTask = page.render(renderContext);
+
+      // Wait for rendering to finish
+      renderTask.promise.then(function() {
+        pageRendering = false;
+        if (pageNumPending !== null) {
+          // New page rendering is pending
+          renderPage(pageNumPending);
+          pageNumPending = null;
+        }
+      });
+    });
+
+    // Update page counters
+    document.getElementById('page_num').value = num-1;
+  }
+
+  /**
+   * If another page rendering in progress, waits until the rendering is
+   * finished. Otherwise, executes rendering immediately.
+   */
+  function queueRenderPage(num) {
+    if (pageRendering) {
+      pageNumPending = num;
+    } else {
+    if(pageNum!=0 && pageNum!=pdfDoc.numpages){renderPage(pageNum, canvas1, ctx1);}
+    if(pageNum+1 <= pdfDoc.numPages){renderPage(pageNum+1, canvas2, ctx2);}
+    }
+  }
+  /**
+   * Asynchronously downloads PDF.
+   */
+  pdfjsLib.getDocument({url:url, 'Origin': '*',}).promise.then(function(pdfDoc_) {
+    pdfDoc = pdfDoc_;
+    document.getElementById('page_count').textContent = pdfDoc.numPages;
+    document.getElementById('page_num').max = pdfDoc.numPages;
+
+    // Initial/first page rendering
+    if(pageNum!=0){renderPage(pageNum, canvas1, ctx1);}
+    renderPage(pageNum+1, canvas2, ctx2);
+  });
+
+
+  /**
+   * Displays previous page.
+   */
+  function onPrevPage() {
+    if (pageNum <= 1) {
+      return;
+    }
+    pageNum-=2;
+    queueRenderPage(pageNum);
+  }
+  document.getElementById('prev').addEventListener('click', onPrevPage);
+  document.getElementById('canvas1').addEventListener('click', onPrevPage);
+
+  /**
+   * Displays next page.
+   */
+  function onNextPage() {
+    if (pageNum >= pdfDoc.numPages-1) {
+      return;
+    }
+    pageNum+=2;
+    queueRenderPage(pageNum);
+  }
+  document.getElementById('next').addEventListener('click', onNextPage);
+  document.getElementById('canvas2').addEventListener('click', onNextPage);
+
+function seek() {
+    pageNum = document.getElementById('page_num').value - document.getElementById('page_num').value%2;
+    queueRenderPage(pageNum);
+  }
+  document.getElementById('page_num').addEventListener('input', seek);
+
+function zoom() {
+    window.scale = document.getElementById('zoom').value;
+    queueRenderPage(pageNum);
+  }
+  document.getElementById('zoom').addEventListener('input', zoom);
+
+function keyboardHandling(event){
+	if(event.key == 'ArrowRight' && document.activeElement!=document.getElementById('page_num') && document.activeElement!=document.getElementById('zoom')){
+		onPrevPage();
+	}
+	else if(event.key == 'ArrowLeft' && document.activeElement!=document.getElementById('page_num') && document.activeElement!=document.getElementById('zoom')){
+		onNextPage();
+	}
+	
+}
+function wheelHandling(event){
+    if(event.deltaY>0){onNextPage();}
+    if(event.deltaY<0){onPrevPage();}
+}
+document.getElementById('content').addEventListener('keydown', keyboardHandling);
+document.getElementById('content').addEventListener('wheel', wheelHandling);
+
+</script>
+
+<div id='navigation'>
+  <button id="next">&lt;&lt;</button>
+  <button id="prev">&gt;&gt;</button>
+  &nbsp; &nbsp;
+  <span>Page: <input id="page_num" type='number' value=0 step=2 min=0 onmousewheel></input> / <span id="page_count"></span></span>
+  &nbsp; &nbsp;
+  <span>Zoom: <input id="zoom" type='number' value=1 step=0.05 min=0 max=10 onmousewheel></input></span>
+</div>
+<br>
+<div id='content'>
+<canvas id="canvas2"></canvas>
+<canvas id="canvas1"></canvas>
+</div>
+</body>
+</html>

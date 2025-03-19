@@ -9,7 +9,7 @@
 </style>
 </head>
 
-<body>
+<body id='body'>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs" type="module"></script>
 
@@ -46,7 +46,7 @@ function clamp(number, min, max){
    * Get page info from document, resize canvas accordingly, and render page.
    * @param num Page number.
    */
-  function renderPage(num, canvas, ctx) {
+  function renderPage(num, canvas, ctx, seek='page') {
 if(typeof canvas !== 'undefined'){
     pageRendering = true;
     // Using promise to fetch the page
@@ -74,8 +74,13 @@ if(typeof canvas !== 'undefined'){
     });
 
     // Update page counters
+if(seek!='sura'){
+    let j=1;
+    while(num-1>=sura_pages[j]){j++;}
+    document.getElementById('sura').value = j-1;}
     document.getElementById('page_num').value = num-1;
     document.getElementById('para').value = clamp(1+~~((num-3)/20), 1, 30);
+
   }
 }
 
@@ -83,12 +88,12 @@ if(typeof canvas !== 'undefined'){
    * If another page rendering in progress, waits until the rendering is
    * finished. Otherwise, executes rendering immediately.
    */
-  function queueRenderPage(num) {
+  function queueRenderPage(num, seek='page') {
     if (pageRendering) {
       pageNumPending = num;
     } else {
-    if(pageNum!=0 && pageNum!=pdfDoc.numpages){renderPage(pageNum, canvas1, ctx1);}
-    if(pageNum+1 <= pdfDoc.numPages){renderPage(pageNum+1, canvas2, ctx2);}
+    if(pageNum!=0 && pageNum!=pdfDoc.numpages){renderPage(pageNum, canvas1, ctx1, seek);}
+    if(pageNum+1 <= pdfDoc.numPages){renderPage(pageNum+1, canvas2, ctx2, seek);}
     }
   }
   /**
@@ -136,20 +141,20 @@ function pageSeek() {
     queueRenderPage(pageNum);
   }
   document.getElementById('page_num').addEventListener('input', pageSeek);
-  document.getElementById('page_num').addEventListener('mouseenter', document.getElementById('page_num').focus());
-document.getElementById('page_num').addEventListener('mouseleave', document.getElementById('page_num').blur());
+  document.getElementById('page_num').addEventListener('mouseenter', (e)=>{document.getElementById('page_num').focus()});
+document.getElementById('page_num').addEventListener('mouseleave', (e)=>{document.getElementById('page_num').blur()});
 
 function paraSeek() {
     pageNum = 2+20*(parseInt(document.getElementById('para').value)-1) +4*(document.getElementById('para').value=='30');
     queueRenderPage(pageNum);
   }
   document.getElementById('para').addEventListener('input', paraSeek);
-  document.getElementById('para').addEventListener('mouseenter', document.getElementById('para').focus());
-  document.getElementById('para').addEventListener('mouseleave', document.getElementById('para').blur());
+  document.getElementById('para').addEventListener('mouseenter', (e)=>{document.getElementById('para').focus()});
+  document.getElementById('para').addEventListener('mouseleave', (e)=>{document.getElementById('para').blur()});
 
 function suraSeek() {
     pageNum = sura_pages[parseInt(document.getElementById('sura').value)]-sura_pages[parseInt(document.getElementById('sura').value)]%2;
-    queueRenderPage(pageNum);
+    queueRenderPage(pageNum, 'sura');
   }
   document.getElementById('sura').addEventListener('input', suraSeek);
 
@@ -158,14 +163,14 @@ function zoom() {
     queueRenderPage(pageNum);
   }
   document.getElementById('zoom').addEventListener('input', zoom);
-  document.getElementById('zoom').addEventListener('mouseenter', document.getElementById('zoom').focus());
-  document.getElementById('zoom').addEventListener('mouseleave', document.getElementById('zoom').blur());
+  document.getElementById('zoom').addEventListener('mouseenter', (e)=>{document.getElementById('zoom').focus()});
+  document.getElementById('zoom').addEventListener('mouseleave', (e)=>{document.getElementById('zoom').blur()});
 
 function keyboardHandling(event){
-	if(event.key == 'ArrowRight' && document.activeElement!=document.getElementById('page_num') && document.activeElement!=document.getElementById('zoom')){
+	if((event.key=='ArrowRight' || event.key=='ArrowUp') && !(document.getElementById('navigation').contains(document.activeElement))){
 		onPrevPage();
 	}
-	else if(event.key == 'ArrowLeft' && document.activeElement!=document.getElementById('page_num') && document.activeElement!=document.getElementById('zoom')){
+	else if((event.key == 'ArrowLeft' || event.key=='ArrowDown') && !(document.getElementById('navigation').contains(document.activeElement))){
 		onNextPage();
 	}
 	
@@ -179,9 +184,8 @@ function wheelHandling2(event){
     if(event.deltaY<0){document.getElementById('sura').value = clamp(parseInt(document.getElementById('sura').value)-1, 0, 113);}
     suraSeek();
 }
-document.getElementById('content').addEventListener('keydown', keyboardHandling);
-document.getElementById('content').addEventListener('wheel', wheelHandling);
-document.getElementById('sura').addEventListener('wheel', wheelHandling2);
+document.getElementById('body').addEventListener('keydown', keyboardHandling);
+document.getElementById('content').addEventListener('wheel', wheelHandling);document.getElementById('sura').addEventListener('wheel', wheelHandling2);
 
 
 </script>
@@ -190,13 +194,13 @@ document.getElementById('sura').addEventListener('wheel', wheelHandling2);
   <button id="next">&lt;&lt;</button>
   <button id="prev">&gt;&gt;</button>
   &nbsp; &nbsp;
-  <span>Page: <input id="page_num" type='number' value=0 step=2 min=0 onmousewheel></input> / <span id="page_count"></span></span>
+  <span>Page: <input id="page_num" type='number' value=0 step=2 min=0 onwheel></input> / <span id="page_count"></span></span>
   &nbsp; &nbsp;
-  <span>Para: <input id="para" type='number' value=1 step=1 min=1 max=30 onmousewheel></input></span>
+  <span>Para: <input id="para" type='number' value=1 step=1 min=1 max=30 onwheel></input></span>
   &nbsp; &nbsp;
   <span>Sura: <select id="sura" type='select'></select></span>
   &nbsp; &nbsp;
-  <span>Zoom: <input id="zoom" type='number' value=1 step=0.05 min=0 max=10 onmousewheel></input></span>
+  <span>Zoom: <input id="zoom" type='number' value=1 step=0.05 min=0 max=10 onwheel></input></span>
 </div>
 <br>
 <div id='content'>

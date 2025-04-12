@@ -1,0 +1,338 @@
+<html>
+<head>
+<meta name="google" value="notranslate" />
+<style>
+#canvas1, #canvas2 {
+  border: 1px solid black;
+  margin: 10px;
+}
+</style>
+</head>
+
+<body id='body'>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs" type="module"></script>
+
+<script type="module">
+
+function clamp(number, min, max){
+  if(number<min){return min;}
+  if(number>max){return max;}
+  if(number>=min && number<= max){return number;}
+}
+
+  // If absolute URL from the remote server is provided, configure the CORS
+  // header on that server.
+  var url = 'https://corsproxy.io/?' + encodeURIComponent('https://files.catbox.moe/ypuj1o.pdf');
+  var url = 'https://files.catbox.moe/ypuj1o.pdf';
+  // Loaded via <script> tag, create shortcut to access PDF.js exports.
+  var { pdfjsLib } = globalThis;
+
+  // The workerSrc property shall be specified.
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.mjs';
+
+  var pageNum=0;
+  var pdfDoc = null;
+  window.scale = document.getElementById('zoom').value;
+  var pageRendering = false,
+      pageNumPending = null,
+      canvas1 = document.getElementById('canvas1'),
+      ctx1 = canvas1.getContext('2d');
+      var canvas2 = document.getElementById('canvas2'),
+      ctx2 = canvas2.getContext('2d');
+
+
+  /**
+   * Get page info from document, resize canvas accordingly, and render page.
+   * @param num Page number.
+   */
+  function renderPage(num, canvas, ctx, seek='page') {
+if(typeof canvas !== 'undefined'){
+    pageRendering = true;
+    // Using promise to fetch the page
+    pdfDoc.getPage(num).then(function(page) {
+      var viewport = page.getViewport({scale: scale});
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      // Render PDF page into canvas context
+      var renderContext = {
+        canvasContext: ctx,
+        viewport: viewport
+      };
+      var renderTask = page.render(renderContext);
+
+      // Wait for rendering to finish
+      renderTask.promise.then(function() {
+        pageRendering = false;
+        if (pageNumPending !== null) {
+          // New page rendering is pending
+          renderPage(pageNumPending);
+          pageNumPending = null;
+        }
+      });
+    });
+
+    // Update page counters
+if(seek!='sura'){
+    let j=1;
+    while(num-1>=sura_pages[j]){j++;}
+    document.getElementById('sura').value = j-1;}
+    document.getElementById('page_num').value = num-1;
+    document.getElementById('para').value = clamp(1+~~((num-3)/20), 1, 30);
+
+  }
+}
+
+  /**
+   * If another page rendering in progress, waits until the rendering is
+   * finished. Otherwise, executes rendering immediately.
+   */
+  function queueRenderPage(num, seek='page') {
+    if (pageRendering) {
+      pageNumPending = num;
+    } else {
+    if(pageNum!=0 && pageNum!=pdfDoc.numpages){renderPage(pageNum, canvas1, ctx1, seek);}
+    if(pageNum+1 <= pdfDoc.numPages){renderPage(pageNum+1, canvas2, ctx2, seek);}
+    }
+  }
+  /**
+   * Asynchronously downloads PDF.
+   */
+  pdfjsLib.getDocument({url:url, 'Origin': '*',}).promise.then(function(pdfDoc_) {
+    pdfDoc = pdfDoc_;
+    document.getElementById('page_count').textContent = pdfDoc.numPages;
+    document.getElementById('page_num').max = pdfDoc.numPages;
+
+    // Initial/first page rendering
+    if(pageNum!=0){renderPage(pageNum, canvas1, ctx1);}
+    renderPage(pageNum+1, canvas2, ctx2);
+  });
+
+
+  /**
+   * Displays previous page.
+   */
+  function onPrevPage() {
+    if (pageNum <= 1) {
+      return;
+    }
+    pageNum-=2;
+    queueRenderPage(pageNum);
+  }
+  document.getElementById('prev').addEventListener('click', onPrevPage);
+  document.getElementById('canvas1').addEventListener('click', onPrevPage);
+
+  /**
+   * Displays next page.
+   */
+  function onNextPage() {
+    if (pageNum >= pdfDoc.numPages-1) {
+      return;
+    }
+    pageNum+=2;
+    queueRenderPage(pageNum);
+  }
+  document.getElementById('next').addEventListener('click', onNextPage);
+  document.getElementById('canvas2').addEventListener('click', onNextPage);
+
+function pageSeek() {
+    pageNum = document.getElementById('page_num').value - document.getElementById('page_num').value%2;
+    queueRenderPage(pageNum);
+  }
+  document.getElementById('page_num').addEventListener('input', pageSeek);
+  document.getElementById('page_num').addEventListener('mouseenter', (e)=>{document.getElementById('page_num').focus()});
+document.getElementById('page_num').addEventListener('mouseleave', (e)=>{document.getElementById('page_num').blur()});
+
+function paraSeek() {
+    pageNum = 2+20*(parseInt(document.getElementById('para').value)-1) +4*(document.getElementById('para').value=='30');
+    queueRenderPage(pageNum);
+  }
+  document.getElementById('para').addEventListener('input', paraSeek);
+  document.getElementById('para').addEventListener('mouseenter', (e)=>{document.getElementById('para').focus()});
+  document.getElementById('para').addEventListener('mouseleave', (e)=>{document.getElementById('para').blur()});
+
+function suraSeek() {
+    pageNum = sura_pages[parseInt(document.getElementById('sura').value)]-sura_pages[parseInt(document.getElementById('sura').value)]%2;
+    queueRenderPage(pageNum, 'sura');
+  }
+  document.getElementById('sura').addEventListener('input', suraSeek);
+
+function zoom() {
+    window.scale = document.getElementById('zoom').value;
+    queueRenderPage(pageNum);
+  }
+  document.getElementById('zoom').addEventListener('input', zoom);
+  document.getElementById('zoom').addEventListener('mouseenter', (e)=>{document.getElementById('zoom').focus()});
+  document.getElementById('zoom').addEventListener('mouseleave', (e)=>{document.getElementById('zoom').blur()});
+
+function keyboardHandling(event){
+	if((event.key=='ArrowRight' || event.key=='ArrowUp') && !(document.getElementById('navigation').contains(document.activeElement))){
+		onPrevPage();
+	}
+	else if((event.key == 'ArrowLeft' || event.key=='ArrowDown') && !(document.getElementById('navigation').contains(document.activeElement))){
+		onNextPage();
+	}
+	
+}
+function wheelHandling(event){
+    if(event.deltaY>0){onNextPage();}
+    if(event.deltaY<0){onPrevPage();}
+}
+function wheelHandling2(event){
+    if(event.deltaY>0){document.getElementById('sura').value = clamp(parseInt(document.getElementById('sura').value)+1, 0, 113);}
+    if(event.deltaY<0){document.getElementById('sura').value = clamp(parseInt(document.getElementById('sura').value)-1, 0, 113);}
+    suraSeek();
+}
+document.getElementById('body').addEventListener('keydown', keyboardHandling);
+document.getElementById('content').addEventListener('wheel', wheelHandling);document.getElementById('sura').addEventListener('wheel', wheelHandling2);
+
+
+</script>
+
+<div id='navigation'>
+  <button id="next">&lt;&lt;</button>
+  <button id="prev">&gt;&gt;</button>
+  &nbsp; &nbsp;
+  <span>Page: <input id="page_num" type='number' value=0 step=2 min=0 onwheel></input> / <span id="page_count"></span></span>
+  &nbsp; &nbsp;
+  <span>Para: <input id="para" type='number' value=1 step=1 min=1 max=30 onwheel></input></span>
+  &nbsp; &nbsp;
+  <span>Sura: <select id="sura" type='select'></select></span>
+  &nbsp; &nbsp;
+  <span>Zoom: <input id="zoom" type='number' value=1 step=0.05 min=0 max=10 onwheel></input></span>
+</div>
+<br>
+<div id='content'>
+<canvas id="canvas2"></canvas>
+<canvas id="canvas1"></canvas>
+</div>
+</body>
+
+<script>
+const sura_select = document.getElementById('sura');
+const sura_names = [
+"Fatiha",
+"Baqara",
+"Imran",
+"Nisaa",
+"Maida",
+"Anaam",
+"Araf",
+"Anfal",
+"Tauba",
+"Yunus",
+"Hud",
+"Yusuf",
+"Raad",
+"Ibrahim",
+"Hijr",
+"Nahl",
+"Bani Israil",
+"Kahf",
+"Maryam",
+"Taha",
+"Anbiyaa",
+"Hajj",
+"Muminun",
+"Nur",
+"Furqan",
+"Shuara",
+"Naml",
+"Qasas",
+"Ankabut",
+"Rum",
+"Luqman",
+"Sajdah",
+"Ahzab",
+"Saba",
+"Fatir",
+"Ya Sin",
+"Saffat",
+"Sad",
+"Zumar",
+"Mumin",
+"Ha Mim Sajdah",
+"Shura",
+"Zukhruf",
+"Dukhan",
+"Jathiya",
+"Ahqaf",
+"Muhammad",
+"Fath",
+"Hujurat",
+"Qaf",
+"Dhariyat",
+"Tur",
+"Najm",
+"Qamar",
+"Rahman",
+"Waqiah",
+"Hadid",
+"Mujadilah",
+"Hashr",
+"Mumtahinah",
+"Saff",
+"Jumuah",
+"Munafiqun",
+"Taghabun",
+"Talaq",
+"Tahrim",
+"Mulk",
+"Qalam",
+"Haqqah",
+"Maarij",
+"Nuh",
+"Jinn",
+"Muzzammil",
+"Muddatthir",
+"Qiyamah",
+"Dahr",
+"Mursalat",
+"Naba",
+"Naziat",
+"Abasa",
+"Takwir",
+"Infitar",
+"Mutaffifeen",
+"Inshiqaq",
+"Buruj",
+"Tariq",
+"Ala",
+"Ghashiyah",
+"Fajr",
+"Balad",
+"Shams",
+"Layl",
+"Dhuha",
+"Inshirah",
+"Teen",
+"Alaq",
+"Qadr",
+"Bayyinah",
+"Zilzilah",
+"Adiyat",
+"Qariah",
+"Takathur",
+"Asr",
+"Humazah",
+"Feel",
+"Quraish",
+"Maun",
+"Kawthar",
+"Kafirun",
+"Nasr",
+"Lahab",
+"Ikhlas",
+"Falaq",
+"Nas"];
+const sura_pages = [2,3,50,78,106,128,152,178,188,208,222,236,250,256,262,268,282,294,306,312,322,332,342,350,360,366,376,386,396,404,412,416,418,428,434,440,446,452,458,468,478,484,490,496,498,502,506,512,516,518,520,524,526,528,532,534,538,542,546,550,552,554,554,556,558,560,562,564,568,570,572,574,576,578,580,582,584,586,588,590,590,592,592,594,596,596,598,598,598,600,600,602,602,602,604,604,604,604,606,606,606,606,608,608,608,608,608,608,608,610,610,610,610,610];
+for(let i=0; i<sura_names.length; i++){
+    var opt = document.createElement('option');
+    opt.value = i;
+    opt.innerHTML = i+1 + ': ' + sura_names[i];
+    sura_select.appendChild(opt);
+}
+
+</script>
+</html>

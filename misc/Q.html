@@ -80,8 +80,8 @@ if(seek!='sura'){
     document.getElementById('sura').value = j-1;}
     document.getElementById('page_num').value = num-1;
     document.getElementById('para').value = clamp(1+~~((num-3)/20), 1, 30);
-
   }
+  if (typeof(Storage) !== "undefined") {localStorage.setItem('bookmark', pageNum);}
 }
 
   /**
@@ -105,6 +105,7 @@ if(seek!='sura'){
     document.getElementById('page_num').max = pdfDoc.numPages;
 
     // Initial/first page rendering
+    if (typeof(Storage) !== "undefined") {pageNum = parseInt(localStorage.getItem('bookmark'));}
     if(pageNum!=0){renderPage(pageNum, canvas1, ctx1);}
     renderPage(pageNum+1, canvas2, ctx2);
   });

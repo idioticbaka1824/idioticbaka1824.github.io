@@ -5,7 +5,6 @@
 function showResult() {
 	let genres = `Action
 Adventure
-Cars
 Comedy
 Dementia
 Demons
@@ -43,7 +42,7 @@ SuperPower
 Thriller
 Vampire`.split('\n');
 let out = '/sg difficulty:Hard number-of-rounds:5 genres:';
-out = out + genres[Math.floor(Math.random()*genres.length)];
+out = out + genres[Math.floor(Math.random()*genres.length)] + ',-Isekai';
 console.log(out);
 navigator.clipboard.writeText(out);
 }

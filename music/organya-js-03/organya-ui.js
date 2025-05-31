@@ -125,16 +125,10 @@
                     if (subBeat === 0) sprX = 80;
                     if (subBeat === 0 && beat === 0) {
                         
-                        if (this.organya!=null && measId==(this.organya.song.start / this.organya.MeasxStep | 0)){
-                            this.drawHeadFoot(x, maxY, 0);
-                        }
-                        
                         sprX = 64;
+                        this.drawNumber(x, height-12, measId, 3);
                         this.drawNumber(x, 0, measId++, 3);
                         
-                        if (this.organya!=null && measId==(this.organya.song.end / this.organya.MeasxStep | 0)){
-                            this.drawHeadFoot(x+16*this.organya.MeasxStep, maxY, 1);
-                        }
                     }
 
                     if (++subBeat === meas[1]) {
@@ -208,6 +202,36 @@
                 this.drawNumber(54, y + 132, octave, 0, true);
                 if (octave-- === 0) break;
                 y += 144;
+				
+                let beat = 0;
+                let subBeat = 0;
+                let x = 64;
+                let measId = startMeas;
+				while (x < width) {
+                    
+                    let sprX = 96;
+                    if (subBeat === 0) sprX = 80;
+                    if (subBeat === 0 && beat === 0) {
+                        
+                        if (this.organya!=null && measId==(this.organya.song.start / this.organya.MeasxStep | 0)){
+                            this.drawHeadFoot(x, height-24, 0);
+                        }
+						
+                        this.drawNumber(x, height-12, measId, 3);
+                        this.drawNumber(x, document.getElementById('noncanvas').offsetHeight, measId++, 3);
+                        
+                        if (this.organya!=null && measId==(this.organya.song.end / this.organya.MeasxStep | 0)){
+                            this.drawHeadFoot(x+16*this.organya.MeasxStep, height-24, 1);
+                        }
+                    }
+
+                    if (++subBeat === meas[1]) {
+                        subBeat = 0;
+                        if (++beat === meas[0]) beat = 0;
+                    }
+                    x += 16;
+                }
+				
             }
         }
     }

@@ -235,7 +235,7 @@ org3test.org`.split("\n").sort();
             let currentOrg = null;
             window.stopOrg = () => {
                 if (currentOrg != null) {
-                    currentOrg.stop();
+                    currentOrg.pause();
                     currentOrg = null;
                 }
             }

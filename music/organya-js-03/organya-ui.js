@@ -126,8 +126,6 @@
                     if (subBeat === 0 && beat === 0) {
                         
                         sprX = 64;
-                        this.drawNumber(x, height-12, measId, 3);
-                        this.drawNumber(x, 0, measId++, 3);
                         
                     }
 
@@ -218,7 +216,7 @@
                         }
 						
                         this.drawNumber(x, height-12, measId, 3);
-                        this.drawNumber(x, document.getElementById('noncanvas').offsetHeight, measId++, 3);
+                        this.drawNumber(x, 0, measId++, 3);
                         
                         if (this.organya!=null && measId==(this.organya.song.end / this.organya.MeasxStep | 0)){
                             this.drawHeadFoot(x+16*this.organya.MeasxStep, height-24, 1);

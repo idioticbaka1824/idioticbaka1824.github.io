@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../styles/mystyle1.css">
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']]
+  }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
+
+<script src='https://cdnjs.cloudflare.com/ajax/libs/d3/5.0.0/d3.js'></script>
+
+
+</head>
+
+
+
+<body>
+
+<div class="body2">
+</div>
+
+<div class="left_bar clearfix">
+ <div class="menu menu-text">
+
+<h1>Science</h1>
+<hr class="menu-hr">
+
+<div class="nav-placeholder clearfix">
+<iframe name="navigation" src="../nav.html"></iframe>
+</div>
+
+
+
+ </div>
+</div>
+
+
+<div class="right_bar clearfix">
+ <div class="pagebg">
+  <div class="page page-text">
+  
+<p>
+<!-- <i>Inspired by a question asked by my sister.</i><br><br> -->
+Suppose we have a neighbourhood of houses, situated in an area where the temperature is always a chilly $T_O$ outside. The inhabitants of these houses wish to keep the interior at a toasty $T_I$. Their daily schedule includes going out to work in the morning at a time $t_1$, and then returning home in the evening at a time $t_2=t_1+\Delta t$.
+<br><br>
+The resident of house 1 turns off the heat before heading to work, and turns it back on when they return.
+<br>
+The resident of house 2 <span style="font-size:x-small;">(<i>*cough*</i>&nbsp; totally not me)</span> thinks, well, it must take a lot of energy to heat up the large mass of air in a cooled-down house - what if the heat was kept running instead? Might not the thermal inertia of the already warm house keep it going without too much energy expenditure?
+<br>
+So, they decide to keep the thermostat tuned to $T_I$ all day long, including when they're not there.
+<br><br>
+<b>Problem statement:</b> We wish to determine in which house more energy is expended on heating, and by how much.
+<br><br>
+Suppose the houses each have volume $V$ and surface area $A$. The volume will generally be related to the area via a characteristic length $V/A=\ell$. Assuming the houses are mostly opaque and minimise exchange of air with the atmosphere, most of the thermal exchange with the environment will be conduction via the walls. Let the walls then have thermal conductivity $\kappa$ and thickness $d$.
+<br>
+We further suppose that the houses are largely unfurnished, consisting mostly of air, whose density is $\rho$ and specific heat capacity is $c$. After the inhabitants return, they turn on the heat, and the temperature stabilises to $T_I$ relatively rapidly, by the time $t_3$. We can assume $t_3-t_2\ll t_2-t_1$.
+<br>
+Since the conditions at night are the same, we can focus our attention on what happens between the times $t_1$ and $t_3$.
+<br><br>
+<i><u>House 1:</u></i> Let us first determine the temperature the house interior will have fallen to by time $t_2$, namely, $T(t_2)$. 
+<br>
+From the Heat Equation, we have the heat energy in the house decreasing at a rate $$\frac{dQ}{dt}=-\frac{\kappa A}{d}\left(T(t)-T_O\right)$$
+Recall that $$dQ=mcdT = \rho VcdT$$
+Then, $$\frac{dT}{dt} = -\frac{\kappa A}{\rho Vcd}\left(T-T_O\right)$$
+With the initial condition $T(t_1)=T_I$, this solves to $$T(t_2)=T_O + \left(T_I-T_O\right)\exp\left(-\frac{\kappa A}{\rho Vcd}\Delta t\right)$$
+Alright. Now how much energy does it take to raise the temperature from $T(t_2)$ to $T_I$? Since we assumed $t_3-t_2$ to be small, we can neglect heat losses during this heating period. The heat energy that must be added is then simply $$\Delta Q_1 = mc\Delta T = \rho Vc\left(T_I-T(t_2)\right)$$ $$ = \rho Vc\left(T_I-T_O\right)\left(1-\exp\left(-\frac{\kappa A}{\rho Vcd}\Delta t\right)\right)$$
+<br>
+<i><u>House 2:</u></i> The temperature is maintained at $T(t)=T_I$ for the entire duration $\Delta t$. Over a small interval of time $dt$, an amount of heat energy $dQ$ is lost to the environment: $$|dQ| = \frac{\kappa A}{d}\left(T_I-T_O\right)\,dt$$
+The temperature drops by a proportional amount $dT$. The heater, trying to retain the original temperature, expends just enough energy to produce exactly that much heat, so as to recover what was lost. Since $dQ$ is independent of time, the integration is trivial, and the total energy expended is thus $$\Delta Q_2 = \frac{\kappa A}{d}\left(T_I-T_O\right)\Delta t$$
+<br><br>
+At a glance, the two expressions are not so easy to compare directly, so consider the ratio instead. Identifying a dimensionless parameter $\lambda \equiv \kappa \Delta t/\rho c\ell d$, we have $$\frac{\Delta Q_1}{\Delta Q_2} = \frac{1-e^{-\lambda}}{\lambda}$$
+which equals $1$ at $\lambda=0$, and approaches $0$ as $\lambda\to\infty$. This suggests that for certain conditions, the two methods of heating may be equivalent; but the longer the workday, the smaller the house, or the thinner or more poorly insulating the walls, the worse off resident 2 will be compared to resident 1.
+<br><br>
+In hindsight, this should have been obvious - of course maintaining a larger temperature differential between indoors and outdoors would take more energy, that's just how heat flow works. But for some reason this didn't really click until I went through the equations and scribbled it out.
+</p>
+
+  </div>
+ </div>
+</div>
+
+
+</body>
+</html>

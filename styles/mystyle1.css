@@ -143,6 +143,10 @@ pre {
 ul.widelist {
   line-height: 2em;
 }
+ul.narrowlist {
+  margin-top: 0.5rem;
+  line-height: 1.25em;
+}
 
 svg {
 	outline: thin solid var(--pink);

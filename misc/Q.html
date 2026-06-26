@@ -11,7 +11,7 @@
 
 <body id='body'>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs" type="module"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.149/pdf.min.mjs" type="module"></script>
 
 <script type="module">
 
@@ -24,12 +24,12 @@ function clamp(number, min, max){
   // If absolute URL from the remote server is provided, configure the CORS
   // header on that server.
   // var url = 'https://corsproxy.io/?' + encodeURIComponent('https://files.catbox.moe/ypuj1o.pdf');
-  var url = 'https://idioticbaka1824.github.io/misc/QuranMajeed-15Lines-PakistaniPrint.pdf';
+  var url = 'https://idioticbaka1824.github.io/misc/QuranMajeed-15Lines-PakistaniPrint_compressed.pdf';
   // Loaded via <script> tag, create shortcut to access PDF.js exports.
   var { pdfjsLib } = globalThis;
 
   // The workerSrc property shall be specified.
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.mjs';
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.149/pdf.worker.mjs';
 
   var pageNum=0;
   var pdfDoc = null;
@@ -71,7 +71,7 @@ if(typeof canvas !== 'undefined'){
           pageNumPending = null;
         }
       });
-    });
+    }).catch((err) => console.log(err));
 
     // Update page counters
 if(seek!='sura'){

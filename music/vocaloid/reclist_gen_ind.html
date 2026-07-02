@@ -492,7 +492,7 @@ for(let language in selected_languages){
   //V and C
   if(document.getElementById("C_V").checked){
     for(let phoneme of selected_allowed_phonemes){
-      reclist = reclist.concat([[phoneme]]);
+      if(!phoneme_bank[phoneme]["properties"].includes("flap")){reclist = reclist.concat([[phoneme]]);}
     }
   }
   

@@ -40,6 +40,669 @@
 	<li><a href=low.html>Lost One's Weeping</a></li>
 	</ul>
 
+	<br><!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../../styles/mystyle1.css">
+<title>Indic reclist generator</title>
+<style>
+  ul{margin-top:0ex; list-style:none;}
+</style>
+</head>
+<body>
+
+<div class="body2">
+</div>
+
+<div class="left_bar clearfix">
+ <div class="menu menu-text">
+
+<h1>Music</h1>
+<hr>
+
+<div class="nav-placeholder clearfix">
+<iframe name="navigation" src="../../nav.html"></iframe>
+</div>
+ </div>
+</div>
+
+
+<div class="right_bar clearfix">
+ <div class="pagebg">
+  <div class="page page-text">
+
+<span style="font-size:small;">
+  Notes: <button onclick="notes_toggle()" id="notes_toggle_button" style="font-size:inherit"><span style="font-size:inherit">Hide</span></button>
+  <ul id="notes_list" style="list-style:disc; margin-bottom:0px">
+    <li>Nasal clusters are transcribed with &lt;n&gt; but should be pronounced with the proper allophone, e.g. &lt;nk&gt; = /ŋk/, &lt;nb&gt; = /mb/. The exception is Meitei where nasal clusters need not be homorganic.</li>
+    <li>Tones are ignored. (Punjabi, Dogri, Meitei, Boro)</li>
+    <li>An Assamese or Bodo voicebank cannot accommodate other languages due to some unique features: &lt;u&gt;=/ʊ/ or /ɯ/ respectively, and &lt;uu&gt;=/u/. And because the &lt;t&gt; series is alveolar, not dental or retroflex. Adding compatible distinctions for all these in the phoneme bank would make things too complicated.</li>
+    <li>Kashmiri's palatalised consonants are approximated as clusters with &lt;y&gt;, which require the "miscellaneous clusters" option.
+  </ul>
+  <br>
+  Pronounciation guide: <button onclick="ipa_toggle()" id="ipa_toggle_button" style="font-size:inherit"><span style="font-size:inherit">Show</span></button>
+  <ul id="ipa_list" style="column-count:5; display:none">
+  </ul>
+</span>
+<span id="options_span">
+  <table id="options_table" style="margin-top:1ex">
+    <tr>
+      <th>Languages to support:</th>
+      <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+      <th>Voicebank complexity:</th>
+      <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+      <th>Other features to include:</th>
+    </tr>
+    <tr>
+      <td>
+        <ul id="language_list" style="column-count:2">
+          <input type="checkbox" id="toggle_languages" onchange="toggle_languages()"/><label for="toggle_languages">(Toggle all)</label>
+        </ul>
+      </td>
+      <td></td>
+      <td style="vertical-align:top;">
+        <ul>
+          <li><input type="checkbox" id="C_V" checked/><label for="C_V">C + V</label></li>
+          <li><input type="checkbox" id="CV_VC" checked/><label for="CV_VC">CV + VC</label></li>
+          <li><input type="checkbox" id="VV" checked/><label for="VV">VV (handpicked diphthongs)</label></li>
+          <li>&nbsp;&nbsp;&bull;&nbsp;&nbsp;CCV + VCC:<ul>
+            <li><input type="checkbox" id="nasal_cc" checked/><label for="nasal_cc">Nasal clusters</label></li>
+            <li><input type="checkbox" id="geminate_cc" checked/><label for="geminate_cc">Geminate consonants</label></li>
+            <li><input type="checkbox" id="misc_cc"/><label for="misc_cc">Handpicked clusters</label></li>
+          </ul></li>
+        </ul>
+      </td>
+      <td></td>
+      <td style="vertical-align:top;">
+        <ul>
+          <li><input type="checkbox" id="nasal_vowels"/><label for="nasal_vowels">Nasal vowels</label></li>
+        </ul>
+      </td>
+    </tr>
+  </table>
+  <button onclick="run()">Generate reclist</button>
+</span>
+<span>
+<p id="reclist_length_announce"></p>
+<pre id="reclist_output_area" style="border-style:inset; padding:1em; height:40vh; max-height:80vh; overflow-y:scroll; resize:both;">output will show up here</pre>
+</span>
+<button onclick="download_txt()">Download txt</button>
+<button onclick="copy_txt()" style="margin-left:2em">Copy to clipboard</button>
+<script>
+/*
+https://en.wikipedia.org/wiki/ISO_15919
+
+vowel properties (short, long, nasalised)
+  -diphthongs treated as vowel clusters
+  -long vowels cannot be treated as clusters since often a quality distinction accompanies the length distinction
+consonant properties (obstruent, sonorant, glide, unvoiced, voiced, aspirated)
+  -what I'm calling obstruents and sonorants here should technically be called continuants and non-continuants!
+
+CCVVCC
+ split as
+CV
+VC
+V
+C
+CCV
+VCC
+VV
+
+VCV for special case of ehe and oho (detail this later)
+CC...
+  -homorganic nasal clusters, and geminates, are more important
+    --nasal clusters to be transcribed only with <n> since place of articulation is always assimilated anyways
+  -/v/ to be pronounced [w] in onglide position in Hindi
+  -Schmidt (2003:293) lists distinctively Sanskrit/Hindi biconsonantal clusters of initial /kr, kʃ, st, sʋ, ʃr, sn, nj/ and final /tʋ, ʃʋ, nj, lj, rʋ, dʒj, rj/, 
+and distinctively Perso-Arabic/Urdu biconsonantal clusters of final /ft, rf, mt, mr, ms, kl, tl, bl, sl, tm, lm, ɦm, ɦr/. 
+  -https://en.wikipedia.org/wiki/Devanagari_conjuncts include everything >1%?
+
+VV...
+  -/ai/ and /au/ in Dravidian (and eastern/southern Hindi dialects?)
+  -several diphthongs in Bengali
+  -...actually, everything needs a case-by-case basis
+
+not bothering to cite all my sources at this point
+mostly wikipedia, some papers i found on google
+also 'The Indo-Aryan Languages' by Cardona and Jain (C&J) and another book by the same name by Colin Masica (CM)
+
+TODO:
+-diphthongs, nasal vowels (which ones are just allophonic?), clusters, forbidden geminates
+-tamil voicing
+*/
+
+var phoneme_bank = {
+"@"  : {"sonority":6, "properties":["short"], "ipa":"ə", "script":[]},
+"@@" : {"sonority":6, "properties":["long"], "ipa":"ə:", "script":[]},
+"a"  : {"sonority":6, "properties":["short"], "ipa":"ə~a", "script":["अ", "অ", "ਅ", "અ", "ଅ", "அ", "అ", "അ", "ಅ", "𑂃", "ꯑ", "ᱚ"]},
+"aa" : {"sonority":6, "properties":["long"], "ipa":"a:", "script":[]},
+"i"  : {"sonority":6, "properties":["short"], "ipa":"ɪ~i", "script":[]},
+"ii" : {"sonority":6, "properties":["long"], "ipa":"i:", "script":[]},
+"u"  : {"sonority":6, "properties":["short"], "ipa":"ʊ~u", "script":[]},
+"uu" : {"sonority":6, "properties":["long"], "ipa":"u:", "script":[]},
+"e"  : {"sonority":6, "properties":["short"], "ipa":"e", "script":[]},
+"ee" : {"sonority":6, "properties":["long"], "ipa":"e:", "script":[]},
+"ae" : {"sonority":6, "properties":["short"], "ipa":"ɛ", "script":[]},
+"aee": {"sonority":6, "properties":["long"], "ipa":"ɛ:", "script":[]},
+"o"  : {"sonority":6, "properties":["short"], "ipa":"o", "script":[]},
+"oo" : {"sonority":6, "properties":["long"], "ipa":"o:", "script":[]},
+"ao" : {"sonority":6, "properties":["short"], "ipa":"ɔ", "script":[]},
+"aoo": {"sonority":6, "properties":["long"], "ipa":"ɔ:", "script":[]},
+"4"  : {"sonority":6, "properties":["short"], "ipa":"ʌ", "script":[]},
+"i-" : {"sonority":6, "properties":["short"], "ipa":"ɨ", "script":[]},
+"ii-" : {"sonority":6, "properties":["long"], "ipa":"ɨ:", "script":[]},
+
+"@~"  : {"sonority":6, "properties":["short", "nasal"], "ipa":"ə̃", "script":[]},
+"@@~" : {"sonority":6, "properties":["long", "nasal"], "ipa":"ə̃:", "script":[]},
+"a~"  : {"sonority":6, "properties":["short", "nasal"], "ipa":"ã", "script":[]},
+"aa~" : {"sonority":6, "properties":["long", "nasal"], "ipa":"ã:", "script":[]},
+"i~"  : {"sonority":6, "properties":["short", "nasal"], "ipa":"ɪ̃", "script":[]},
+"ii~" : {"sonority":6, "properties":["long", "nasal"], "ipa":"ĩ:", "script":[]},
+"u~"  : {"sonority":6, "properties":["short", "nasal"], "ipa":"ʊ̃", "script":[]},
+"uu~" : {"sonority":6, "properties":["long", "nasal"], "ipa":"ũ:", "script":[]},
+"e~"  : {"sonority":6, "properties":["short", "nasal"], "ipa":"ẽ", "script":[]},
+"ee~" : {"sonority":6, "properties":["long", "nasal"], "ipa":"ẽ:", "script":[]},
+"ae~" : {"sonority":6, "properties":["short", "nasal"], "ipa":"ɛ̃", "script":[]},
+"aee~": {"sonority":6, "properties":["long", "nasal"], "ipa":"ɛ̃:", "script":[]},
+"o~"  : {"sonority":6, "properties":["short", "nasal"], "ipa":"õ", "script":[]},
+"oo~" : {"sonority":6, "properties":["long", "nasal"], "ipa":"õ:", "script":[]},
+"ao~" : {"sonority":6, "properties":["short", "nasal"], "ipa":"ɔ̃", "script":[]},
+"aoo~": {"sonority":6, "properties":["long", "nasal"], "ipa":"ɔ̃:", "script":[]},
+"4~"  : {"sonority":6, "properties":["short", "nasal"], "ipa":"ʌ̃", "script":[]},
+"i-~" : {"sonority":6, "properties":["short", "nasal"], "ipa":"̃ɨ", "script":[]},
+"ii-~": {"sonority":6, "properties":["long", "nasal"], "ipa":"̃ɨ:", "script":[]},
+
+"k"  : {"sonority":1, "properties":["unvoiced"], "ipa":"k", "script":[]},
+"kh" : {"sonority":1, "properties":["unvoiced", "aspirate"], "ipa":"kʰ", "script":[]},
+"g"  : {"sonority":1, "properties":["voiced"], "ipa":"g", "script":[]},
+"gh" : {"sonority":1, "properties":["aspirate"], "ipa":"gʰ", "script":[]},
+"c"  : {"sonority":2, "properties":["unvoiced"], "ipa":"t͡ʃ", "script":[]},
+"ch" : {"sonority":2, "properties":["unvoiced", "aspirate"], "ipa":"t͡ʃʰ", "script":[]},
+"j"  : {"sonority":2, "properties":["voiced"], "ipa":"d͡ʒ", "script":[]},
+"jh" : {"sonority":2, "properties":["voiced", "aspirate"], "ipa":"d͡ʒʰ", "script":[]},
+"rt" : {"sonority":1, "properties":["unvoiced"], "ipa":"ʈ", "script":[]},
+"rth": {"sonority":1, "properties":["unvoiced", "aspirate"], "ipa":"ʈʰ", "script":[]},
+"rd" : {"sonority":1, "properties":["voiced"], "ipa":"ɖ", "script":[]},
+"rdh": {"sonority":1, "properties":["voiced", "aspirate"], "ipa":"ɖʰ", "script":[]},
+"rd_": {"sonority":1, "properties":["voiced", "flap"], "ipa":"ɽ", "script":[]},
+"rdh_":{"sonority":1, "properties":["voiced", "aspirate", "flap"], "ipa":"ɽʰ", "script":[]},
+"ts" : {"sonority":2, "properties":["unvoiced"], "ipa":"t͡s", "script":[]},
+"tsh": {"sonority":2, "properties":["unvoiced", "aspirate"], "ipa":"t͡sʰ", "script":[]},
+"dz" : {"sonority":2, "properties":["voiced"], "ipa":"d͡z", "script":[]},
+"dzh": {"sonority":2, "properties":["voiced", "aspirate"], "ipa":"d͡zʰ", "script":[]},
+"t"  : {"sonority":1, "properties":["unvoiced"], "ipa":"t̪ ", "script":[]},
+"th" : {"sonority":1, "properties":["unvoiced", "aspirate"], "ipa":"t̪ʰ", "script":[]},
+"d"  : {"sonority":1, "properties":["voiced"], "ipa":"d̪ ", "script":[]},
+"dh" : {"sonority":1, "properties":["voiced", "aspirate"], "ipa":"d̪ʰ", "script":[]},
+"p"  : {"sonority":1, "properties":["unvoiced"], "ipa":"p", "script":[]},
+"ph" : {"sonority":1, "properties":["unvoiced", "aspirate"], "ipa":"pʰ", "script":[]},
+"b"  : {"sonority":1, "properties":["voiced"], "ipa":"b", "script":[]},
+"bh" : {"sonority":1, "properties":["voiced", "aspirate"], "ipa":"bʰ", "script":[]},
+"ng" : {"sonority":4, "properties":["voiced"], "ipa":"ŋ", "script":[]},
+"ny" : {"sonority":4, "properties":["voiced"], "ipa":"ɲ", "script":[]},
+"rn" : {"sonority":4, "properties":["voiced"], "ipa":"ɳ", "script":[]},
+"n"  : {"sonority":4, "properties":["voiced"], "ipa":"n", "script":[]},
+"m"  : {"sonority":4, "properties":["voiced"], "ipa":"m", "script":[]},
+"y"  : {"sonority":5, "properties":["voiced"], "ipa":"j", "script":[]},
+"w"  : {"sonority":5, "properties":["voiced"], "ipa":"w~ʋ~v", "script":[]},
+"sh" : {"sonority":3, "properties":["unvoiced"], "ipa":"ʃ", "script":[]},
+"s"  : {"sonority":3, "properties":["unvoiced"], "ipa":"s", "script":[]},
+"h"  : {"sonority":3, "properties":[], "ipa":"ɦ", "script":[]},
+"r"  : {"sonority":5, "properties":["voiced"], "ipa":"ɾ", "script":[]},
+"l"  : {"sonority":5, "properties":["voiced"], "ipa":"l", "script":[]},
+"rl" : {"sonority":5, "properties":["voiced"], "ipa":"ɭ", "script":[]},
+"zh" : {"sonority":3, "properties":["voiced"], "ipa":"ɻ", "script":[]},
+"q"  : {"sonority":1, "properties":["unvoiced"], "ipa":"q", "script":[]},
+"x"  : {"sonority":3, "properties":["unvoiced"], "ipa":"x", "script":[]},
+"g3" : {"sonority":3, "properties":["voiced"], "ipa":"ɣ", "script":[]},
+"f"  : {"sonority":3, "properties":["unvoiced"], "ipa":"f", "script":[]},
+"z"  : {"sonority":3, "properties":["voiced"], "ipa":"z", "script":[]},
+"g^" : {"sonority":1, "properties":["voiced"], "ipa":"ɠ", "script":[]},
+"j^" : {"sonority":1, "properties":["voiced"], "ipa":"ʄ", "script":[]},
+"d^" : {"sonority":1, "properties":["voiced"], "ipa":"ɗ", "script":[]},
+"b^" : {"sonority":1, "properties":["voiced"], "ipa":"ɓ", "script":[]},
+"v"  : {"sonority":3, "properties":["voiced"], "ipa":"v~β", "script":[]}
+};
+
+var allowed_phonemes = {
+"dakhni"   : ["a", "aa", "i", "ii", "u", "uu", "ee", "aee", "oo", "aoo", "k", "kh", "g", "gh", "c", "ch", "j", "jh", "rt", "rth", "rd", "rdh", "rd_", "rdh_", "t", "th", "d", "dh", "p", "ph", "b", "bh", "n", "m", "y", "w", "sh", "s", "h", "r", "l", "x", "g3", "f", "z"],
+"urdu"     : ["a", "aa", "i", "ii", "u", "uu", "ee", "aee", "oo", "aoo", "k", "kh", "g", "gh", "c", "ch", "j", "jh", "rt", "rth", "rd", "rdh", "rd_", "rdh_", "t", "th", "d", "dh", "p", "ph", "b", "bh", "n", "m", "y", "w", "sh", "s", "h", "r", "l", "q", "x", "g3", "f", "z"],
+"hindi"    : ["a", "aa", "i", "ii", "u", "uu", "ee", "aee", "oo", "aoo", "k", "kh", "g", "gh", "c", "ch", "j", "jh", "rt", "rth", "rd", "rdh", "rd_", "rdh_", "t", "th", "d", "dh", "p", "ph", "b", "bh", "n", "m", "y", "w", "sh", "s", "h", "r", "l"],
+"maithili" : ["a", "aa", "i", "ii", "u", "uu", "e", "ee", "ae", "o", "oo", "ao", "k", "kh", "g", "gh", "c", "ch", "j", "jh", "rt", "rth", "rd", "rdh", "t", "th", "d", "dh", "p", "ph", "b", "bh", "n", "m", "s", "h", "r", "l"],
+"marathi"  : ["@", "a", "i", "u", "e", "o", "k", "kh", "g", "gh", "c", "ch", "j", "jh", "rt", "rth", "rd", "rdh", "ts", "dz", "dzh", "t", "th", "d", "dh", "p", "ph", "b", "bh", "rn", "n", "m", "y", "w", "sh", "s", "h", "r", "l", "rl"],
+//"konkani"  : [],
+//"dogri"    : ["a", "aa", "i", "ii", "u", "uu", "ee", "aee", "oo", "aoo", "k", "kh", "g", "c", "ch", "j", "rt", "rth", "rd", "rd_", "t", "th", "d", "p", "ph", "b", "rn", "n", "m", "y", "w", "sh", "s", "h", "r", "l", "x", "g3", "f", "z"],
+"punjabi"  : ["a", "aa", "i", "ii", "u", "uu", "ee", "aee", "oo", "aoo", "k", "kh", "g", "c", "ch", "j", "rt", "rth", "rd", "rd_","t", "th", "d", "p", "ph", "b", "rn", "n", "m", "w", "sh", "s", "h", "r", "l", "rl", "f", "z", "x"],
+"sindhi"   : ["a", "aa", "i", "ii", "u", "uu", "ee", "oo", "k", "kh", "g", "gh", "g^", "c", "ch", "j", "jh", "j^", "rt", "rth", "rd", "rdh", "rd_", "rdh_", "t", "th", "d", "dh", "d^", "p", "ph", "b", "bh", "b^", "n", "m", "y", "w", "sh", "s", "h", "r", "l", "x", "g3", "f", "z"],
+"bengali"  : ["a", "i", "u", "e", "ae", "o", "ao", "k", "kh", "g", "gh", "c", "ch", "j", "jh", "rt", "rth", "rd", "rdh", "rd_", "t", "th", "d", "dh", "p", "ph", "b", "bh", "ng", "n", "m", "y", "w", "sh", "h", "r", "l", "q", "x", "g3", "f", "z", "v"], //adding a distinct <v> for smoother allophones. idk. might be useful
+"odia"     : ["a", "i", "u", "e", "o", "ao", "k", "kh", "g", "gh", "c", "ch", "j", "jh", "rt", "rth", "rd", "rdh", "t", "th", "d", "dh", "p", "ph", "b", "bh", "n", "m", "y", "w", "s", "h", "r", "l", "rl"],
+"assamese" : ["a", "i", "u", "uu", "e", "o", "ae", "ao", "k", "kh", "g", "gh", "t", "th", "d", "dh", "p", "ph", "b", "bh", "ng", "n", "m", "y", "w", "s", "z", "h", "x", "r", "l"],
+"nepali"   : ["a", "i", "u", "e", "o", "4", "k", "kh", "g", "gh", "c", "ch", "j", "jh", "rt", "rth", "rd", "rdh", "ts", "tsh", "dz", "dzh", "t", "th", "d", "dh", "p", "ph", "b", "bh", "n", "m", "s", "h", "r", "l"],
+"kashmiri" : ["@", "@@", "a", "aa", "i", "ii", "u", "uu", "e", "ee", "o", "oo", "ao", "aoo", "i-", "ii-", "k", "kh", "g", "c", "ch", "j", "rt", "rth", "rd", "ts", "tsh", "t", "th", "d", "p", "ph", "b", "n", "m", "y", "w", "sh", "s", "h", "r", "l", "z"],
+"tamil"    : ["a", "aa", "i", "ii", "u", "uu", "e", "ee", "o", "oo", "k", "g", "c", "j", "rt", "rd", "t", "d", "p", "b", "rn", "n", "m", "y", "w", "s", "r", "l", "rl", "zh"],
+"telugu"   : ["a", "aa", "i", "ii", "u", "uu", "e", "ee", "o", "oo", "k", "kh", "g", "gh", "c", "ch", "j", "jh", "rt", "rth", "rd", "rdh", "t", "th", "d", "dh", "p", "ph", "b", "bh", "rn", "n", "m", "y", "w", "sh", "s", "h", "r", "l", "rl"],
+"kannada"  : ["a", "aa", "i", "ii", "u", "uu", "e", "ee", "o", "oo", "k", "kh", "g", "gh", "c", "ch", "j", "jh", "rt", "rth", "rd", "rdh", "t", "th", "d", "dh", "p", "ph", "b", "bh", "rn", "n", "m", "y", "w", "sh", "s", "h", "r", "l", "rl"],
+"malayalam": ["a", "aa", "i", "ii", "u", "uu", "e", "ee", "o", "oo", "k", "kh", "g", "gh", "c", "ch", "j", "jh", "rt", "rth", "rd", "rdh", "t", "th", "d", "dh", "p", "ph", "b", "bh", "rn", "n", "m", "y", "w", "sh", "s", "h", "r", "l", "rl", "zh"],
+"meitei"   : ["@", "a", "i", "u", "e", "o", "k", "kh", "g", "gh", "c", "j", "t", "th", "d", "dh", "p", "ph", "b", "bh", "n", "m", "y", "w", "s", "h", "r", "l"],
+"boro"     : ["a", "i", "u", "uu", "e", "o", "kh", "g", "ng", "th", "d", "n", "ph", "b", "m", "s", "z", "r", "l", "y", "w"],
+"santali"  : ["@", "a", "i", "u", "e", "o", "ae", "ao", "k", "kh", "g", "gh", "c", "ch", "j", "jh", "rt", "rth", "rd", "rdh", "rd_", "t", "th", "d", "dh", "p", "ph", "b", "bh", "ng", "ny", "n", "m", "y", "w", "s", "h", "r", "l"]
+
+//ignoring any tones
+}
+
+var allowed_diphthongs = {
+"urdu"     : [],
+"dakhni"   : [["a","i"], ["a","e"], ["a","u"], ["a","o"]],
+"hindi"    : [],
+"maithili" : [["a","i"], ["a","u"], ["a","e"], ["a","o"], ["i","u"], ["i","e"], ["i","o"], ["u","a"], ["u","i"]],
+"marathi"  : [["@","i"], ["@","u"], ["a","i"], ["a","u"]],
+//"konkani"  : [],
+//"dogri"    : [],
+"punjabi"  : [["a","i"], ["a","u"], ["i","aa"], ["u","a"] ],
+"sindhi"   : [],
+"bengali"  : [["a","i"], ["a","u"], ["a","e"], ["a","o"], ["i","u"], ["u","i"], ["e","i"], ["e","u"], ["ae","e"], ["o","i"], ["o","u"], ["ao","e"], ["ao","o"]],
+"odia"     : [["ao","i"], ["ao","u"], ["e","i"]],
+"assamese" : [["a","i"], ["a","u"], ["i","u"], ["u","a"], ["u","i"], ["e","i"], ["e","u"], ["o","i"], ["o","u"], ["ao","i"]],
+"nepali"   : [["a","i"], ["a","u"], ["i","u"], ["u","i"], ["e","i"], ["e","u"], ["o","i"], ["o","u"], ["4","i"], ["4","u"]],
+"kashmiri" : [["a","i"], ["e","i"], ["o","i"], ["u","i-"], ["o","a"], ["u","a"], ["i","a"], ["i-","a"]],
+"tamil"    : [["a","i"], ["a","u"]],
+"telugu"   : [["a","i"], ["a","u"]],
+"kannada"  : [["a","i"], ["a","u"]],
+"malayalam": [["a","i"], ["a","u"]],
+"meitei"   : [["@","i"], ["@","u"], ["a","i"], ["a","u"], ["u","i"], ["o","i"]],
+"boro"     : [["a","i"], ["a","o"], ["i","uu"], ["uu","i"], ["u","i"], ["u","uu"], ["e","o"], ["o","i"]],
+"santali"  : [["@","i"], ["@","u"], ["a","e"], ["a","o"], ["i","@"], ["i","u"], ["i","o"], ["u","i"], ["u","@"], ["e","a"], ["e","i"], ["e","o"], ["o","a"], ["o","e"], ["ae","o"], ["ao","e"]]
+}
+
+var allowed_nasal_vowels = {
+"urdu"     : [],
+"dakhni"   : [],
+"hindi"    : ["aa~", "ii~", "uu~", "ee~", "aee~", "oo~", "aoo~"], //Ohala (1972): phonemic nasal vowels are long and never followed by voiced consonants. this rule will be added to the VC construction below. Non-phonemic (and obligatory) nasalisation of vowels in the vicinity of a nasal consonant is not transcribed but rather assumed on the part of the singer when recording CV and VC clips.
+"maithili" : ["a~", "aa~", "i~", "ii~", "u~", "uu~", "e~", "ee~", "ae~", "o~", "oo~", "ao~"],
+"marathi"  : [],
+//"konkani"  : [],
+//"dogri"    : ["aa~", "ii~", "uu~", "ee~", "aee~", "oo~", "aoo~"],
+"punjabi"  : ["aa~", "ii~", "uu~", "ee~", "aee~", "oo~", "aoo~"],
+"sindhi"   : ["a~", "aa~", "i~", "ii~", "u~", "uu~", "ee~", "oo~"],
+"bengali"  : ["a~", "i~", "u~", "e~", "o~", "ae~"],
+"odia"     : ["a~", "i~", "u~", "e~", "o~", "ao~"],
+"assamese" : ["a~", "u~"],
+"nepali"   : ["a~", "i~", "u~", "e~", "4~"],
+"kashmiri" : ["@~", "@@~", "a~", "aa~", "ii~", "u~", "uu~", "e~", "ee~", "o~", "oo~", "ao~", "i-~", "ii-~"],
+"tamil"    : [],
+"telugu"   : [],
+"kannada"  : [],
+"malayalam": [],
+"meitei"   : [],
+"boro"     : [],
+"santali"  : ["@~", "a~", "i~", "u~", "ae~", "ao~"]
+}
+for(language in allowed_nasal_vowels){
+  let number_of_vowels = 0;
+  for(phoneme in phoneme_bank){
+    if(allowed_phonemes[language].includes(phoneme) && phoneme_bank[phoneme]["sonority"]==6){number_of_vowels++;}
+  }
+  for(let i=0; i<allowed_nasal_vowels[language].length; i++){
+    allowed_phonemes[language].splice(number_of_vowels+i, 0, allowed_nasal_vowels[language][i]);
+  }
+}
+
+
+//To economise, consonant clusters can be designated as solely word-initial, solely word-final, or both. E.g. if CC is solely word-initial, then VCC will not appear in the reclist. If not specified, fallback to 'both'.
+var allowed_clusters = {
+"urdu"     : [[["f","t"],"final"], [["r","f"],"final"], [["m","t"],"final"], [["m","r"],"final"], [["m","s"],"final"], [["k","l"],"final"], [["t","l"],"final"], [["b","l"],"final"], [["s","l"],"final"], [["t","m"],"final"], [["l","m"],"final"], [["h","m"],"final"], [["h","r"],"final"]],
+"dakhni"   : [["r","h"], ["l","h"], ["m","h"], ["n","h"]],
+"hindi"    : [[["k","r"],"initial"], [["k","sh"],"both"], [["s","t"],"initial"], [["s","w"],"initial"], [["sh","r"],"initial"], [["s","n"],"initial"], [["t","w"],"final"], [["sh","w"],"final"], [["n","y"],"final"], [["l","y"],"final"], [["r","y"],"final"], [["j","y"],"final"], [["r","v"],"final"], ["t","r"], ["g","n"]], //Ohala (1972) lists a LOT more but this is complicated enough already
+"maithili" : [],
+"marathi"  : [[["k","r"],"initial"], [["k","sh"],"both"], [["s","t"],"initial"], [["s","w"],"initial"], [["sh","r"],"initial"], [["s","n"],"initial"], [["t","w"],"final"], [["sh","w"],"final"], [["n","y"],"final"], [["l","y"],"final"], [["r","y"],"final"], [["j","y"],"final"], [["r","v"],"final"], ["t","r"], ["g","n"], ["l","h"], ["m","h"], ["n","h"]],
+//"konkani"  : [],
+//"dogri"    : [],
+"punjabi"  : [],
+"sindhi"   : [["l","h"], ["m","h"], ["n","h"]],
+"bengali"  : [], //?
+"odia"     : [], //?
+"assamese" : [["l","k"], ["s","k"], ["s","ph"], ["s","kh"], ["d","gh"], ["z","n"], ["l","t"], ["s","th"], ["s","n"], ["h","n"], ["k","s"], ["p","t"], ["s","t"], ["k","t"], ["g","n"], ["m","n"], ["b","d"], ["l","p"], ["d","b"], ["d","bh"], ["k","m"], ["d","m"], ["h","m"], ["h","b"]], //i don't remember where i got this from, seems more restricted than what's in C&J. but whatever, i'm feeling lazy
+"nepali"   : [[["k","r"],"initial"], [["k","sh"],"both"], [["s","t"],"initial"], [["s","w"],"initial"], [["sh","r"],"initial"], [["s","n"],"initial"], [["t","w"],"final"], [["sh","w"],"final"], [["n","y"],"final"], [["l","y"],"final"], [["r","y"],"final"], [["j","y"],"final"], [["r","v"],"final"], ["t","r"], ["g","n"]],
+"kashmiri" : [],// https://languageinindia.com/april2019/sobialkashmirienglishconsonantclusters.pdf
+"tamil"    : [],
+"telugu"   : [],
+"kannada"  : [],
+"malayalam": [],
+"meitei"   : [],// http://sealang.net/sala/archives/pdf8/abbi1985consonant.pdf
+"boro"     : [],
+"santali"  : []// https://www.scribd.com/document/383924565/Santali
+}
+//kashmiri has palatalised consonants, approximating them as clusters with /j/
+for(phoneme of allowed_phonemes["kashmiri"]){
+  if(phoneme_bank[phoneme]["sonority"]<=5 && !["c", "ch", "j", "sh", "y"].includes(phoneme)){
+    allowed_clusters["kashmiri"].push([phoneme,"y"]);
+  }
+}
+//kashmiri's consonant clusters are typically: word-initially with <r>, word-medially at a morpheme boundary, and word-finally a homorganic nasal cluster. Only the first need be treated separately here
+for(phoneme of allowed_phonemes["kashmiri"]){
+  if(phoneme_bank[phoneme]["sonority"]<=3){
+    allowed_clusters["kashmiri"].push([[phoneme,"r"],"initial"]);
+  }
+}
+//meitei. just an approximation
+for(phoneme of allowed_phonemes["meitei"]){
+  if(phoneme_bank[phoneme]["sonority"]<=5 && !(phoneme_bank[phoneme]["properties"].includes("voiced") && phoneme_bank[phoneme]["properties"].includes("aspirate"))){
+    for(initial of ["k","t","p","ng","n","m"]){
+      allowed_clusters["meitei"].push([initial, phoneme]);
+    }
+  }
+}
+//inserting a "both" where it's not written, since it's the default
+for(language in allowed_clusters){
+  for(let i=0; i<allowed_clusters[language].length; i++){
+    if(allowed_clusters[language][i][0].length==1){allowed_clusters[language][i] = [allowed_clusters[language][i], "both"];}
+  }
+}
+
+
+var forbidden_geminates = {
+"urdu"     : ["h"],
+"dakhni"   : ["h"],
+"hindi"    : ["h"],
+"maithili" : ["h"],
+"marathi"  : ["h"],
+//"konkani"  : [],
+//"dogri"    : ["r", "sh", "rn"],
+"punjabi"  : ["h", "rn", "r", "rl", "w", "y"],
+"sindhi"   : allowed_phonemes["sindhi"],
+"bengali"  : ["h"],
+"odia"     : allowed_phonemes["odia"],
+"assamese" : ["kh", "gh", "th", "dh", "ph", "bh", "y", "w", "h", "x", "r"],
+"nepali"   : ["h"],
+"kashmiri" : allowed_phonemes["kashmiri"],
+"tamil"    : ["h", "g", "j", "rd", "d", "b"],
+"telugu"   : ["h"],
+"kannada"  : ["h"],
+"malayalam": ["h"],
+"meitei"   : ["h"],
+"boro"     : ["h"],
+"santali"  : allowed_phonemes["santali"]
+}
+
+
+//populating the page with the language options and checkboxes
+for(language in allowed_phonemes){if(!["konkani", "dogri", "gujarati"].includes(language)){ //not supported yet
+  let language_list = document.getElementById("language_list");
+  let new_language_item = document.createElement("li");
+  let new_language_label = document.createElement("label");
+  new_language_label.innerHTML = " " + language;
+  new_language_label.style = "text-transform:capitalize;";
+  let new_language_checkbox = document.createElement("input");
+  new_language_checkbox.type = "checkbox";
+  new_language_checkbox.id = language + "_checkbox";
+  new_language_label.htmlFor = language + "_checkbox";
+  new_language_item.appendChild(new_language_checkbox);
+  new_language_item.appendChild(new_language_label);
+  language_list.appendChild(new_language_item);
+}}
+
+var reclist_out = "";
+
+function run(){
+  reclist_out = "";
+// Select which languages to support
+// var selected_languages = { //now i'm just using this to mark which ones i'm done with haha
+// "urdu"     : 1,
+// "dakhni"   : 1,
+// "hindi"    : 1,
+// "maithili" : 1,
+// "konkani"  : 0,
+// "dogri"    : 0,
+// "punjabi"  : 1,
+// "sindhi"   : 1,
+// "bengali"  : 1,
+// "odia"     : 1,
+// "assamese" : 1,
+// "nepali"   : 1,
+// "kashmiri" : 1,
+// "tamil"    : 1,
+// "telugu"   : 0,
+// "kannada"  : 0,
+// "malayalam": 0,
+// "meitei"   : 1,
+// "boro"     : 1,
+// "santali"  : 1
+// }
+var selected_languages = {};
+for(language in allowed_phonemes){
+  selected_languages[language] = document.getElementById(language + "_checkbox").checked;
+}
+
+// Optional CC features
+// var include_nasal_clusters         = 1;
+// var include_geminate_consonants    = 1;
+// var include_miscellaneous_clusters = 0;
+var include_nasal_clusters         = document.getElementById("nasal_cc").checked;
+var include_geminate_consonants    = document.getElementById("geminate_cc").checked;
+var include_miscellaneous_clusters = document.getElementById("misc_cc").checked;
+
+//Optional other features
+// var include_nasal_vowels = 0;
+var include_nasal_vowels = document.getElementById("nasal_vowels").checked;
+
+
+var all_languages_reclist = [];
+
+//setting up all allowed phonemes for the selected languages
+for(let language in selected_languages){
+  if(selected_languages[language]){
+
+  let selected_allowed_phonemes = [];
+  let selected_allowed_diphthongs = [];
+  let selected_allowed_clusters = [];
+
+  if(selected_languages[language]){
+    selected_allowed_phonemes = selected_allowed_phonemes.concat(allowed_phonemes[language]); //adding together all allowed individual phonemes for the selected languages
+    selected_allowed_diphthongs = selected_allowed_diphthongs.concat(allowed_diphthongs[language]);
+    
+    //adding nasal clusters
+    if(include_nasal_clusters){
+      for(let phoneme of allowed_phonemes[language]){
+        if(phoneme_bank[phoneme]["sonority"]<=1 && !phoneme_bank[phoneme]["properties"].includes("flap")){
+          let do_this = 1;
+          if(language=="tamil"){if(phoneme_bank[phoneme]["sonority"]<=1 && phoneme_bank[phoneme]["properties"].includes("unvoiced")){do_this = 0;}} //tamil plosives are always voiced after a nasal
+          if(do_this){selected_allowed_clusters = selected_allowed_clusters.concat([[["n", phoneme], "both"]]);} //When recording, this 'n' must be pronounced with the appropriate allophone.
+          //also, need to add extra square brackets due to the way concat works
+        }
+      }
+    }
+    
+    //adding geminate consonants
+    if(include_geminate_consonants){
+      for(let phoneme of allowed_phonemes[language]){
+        if(phoneme_bank[phoneme]["sonority"]<=5 && !phoneme_bank[phoneme]["properties"].includes("aspirate") && !phoneme_bank[phoneme]["properties"].includes("flap") && !forbidden_geminates[language].includes(phoneme)){ //Don't need to geminate these consonants. Notably, aspirates can be handled as e.g. <kh kh> -> <k kh>
+          selected_allowed_clusters = selected_allowed_clusters.concat([[[phoneme, phoneme], "both"]]);
+        }
+      }
+    }
+
+    //adding miscellaneous clusters
+    if(include_miscellaneous_clusters){selected_allowed_clusters = selected_allowed_clusters.concat(allowed_clusters[language]);}
+  }
+
+  //setting up all phoneme combinations to be recorded
+  let reclist = [];
+
+  //V and C
+  if(document.getElementById("C_V").checked){
+    for(let phoneme of selected_allowed_phonemes){
+      reclist = reclist.concat([[phoneme]]);
+    }
+  }
+  
+  //CV
+  if(document.getElementById("CV_VC").checked){
+    for(let phoneme1 of selected_allowed_phonemes){
+      if(phoneme_bank[phoneme1]["sonority"]<=5){
+        for(let phoneme2 of selected_allowed_phonemes){
+          if(phoneme_bank[phoneme2]["sonority"]==6){
+            reclist = reclist.concat([[phoneme1,phoneme2]]);
+          }
+        }
+      }
+    }
+
+    //VC
+    for(let phoneme1 of selected_allowed_phonemes){
+      if(phoneme_bank[phoneme1]["sonority"]==6){
+        for(let phoneme2 of selected_allowed_phonemes){
+          if(phoneme_bank[phoneme2]["sonority"]<=5){
+            let do_this = 1;
+            if(["dakhni","urdu","hindi"].includes(language)){if(phoneme_bank[phoneme1]["properties"].includes("nasal") && phoneme_bank[phoneme2]["properties"].includes("voiced")){do_this = 0;}}
+            if(do_this){reclist = reclist.concat([[phoneme1,phoneme2]]);}
+          }
+        }
+      }
+    }
+  }
+
+  //CCV
+  for(cluster of selected_allowed_clusters){
+    if(cluster.length==2 && (cluster[1]=="initial" || cluster[1]=="both")){
+      for(vowel of selected_allowed_phonemes){
+        if(phoneme_bank[vowel]["sonority"]==6){
+          reclist = reclist.concat([cluster[0].concat(vowel)]);
+        }
+      }
+    }
+  }
+
+  //VCC
+  for(cluster of selected_allowed_clusters){
+    if(cluster.length==2 && (cluster[1]=="final" || cluster[1]=="both")){
+      for(vowel of selected_allowed_phonemes){
+        if(phoneme_bank[vowel]["sonority"]==6){
+          let do_this = 1;
+          if(language=="punjabi"){if(phoneme_bank[vowel]["properties"].includes("long")){do_this = 0;}} //punjabi forbids geminates after long vowels
+          if(do_this){reclist = reclist.concat([[vowel].concat(cluster[0])]);}
+        }
+      }
+    }
+  }
+
+  //VV
+  if(document.getElementById("VV").checked){
+    for(let diphthong of selected_allowed_diphthongs){
+      reclist = reclist.concat([diphthong]);
+    }
+  }
+
+  reclist = reclist.concat([["linebreak_finished_" + language]]);
+
+  let number_of_vowels = 0;
+  let number_of_consonants = 0;
+  for(phoneme of selected_allowed_phonemes){
+    if(phoneme_bank[phoneme]["sonority"]==6){number_of_vowels++;}
+    if(phoneme_bank[phoneme]["sonority"]<=5){number_of_consonants++;}
+  }
+  
+  let column = 1;
+  for(sound of reclist){
+    if(column==number_of_vowels || (column>number_of_vowels && column%(1+number_of_vowels) == (number_of_consonants)%number_of_vowels)){
+      reclist.splice(column, 0, ["linebreak_" + column + "_" + language]);
+    }
+    column++;
+  }
+  // console.log(reclist);
+
+  all_languages_reclist = all_languages_reclist.concat(reclist);
+}
+}
+// console.log(all_languages_reclist);
+
+//deduplicating
+all_languages_reclist = Array.from(new Set(all_languages_reclist.map(JSON.stringify)), JSON.parse);
+
+number_of_recordings = 0;
+for(sound of all_languages_reclist){
+  if(sound[0].substring(0,9)!="linebreak"){
+    number_of_recordings++;
+    for(phoneme of sound){
+      reclist_out += phoneme;
+      reclist_out += " ";
+    }
+    reclist_out += ", ";
+  }
+  else{
+    if(reclist_out[reclist_out.length-1]!="\n"){reclist_out += "\n";}
+    if(sound[0].substring(10,18)=="finished"){reclist_out += "\n";}
+  }
+}
+
+// console.log(reclist.length);
+// console.log(reclist_out);
+
+const reclist_length_announce = document.getElementById("reclist_length_announce");
+reclist_length_announce.innerHTML = "Sounds to record: " + number_of_recordings.toLocaleString('en', {useGrouping:true});
+const reclist_output_area = document.getElementById("reclist_output_area");
+reclist_output_area.innerHTML = reclist_out;
+
+}
+
+function download_txt() {
+  var element = document.createElement('a');
+  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(reclist_out));
+  element.setAttribute('download', "my_reclist.txt");
+  element.style.display = 'none';
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+}
+
+function copy_txt(){
+  navigator.clipboard.writeText(reclist_out);
+}
+
+var notes_show = 1;
+function notes_toggle(){
+  notes_list = document.getElementById("notes_list");
+  notes_toggle_button = document.getElementById("notes_toggle_button");
+  notes_list.style.display = notes_show ? "none" : "block";
+  notes_toggle_button.innerHTML = notes_show ? "Show" : "Hide";
+  notes_show = 1-notes_show;
+}
+
+function toggle_languages(){
+  let toggle_languages = document.getElementById("toggle_languages");
+  for(language in allowed_phonemes){
+    document.getElementById(language + "_checkbox").checked = toggle_languages.checked;
+  }
+}
+
+//populating ipa table
+var ipa_list = document.getElementById("ipa_list");
+for(phoneme in phoneme_bank){
+  let ipa_li = document.createElement("li");
+  ipa_li.innerHTML = "&lt;" + phoneme + "&gt; = /" + phoneme_bank[phoneme]["ipa"] + "/";
+  ipa_list.appendChild(ipa_li);
+}
+
+var ipa_show = 0;
+function ipa_toggle(){
+  ipa_list = document.getElementById("ipa_list");
+  ipa_toggle_button = document.getElementById("ipa_toggle_button");
+  ipa_list.style.display = ipa_show ? "none" : "block";
+  ipa_toggle_button.innerHTML = ipa_show ? "Show" : "Hide";
+  ipa_show = 1-ipa_show;
+}
+
+
+</script>
+
+  </div>
+ </div>
+</div>
+
+</body>
+</html>
+	<br>
+	<a href=reclist_gen_ind.html>Indic Reclist Generator</a>: This is a simple script that can generate an UTAU reclist in several different Indian languages (mostly done but needs 'crowdfunded' finetuning). The sheer size and complexity of the phonemic inventories involved make it borderline impractical in use, so it is more of a curiosity (unless you're really brave?).
+
   </div>
  </div>
 </div>

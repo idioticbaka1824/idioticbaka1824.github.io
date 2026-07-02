@@ -29,7 +29,7 @@
  <div class="pagebg">
   <div class="page page-text">
 
-<span style="font-size:x-small;">
+<span style="font-size:small;">
   Notes: <button onclick="notes_toggle()" id="notes_toggle_button" style="font-size:inherit"><span style="font-size:inherit">Hide</span></button>
   <ul id="notes_list" style="list-style:disc; margin-bottom:0px">
     <li>Nasal clusters are transcribed with &lt;n&gt; but should be pronounced with the proper allophone, e.g. &lt;nk&gt; = /ŋk/, &lt;nb&gt; = /mb/. The exception is Meitei where nasal clusters need not be homorganic.</li>
@@ -237,7 +237,7 @@ var allowed_phonemes = {
 "assamese" : ["a", "i", "u", "uu", "e", "o", "ae", "ao", "k", "kh", "g", "gh", "t", "th", "d", "dh", "p", "ph", "b", "bh", "ng", "n", "m", "y", "w", "s", "z", "h", "x", "r", "l"],
 "nepali"   : ["a", "i", "u", "e", "o", "4", "k", "kh", "g", "gh", "c", "ch", "j", "jh", "rt", "rth", "rd", "rdh", "ts", "tsh", "dz", "dzh", "t", "th", "d", "dh", "p", "ph", "b", "bh", "n", "m", "s", "h", "r", "l"],
 "kashmiri" : ["@", "@@", "a", "aa", "i", "ii", "u", "uu", "e", "ee", "o", "oo", "ao", "aoo", "i-", "ii-", "k", "kh", "g", "c", "ch", "j", "rt", "rth", "rd", "ts", "tsh", "t", "th", "d", "p", "ph", "b", "n", "m", "y", "w", "sh", "s", "h", "r", "l", "z"],
-"tamil"    : ["a", "aa", "i", "ii", "u", "uu", "e", "ee", "o", "oo", "k", "c", "rt", "t", "p", "ng", "rn", "n", "m", "y", "w", "s", "r", "l", "rl", "zh"],
+"tamil"    : ["a", "aa", "i", "ii", "u", "uu", "e", "ee", "o", "oo", "k", "g", "c", "j", "rt", "rd", "t", "d", "p", "b", "rn", "n", "m", "y", "w", "s", "r", "l", "rl", "zh"],
 "telugu"   : ["a", "aa", "i", "ii", "u", "uu", "e", "ee", "o", "oo", "k", "kh", "g", "gh", "c", "ch", "j", "jh", "rt", "rth", "rd", "rdh", "t", "th", "d", "dh", "p", "ph", "b", "bh", "rn", "n", "m", "y", "w", "sh", "s", "h", "r", "l", "rl"],
 "kannada"  : ["a", "aa", "i", "ii", "u", "uu", "e", "ee", "o", "oo", "k", "kh", "g", "gh", "c", "ch", "j", "jh", "rt", "rth", "rd", "rdh", "t", "th", "d", "dh", "p", "ph", "b", "bh", "rn", "n", "m", "y", "w", "sh", "s", "h", "r", "l", "rl"],
 "malayalam": ["a", "aa", "i", "ii", "u", "uu", "e", "ee", "o", "oo", "k", "kh", "g", "gh", "c", "ch", "j", "jh", "rt", "rth", "rd", "rdh", "t", "th", "d", "dh", "p", "ph", "b", "bh", "rn", "n", "m", "y", "w", "sh", "s", "h", "r", "l", "rl", "zh"],
@@ -373,7 +373,7 @@ var forbidden_geminates = {
 "assamese" : ["kh", "gh", "th", "dh", "ph", "bh", "y", "w", "h", "x", "r"],
 "nepali"   : ["h"],
 "kashmiri" : allowed_phonemes["kashmiri"],
-"tamil"    : ["h"],
+"tamil"    : ["h", "g", "j", "rd", "d", "b"],
 "telugu"   : ["h"],
 "kannada"  : ["h"],
 "malayalam": ["h"],
@@ -413,15 +413,15 @@ function run(){
 // "dogri"    : 0,
 // "punjabi"  : 1,
 // "sindhi"   : 1,
-// "bengali"  : 0.9,
-// "odia"     : 0.9,
+// "bengali"  : 1,
+// "odia"     : 1,
 // "assamese" : 1,
 // "nepali"   : 1,
 // "kashmiri" : 1,
-// "tamil"    : 0,
-// "telugu"   : 0,
-// "kannada"  : 0,
-// "malayalam": 0,
+// "tamil"    : 1,
+// "telugu"   : 0.9,
+// "kannada"  : 0.9,
+// "malayalam": 0.9,
 // "meitei"   : 1,
 // "boro"     : 1,
 // "santali"  : 1
@@ -462,7 +462,9 @@ for(let language in selected_languages){
     if(include_nasal_clusters){
       for(let phoneme of allowed_phonemes[language]){
         if(phoneme_bank[phoneme]["sonority"]<=1 && !phoneme_bank[phoneme]["properties"].includes("flap")){
-          selected_allowed_clusters = selected_allowed_clusters.concat([[["n", phoneme], "both"]]); //When recording, this 'n' must be pronounced with the appropriate allophone.
+          let do_this = 1;
+          if(language=="tamil"){if(phoneme_bank[phoneme]["sonority"]<=1 && phoneme_bank[phoneme]["properties"].includes("unvoiced")){do_this = 0;}} //tamil plosives are always voiced after a nasal
+          if(do_this){selected_allowed_clusters = selected_allowed_clusters.concat([[["n", phoneme], "both"]]);} //When recording, this 'n' must be pronounced with the appropriate allophone.
           //also, need to add extra square brackets due to the way concat works
         }
       }
@@ -475,6 +477,7 @@ for(let language in selected_languages){
           selected_allowed_clusters = selected_allowed_clusters.concat([[[phoneme, phoneme], "both"]]);
         }
       }
+      if(language=="malayalam"){selected_allowed_clusters = selected_allowed_clusters.concat([[["ng", "ng"], "both"], [["ny", "ny"], "both"]]);} //because these sounds appear as geminates (apart from the standard homorganic clusters), but not as CV/VC
     }
 
     //adding miscellaneous clusters

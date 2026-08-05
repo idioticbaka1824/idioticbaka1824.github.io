@@ -81,7 +81,7 @@ if(seek!='sura'){
     document.getElementById('page_num').value = num-1;
     document.getElementById('para').value = clamp(1+~~((num-3)/20), 1, 30);
   }
-  if (typeof(Storage) !== "undefined") {localStorage.setItem('bookmark', pageNum);}
+  if (typeof(Storage) !== "undefined") {localStorage.setItem('bookmark_auto', pageNum);}
 }
 
   /**
@@ -105,7 +105,8 @@ if(seek!='sura'){
     document.getElementById('page_num').max = pdfDoc.numPages;
 
     // Initial/first page rendering
-    if (typeof(Storage) !== "undefined") {pageNum = parseInt(localStorage.getItem('bookmark'));}
+    pageNum = parseInt(localStorage.getItem('bookmark_auto'));
+    if(isNaN(pageNum)){pageNum = 0;}
     if(pageNum!=0){renderPage(pageNum, canvas1, ctx1);}
     renderPage(pageNum+1, canvas2, ctx2);
   });
@@ -159,6 +160,18 @@ function suraSeek() {
   }
   document.getElementById('sura').addEventListener('input', suraSeek);
 
+function saveBookmark() {
+  if (typeof(Storage) !== "undefined") {localStorage.setItem('bookmark_manual', pageNum);}
+}
+document.getElementById('save_bookmark').addEventListener("click", saveBookmark);
+function loadBookmark() {
+  pageNum = parseInt(localStorage.getItem('bookmark_manual'));
+  if(isNaN(pageNum)){pageNum = parseInt(localStorage.getItem('bookmark_auto'));}
+  if(isNaN(pageNum)){pageNum = 0;}
+  queueRenderPage(pageNum);
+}
+document.getElementById('load_bookmark').addEventListener("click", loadBookmark);
+
 function zoom() {
     window.scale = document.getElementById('zoom').value;
     queueRenderPage(pageNum);
@@ -202,11 +215,15 @@ document.getElementById('content').addEventListener('wheel', wheelHandling);docu
   <span>Sura: <select id="sura" type='select'></select></span>
   &nbsp; &nbsp;
   <span>Zoom: <input id="zoom" type='number' value=1 step=0.05 min=0 max=10 onwheel></input></span>
+  <br style="margin:1ex">
+  <button id="save_bookmark">Save Bookmark</button>
+  &nbsp;
+  <button id="load_bookmark">Load Bookmark</button>
 </div>
 <br>
 <div id='content'>
-<canvas id="canvas2"></canvas>
-<canvas id="canvas1"></canvas>
+  <canvas id="canvas2"></canvas>
+  <canvas id="canvas1"></canvas>
 </div>
 </body>
 

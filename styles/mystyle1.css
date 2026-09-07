@@ -161,20 +161,3 @@ circle[name='0'] {fill:var(--pink);}
 circle[name='virtual'] {fill:var(--hotpurple);}
 path {stroke: var(--violet);}
 polygon {stroke: var(--violet);}
-
-@font-face {
-			font-family: Sanskrit Text;
-			src: url(../../fonts/Sanskr.ttf);
-			unicode-range: U+0900-097F;
-		}
-@font-face {
-			font-family: Jameel Noori Nastaleeq;
-			src: url(../../fonts/JameelNooriNastaleeqRegular.ttf);
-			unicode-range: U+600-6FF;
-		}
-@font-face {
-			font-family: Times New Roman;
-			src: url(../../fonts/times.ttf);
-			unicode-range: U+0-07F;
-		}
-

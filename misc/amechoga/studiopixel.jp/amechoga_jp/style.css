@@ -1,0 +1,94 @@
+body
+{
+	font-family: "Yu Gothic Medium", YuGothic, sans-serif;
+	margin:0px;
+}
+
+div
+{
+	font-size: 14px;
+	line-height: 1.5em;
+	background-color: #E6E4DC;
+	padding: 0px 0px 0px 0px;
+	margin: 0px 0px 0px 0px;
+}
+
+dt
+{
+	font-weight: bold;
+}
+
+.head1
+{
+	font-size: 12px;
+	position: absolute;
+	left:0px;
+	top:0px;
+	width:500px;
+	margin: 0px 0px 0px 0px;
+}
+
+
+.view1
+{
+	font-size:20px;
+	padding: 20px 20px 20px 20px;
+	margin: 0px 0px 0px 0px;
+	
+	background-color: #E6E4DC;
+/*	background-image: url(note.png);
+	background-attachment: scroll;
+	*/
+}
+
+.menu1
+{
+	font-size:20px;
+	margin:0px;	
+	padding: 20px 20px 20px 20px;
+	background: #EFDEC1;
+}
+{
+	  LINK =D56F00
+	  VLINK=D56F00
+	  ALINK=D56F88
+}
+
+.thumb1 img
+{
+	margin:12px;	
+	border-style: dotted;
+}
+.thumb2 img
+{
+	margin:12px;	
+	border-style: none;
+}
+
+.view1 img
+{
+	border-style: none;
+}
+
+img
+{
+	border-style: none;
+}
+
+a
+{
+	text-decoration: none;
+	color: #002963;
+}
+
+a:hover
+{
+	color: #2e5cbc;
+	background-color: #ceccfc;
+}
+
+.body1 a#ques{ position: absolute; top:  32px; left: 184px; display: block; width: 320px; height: 48px; background-image: url(img/questionnaire_s.html);}
+.body1 a#ques:hover { background-position: top right; }
+.bodyxx a#ques{ position: absolute; top:  176px; left: 16px; display: block; width: 320px; height: 48px; background-image: url(img/questionnaire_s.html);}
+
+ 

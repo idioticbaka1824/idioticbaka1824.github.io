@@ -183,7 +183,7 @@
         }
         
         homeOrg() {
-			this.stop();
+			this.pause();
             this.playPos = 0;
             this.updateTimeDisplay();
         }
